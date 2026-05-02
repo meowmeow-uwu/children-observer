@@ -1,0 +1,41 @@
+[project]
+name = "children-observer"
+version = "0.1.0"
+description = "AI Child Guardian: Hệ thống Giám sát & Bảo vệ Trẻ em Chủ động"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "opencv-python-headless>=4.10",
+    "ultralytics>=8.3",
+    "torch>=2.4",
+    "torchvision>=0.19",
+    "albumentations>=1.4",
+    "pydantic-settings>=2.5",
+    "loguru>=0.7",
+    "numpy>=1.26",
+    "pillow>=10.4",
+    "onnxruntime>=1.19",
+    "cryptography>=43.0",
+    "python-dotenv>=1.0",
+    "mediapipe>=0.10",
+]
+
+[project.optional-dependencies]
+gpu = ["onnxruntime-gpu>=1.19"]
+tensorrt = ["tensorrt>=10.0"]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.7",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
