@@ -48,8 +48,8 @@ def main():
 
         model_path = output_dir / "yolo-pose-best.pt"
         # Export pretrained weights
-        if hasattr(estimator.model, "save"):
-            estimator.model.save(str(model_path))
+        if hasattr(estimator._model, "save"):
+            estimator._model.save(str(model_path))
         logger.info(f"Pretrained model saved: {model_path}")
     else:
         # Fine-tune trên dữ liệu custom
