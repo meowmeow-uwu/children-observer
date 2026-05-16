@@ -1,0 +1,29 @@
+name: Sync All Pushes to Organization Repo
+
+on:
+  push:
+    branches:
+      - '*'
+    tags:
+      - '*'
+
+jobs:
+  mirror-to-org:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code from Personal Repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Lấy toàn bộ lịch sử và nhánh
+
+      - name: Push everything to Organization Repo
+        run: |
+          git config --global user.name "GitHub Action Bot"
+          git config --global user.email "actions@github.com"
+          
+          # Mirror sang repo của tổ chức DUT-AI/children-observer
+          git remote add org-target https://x-access-token:${{ secrets.ORG_TARGET_TOKEN }}@github.com/DUT-AI/children-observer.git
+          
+          # Đẩy đồng bộ tất cả các nhánh và thẻ sang repo của tổ chức
+          git push org-target --all --force
+          git push org-target --tags --force
