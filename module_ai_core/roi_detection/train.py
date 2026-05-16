@@ -53,23 +53,63 @@ def main():
         cache=args.cache if args.cache else False,
     )
 
-    # Cập nhật Model Registry
+    # Cập nhật Model Registry & So sánh model
     registry_path = Path("weights/registry.json")
     registry = {}
     if registry_path.exists():
-        registry = json.loads(registry_path.read_text())
+        try:
+            registry = json.loads(registry_path.read_text())
+        except json.JSONDecodeError:
+            pass
 
-    registry["roi_detection"] = {
-        "status": "ready",
-        "path": str(output_dir / "best.pt"),
-        "format": "pytorch",
-        "metrics": {
-            "mAP50": getattr(results, "maps", [0])[0] if results else 0,
-        },
-    }
+    # Lấy điểm mAP50 cũ (mặc định 0.0 nếu chưa có)
+    old_metrics = registry.get("roi_detection", {}).get("metrics", {})
+    old_map50 = old_metrics.get("mAP50", 0.0)
 
-    registry_path.write_text(json.dumps(registry, indent=2, ensure_ascii=False))
-    logger.info(f"✅ Model saved & registry updated: {registry_path}")
+    # Lấy điểm mAP50 mới từ Ultralytics results
+    new_map50 = getattr(results, "maps", [0])[0] if results else 0.0
+
+    logger.info("=" * 50)
+    logger.info(f"📊 Kết quả Training: mAP50 Mới = {new_map50:.4f} | mAP50 Cũ = {old_map50:.4f}")
+
+    if new_map50 > old_map50:
+        logger.info("🎉 Đã tìm thấy model tốt hơn! Tiến hành lưu và cập nhật registry...")
+        
+        # YOLO lưu model ở thư mục riêng (e.g., runs/detect/train3/weights/best.pt)
+        # Ta cần copy nó ra thư mục weights/roi_detection chuẩn của dự án
+        import shutil
+        try:
+            # Truy cập thuộc tính save_dir của Ultralytics trainer
+            save_dir = getattr(detector._model.trainer, "save_dir", None)
+            if save_dir:
+                new_best_pt = Path(save_dir) / "weights" / "best.pt"
+                target_pt = output_dir / "best.pt"
+                
+                if new_best_pt.exists():
+                    shutil.copy2(new_best_pt, target_pt)
+                    logger.info(f"Đã copy model từ {new_best_pt} -> {target_pt}")
+                else:
+                    logger.warning(f"Không tìm thấy file {new_best_pt} để copy!")
+        except Exception as e:
+            logger.warning(f"Không thể copy file model tự động: {e}")
+
+        # Cập nhật registry
+        registry["roi_detection"] = {
+            "status": "ready",
+            "path": str(output_dir / "best.pt").replace("\\", "/"),
+            "format": "pytorch",
+            "metrics": {
+                "mAP50": new_map50,
+            },
+        }
+
+        registry_path.write_text(json.dumps(registry, indent=2, ensure_ascii=False))
+        logger.info(f"✅ Đã cập nhật Model Registry tại {registry_path}")
+    else:
+        logger.info(f"⚠️ Model mới ({new_map50:.4f}) KHÔNG tốt hơn model cũ ({old_map50:.4f}).")
+        logger.info("Giữ nguyên model cũ. Bỏ qua cập nhật Registry!")
+
+    logger.info("=" * 50)
 
 
 if __name__ == "__main__":
