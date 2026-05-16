@@ -48,6 +48,9 @@ class RTSPCapture:
         self._thread: threading.Thread | None = None
         self._frame_count = 0
         self._on_frame_callbacks: list[Callable] = []
+        self._actual_fps = 0.0
+        self._last_fps_time = time.monotonic()
+        self._fps_frames = 0
 
     def start(self) -> None:
         """Bắt đầu capture stream trên background thread."""
@@ -82,6 +85,11 @@ class RTSPCapture:
     @property
     def is_running(self) -> bool:
         return self._running
+
+    @property
+    def actual_fps(self) -> float:
+        """Trả về FPS thực tế đo được từ stream."""
+        return self._actual_fps
 
     @property
     def frame_count(self) -> int:
@@ -128,6 +136,14 @@ class RTSPCapture:
                         cb(frame, self._frame_count)
                     except Exception as e:
                         logger.error(f"Frame callback error: {e}")
+
+                # Actual FPS measurement
+                self._fps_frames += 1
+                now = time.monotonic()
+                if now - self._last_fps_time >= 2.0: # Update mỗi 2s
+                    self._actual_fps = self._fps_frames / (now - self._last_fps_time)
+                    self._fps_frames = 0
+                    self._last_fps_time = now
 
                 # FPS control
                 elapsed = time.monotonic() - start_time

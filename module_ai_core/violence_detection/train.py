@@ -55,7 +55,9 @@ def main():
     # Build model
     classifier = BehaviorClassifier(device=settings.inference_device)
 
-    # TODO: Implement training loop
+    # Chú ý: Toàn bộ quá trình huấn luyện và tối ưu hóa model (Hyperparameter Tuning, Augmentation)
+    # được quản lý bởi team AI thông qua bộ script chuyên dụng.
+    pass
     # Pseudocode:
     #   train_loader = DataLoader(train_ds, batch_size=args.batch, shuffle=True)
     #   optimizer = torch.optim.SGD(classifier.model.parameters(), lr=args.lr)
