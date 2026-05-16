@@ -471,7 +471,3 @@ README.md nói rõ: *"Logic té ngã không cần train riêng — nó dựa tr�
 
 ---
 
-**Completed by:** Claude (Senior AI Engineer)  
-**Date:** 2026-05-05  
-**Branch:** feat/fall_detection  
-**Total Time:** ~4 hours (as estimated in plan)
