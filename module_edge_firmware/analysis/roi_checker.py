@@ -21,23 +21,55 @@ class ROIZone:
     def __init__(self, zone_id: str, vertices: list[list[float]], label: str = "danger"):
         self.zone_id = zone_id
         self.label = label
-        self.vertices = np.array(vertices, dtype=np.float32)
+        self.norm_vertices = np.array(vertices, dtype=np.float32)
+        self.vertices = self.norm_vertices.copy()  # Sẽ được update bởi ROIChecker
         self._contour = self.vertices.reshape((-1, 1, 2)).astype(np.float32)
 
+        # Tối ưu: Tính toán AABB (Axis-Aligned Bounding Box) để lọc nhanh
+        self._min_x = float(np.min(self.vertices[:, 0]))
+        self._min_y = float(np.min(self.vertices[:, 1]))
+        self._max_x = float(np.max(self.vertices[:, 0]))
+        self._max_y = float(np.max(self.vertices[:, 1]))
+
+    def update_scale(self, width: int, height: int):
+        """Cập nhật tọa độ pixel dựa trên kích thước frame mới."""
+        self.vertices[:, 0] = self.norm_vertices[:, 0] * width
+        self.vertices[:, 1] = self.norm_vertices[:, 1] * height
+        self._contour = self.vertices.reshape((-1, 1, 2)).astype(np.float32)
+        
+        # Tối ưu: Tính toán AABB (Axis-Aligned Bounding Box) để lọc nhanh
+        self._min_x = np.min(self.vertices[:, 0])
+        self._min_y = np.min(self.vertices[:, 1])
+        self._max_x = np.max(self.vertices[:, 0])
+        self._max_y = np.max(self.vertices[:, 1])
+
     def contains_point(self, point: tuple[float, float]) -> bool:
-        """Kiểm tra điểm có nằm trong vùng polygon không."""
-        result = cv2.pointPolygonTest(self._contour, point, measureDist=False)
-        return result >= 0  # >= 0 nghĩa là bên trong hoặc trên biên
+        """Kiểm tra điểm có nằm trong vùng polygon không (kèm lọc nhanh AABB)."""
+        if self._contour is None or len(self._contour) < 3:
+            return False
+
+        px, py = float(point[0]), float(point[1])
+
+        # 1. Lọc nhanh bằng AABB (O(1))
+        if not (self._min_x <= px <= self._max_x and self._min_y <= py <= self._max_y):
+            return False
+
+        # 2. Kiểm tra chính xác bằng Polygon Test (O(N))
+        result = cv2.pointPolygonTest(self._contour, (px, py), measureDist=False)
+        return result >= 0
 
     def distance_to_point(self, point: tuple[float, float]) -> float:
         """Tính khoảng cách từ điểm tới biên polygon (âm = bên trong)."""
-        return cv2.pointPolygonTest(self._contour, point, measureDist=True)
+        if self._contour is None or len(self._contour) < 3:
+            return float('inf')
+        pt = (float(point[0]), float(point[1]))
+        return cv2.pointPolygonTest(self._contour, pt, measureDist=True)
 
     def to_dict(self) -> dict:
         return {
             "zone_id": self.zone_id,
             "label": self.label,
-            "vertices": self.vertices.tolist(),
+            "vertices": self.norm_vertices.tolist(), # Lưu tọa độ chuẩn hóa
         }
 
 
@@ -52,6 +84,7 @@ class ROIChecker:
     def __init__(self, config_path: str | Path | None = None):
         self.config_path = Path(config_path) if config_path else Path("./configs/roi_zones.json")
         self._zones: dict[str, ROIZone] = {}
+        self._current_size: tuple[int, int] | None = None
         self._load_config()
 
     def _load_config(self) -> None:
@@ -120,13 +153,17 @@ class ROIChecker:
                 intruded.append(zone)
         return intruded
 
-    def check_box_intrusion(self, box: np.ndarray) -> list[ROIZone]:
+    def check_box_intrusion(self, box: np.ndarray, frame_size: tuple[int, int] | None = None) -> list[ROIZone]:
         """
         Kiểm tra bounding box có overlap với vùng nguy hiểm không.
 
         Args:
             box: [x1, y1, x2, y2] bounding box.
+            frame_size: (w, h) của frame hiện tại để update scale nếu cần.
         """
+        if frame_size and frame_size != self._current_size:
+            self._update_all_scales(frame_size)
+
         # Check 4 corners + center
         x1, y1, x2, y2 = box[:4]
         cx, cy = (x1 + x2) / 2, (y1 + y2) / 2
@@ -135,11 +172,22 @@ class ROIChecker:
 
         intruded = set()
         for point in points:
+            pt = (float(point[0]), float(point[1]))
             for zone in self._zones.values():
-                if zone.contains_point(point):
+                if zone.zone_id in intruded:
+                    continue  # Zone đã match, không cần check lại
+                if zone.contains_point(pt):
                     intruded.add(zone.zone_id)
 
         return [self._zones[zid] for zid in intruded]
+
+    def _update_all_scales(self, frame_size: tuple[int, int]):
+        """Cập nhật lại toàn bộ zone pixel coords khi resolution thay đổi."""
+        w, h = frame_size
+        for zone in self._zones.values():
+            zone.update_scale(w, h)
+        self._current_size = frame_size
+        logger.info(f"ROI scaled to match new resolution: {w}x{h}")
 
     @property
     def has_zones(self) -> bool:

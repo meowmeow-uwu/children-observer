@@ -37,6 +37,7 @@ class FrameAnalysis:
     poses: PoseResult | None = None
     behavior: BehaviorResult | None = None
     latency_ms: float = 0.0
+    frame_size: tuple[int, int] | None = None # (w, h)
     errors: list[str] = field(default_factory=list)
     active_tasks: list[str] = field(default_factory=list)
 
@@ -131,12 +132,17 @@ class MultiTaskRunner:
         if self._detector or self.registry.is_ready("roi_detection"):
             try:
                 if self._detector is None:
+                    from configs.settings import get_settings
+                    settings = get_settings()
                     model_path = self.registry.get_model_path("roi_detection")
-                    self._detector = ObjectDetector(model_path=model_path)
+                    self._detector = ObjectDetector(
+                        model_path=model_path,
+                        engine_type=settings.inference_engine_type
+                    )
                 self._detector.load()
                 self._det_loaded = True
                 active.append("roi_detection")
-                logger.info("✅ ROI Detection: LOADED")
+                logger.info(f"✅ ROI Detection: LOADED ({self._detector.engine_type})")
             except Exception as e:
                 logger.warning(f"⚠️ ROI Detection: FAILED - {e}")
         else:
@@ -192,6 +198,7 @@ class MultiTaskRunner:
         analysis = FrameAnalysis(
             frame_id=self._frame_counter,
             timestamp=time.time(),
+            frame_size=(frame.shape[1], frame.shape[0]) # (w, h)
         )
 
         futures: dict[str, Future] = {}
