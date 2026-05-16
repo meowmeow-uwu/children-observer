@@ -1,8 +1,12 @@
 # Task AI #1: ROI & Object Detection (P3)
 
 ## 🎯 Nhiệm vụ
-Huấn luyện YOLO26 phát hiện **trẻ em** và **vật nguy hiểm** (dao, kéo, ổ điện, bật lửa...).
-Kết hợp với logic ROI để cảnh báo khi trẻ tiếp cận vùng nguy hiểm.
+Huấn luyện mô hình YOLO26 để phát hiện chính xác **trẻ em** và các **vật thể nguy hiểm** trong khung hình. 
+
+> [!IMPORTANT]
+> **Phân định trách nhiệm:** 
+> - **Module AI:** Chịu trách nhiệm **Object Detection** (trả về Bounding Box, Label, Confidence).
+> - **Module Edge Firmware:** Chịu trách nhiệm **ROI Logic** (kiểm tra va chạm giữa Bounding Box và vùng đa giác/Polygon). Team AI **không** cần code logic kiểm tra vùng nguy hiểm.
 
 ## 📂 File làm việc
 - `module_ai_core/datasets/childsun_loader.py` — Bộ nạp dữ liệu ChildSUn (~5.350 ảnh).
@@ -18,34 +22,23 @@ python scripts/download_dataset.py --dataset childsun
 # Huấn luyện
 python module_ai_core/roi_detection/train.py
 
-# Export sang ONNX
+# Export sang định dạng tối ưu cho Edge (Yêu cầu bởi Team Edge)
 python scripts/convert_model.py --model weights/roi_detection/best.pt --format onnx
 ```
 
-## 📤 Output (Giao cho Module 2)
-Sau khi train xong, copy file model vào:
-```
-weights/roi_detection/best.pt      # PyTorch weights
-weights/roi_detection/best.onnx    # ONNX (tùy chọn)
-```
-Sau đó cập nhật `weights/registry.json`:
-```json
-{
-  "roi_detection": {
-    "status": "ready",
-    "path": "weights/roi_detection/best.pt",
-    "mAP50": 0.85
-  }
-}
-```
+## 📤 Output & Interface (Bàn giao cho Team Edge)
+Sau khi train xong, model cần đảm bảo các tiêu chuẩn sau để tích hợp vào `EdgePipeline`:
 
-## ⚙️ Biến .env liên quan
-- `YOLO_MODEL_PATH`: Đường dẫn model.
-- `INFERENCE_CONF_THRESHOLD`: Ngưỡng tin cậy.
-- `INFERENCE_DEVICE`: `cuda:0` hoặc `cpu`.
+1. **Định dạng file:** 
+   - `weights/roi_detection/best.pt` (PyTorch)
+   - `weights/roi_detection/best.onnx` (Ưu tiên để chạy TensorRT)
+2. **Hệ tọa độ:** Bounding Box phải được trả về dưới dạng **chuẩn hóa (0.0 đến 1.0)** hoặc tọa độ pixel tương ứng với resolution gốc của camera.
+3. **Danh sách Labels:** Cần thống nhất tại `configs/labels.json`. Các label bắt buộc:
+   - `child`
+   - `knife`, `scissors`, `socket`, `lighter`, `stove` (vật thể nguy hiểm)
 
 ## 📊 Tiêu chí hoàn thành (DoD)
-- [ ] mAP@0.5 ≥ 0.80 trên tập validation.
-- [ ] Phát hiện được ít nhất 5 loại vật nguy hiểm.
-- [ ] File model đã được lưu vào `weights/roi_detection/`.
-- [ ] Cập nhật `registry.json` với trạng thái "ready".
+- [ ] mAP@0.5 ≥ 0.80 trên tập validation cho tất cả các class.
+- [ ] Export thành công sang định dạng **ONNX**.
+- [ ] Cập nhật `weights/registry.json` với đường dẫn và thông số model mới nhất.
+- [ ] Kiểm tra độ trễ (latency) của model trên thiết bị Edge mục tiêu (Target < 50ms/frame).
