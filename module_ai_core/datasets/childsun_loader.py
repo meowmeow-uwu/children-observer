@@ -24,17 +24,13 @@ from loguru import logger
 from configs.settings import get_settings
 
 
-# Nhãn vật thể nguy hiểm trong ChildSUn dataset
+# Nhãn vật thể trong KidSentry dataset (Roboflow)
 CHILDSUN_CLASSES = [
+    "adult",           # Người lớn
     "child",           # Trẻ em
     "knife",           # Dao
+    "outlet",          # Ổ điện
     "scissors",        # Kéo
-    "fork",            # Nĩa
-    "thermos",         # Phích nước
-    "power_outlet",    # Ổ điện
-    "lighter",         # Bật lửa
-    "medicine",        # Thuốc
-    "small_object",    # Vật nhỏ nguy hiểm khác
 ]
 
 

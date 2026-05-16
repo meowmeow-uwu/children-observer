@@ -26,6 +26,8 @@ def main():
     parser.add_argument("--batch", type=int, default=16)
     parser.add_argument("--img-size", type=int, default=640)
     parser.add_argument("--data-yaml", type=str, default="./data/childsun/data.yaml")
+    parser.add_argument("--workers", type=int, default=8, help="Số CPU threads load dữ liệu")
+    parser.add_argument("--cache", type=str, default="", help="Cache ảnh: 'ram' hoặc 'disk'")
     args = parser.parse_args()
 
     settings = get_settings()
@@ -36,6 +38,7 @@ def main():
     logger.info("Task AI #1: ROI Object Detection Training")
     logger.info(f"Device: {settings.inference_device}")
     logger.info(f"Epochs: {args.epochs} | Batch: {args.batch}")
+    logger.info(f"Workers: {args.workers} | Cache: {args.cache or 'off'}")
     logger.info("=" * 50)
 
     # Train
@@ -46,6 +49,8 @@ def main():
         batch_size=args.batch,
         img_size=args.img_size,
         output_dir=str(output_dir),
+        workers=args.workers,
+        cache=args.cache if args.cache else False,
     )
 
     # Cập nhật Model Registry

@@ -185,6 +185,9 @@ class ObjectDetector:
         batch_size: int = 16,
         img_size: int = 640,
         name: str = "childsun_yolo26",
+        output_dir: str | Path | None = None,
+        workers: int = 8,
+        cache: bool | str = False,
         **kwargs: Any,
     ) -> dict:
         """
@@ -196,6 +199,9 @@ class ObjectDetector:
             batch_size: Batch size.
             img_size: Kích thước ảnh.
             name: Tên experiment.
+            output_dir: Thư mục lưu kết quả training.
+            workers: Số CPU threads để load dữ liệu song song.
+            cache: Cache ảnh vào RAM ('ram') hoặc disk ('disk') để tăng tốc.
 
         Returns:
             Dict chứa training metrics.
@@ -205,10 +211,10 @@ class ObjectDetector:
 
         logger.info(
             f"Starting training | epochs={epochs} | batch={batch_size} | "
-            f"img_size={img_size}"
+            f"img_size={img_size} | workers={workers} | cache={cache}"
         )
 
-        results = self._model.train(
+        train_args = dict(
             data=str(data_yaml),
             epochs=epochs,
             batch=batch_size,
@@ -219,8 +225,14 @@ class ObjectDetector:
             save=True,
             save_period=10,
             plots=True,
+            workers=workers,
+            cache=cache,
             **kwargs,
         )
+        if output_dir:
+            train_args["project"] = str(output_dir)
+
+        results = self._model.train(**train_args)
 
         logger.info(f"Training completed: {name}")
         return results
