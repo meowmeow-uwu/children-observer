@@ -12,18 +12,16 @@ Features:
 
 from __future__ import annotations
 
+import time
 from pathlib import Path
-from typing import Any
-
+from typing import Any, TYPE_CHECKING
 import numpy as np
 from loguru import logger
-
 from configs.settings import get_settings
 from module_ai_core.datasets.childsun_loader import CHILDSUN_CLASSES
-from module_edge_firmware.inference.engine import create_engine, BaseInferenceEngine
-from module_edge_firmware.ingestion.preprocessor import FramePreprocessor
 
-
+if TYPE_CHECKING:
+    from module_edge_firmware.inference.engine import BaseInferenceEngine
 class DetectionResult:
     """Kết quả phát hiện vật thể cho một frame."""
 
@@ -33,6 +31,7 @@ class DetectionResult:
         scores: np.ndarray,
         class_ids: np.ndarray,
         class_names: list[str],
+        inference_time_ms: float = 0.0,
     ):
         """
         Args:
@@ -40,23 +39,26 @@ class DetectionResult:
             scores: np.ndarray shape (N,) - confidence scores
             class_ids: np.ndarray shape (N,) - class IDs
             class_names: list[str] - corresponding class names
+            inference_time_ms: float - thời gian inference (ms)
         """
         self.boxes = boxes
         self.scores = scores
         self.class_ids = class_ids
         self.class_names = class_names
+        self.inference_time_ms = inference_time_ms
 
     def __len__(self) -> int:
         return len(self.boxes)
 
     def filter_by_class(self, target_classes: list[str]) -> "DetectionResult":
         """Lọc kết quả theo danh sách class cụ thể."""
-        mask = np.array([name in target_classes for name in self.class_names])
+        mask = np.array([name in target_classes for name in self.class_names], dtype=bool)
         return DetectionResult(
             boxes=self.boxes[mask],
             scores=self.scores[mask],
             class_ids=self.class_ids[mask],
             class_names=[n for n, m in zip(self.class_names, mask) if m],
+            inference_time_ms=self.inference_time_ms,
         )
 
     def get_dangerous_objects(self) -> "DetectionResult":
@@ -112,7 +114,8 @@ class ObjectDetector:
         self.classes = CHILDSUN_CLASSES
 
         self._model = None
-        self._engine: BaseInferenceEngine | None = None
+        self._engine: "BaseInferenceEngine | None" = None
+        from module_edge_firmware.ingestion.preprocessor import FramePreprocessor
         self._preprocessor = FramePreprocessor(normalize=True)
         self._is_loaded = False
 
@@ -130,6 +133,7 @@ class ObjectDetector:
                 self._model.to(self.device)
             else:
                 # Sử dụng optimized engine (TensorRT/OpenVINO/ONNX)
+                from module_edge_firmware.inference.engine import create_engine
                 self._engine = create_engine(self.engine_type)
                 # Tự động tìm file engine phù hợp
                 ext_map = {"tensorrt": ".engine", "openvino": ".xml", "onnx": ".onnx"}
@@ -168,6 +172,8 @@ class ObjectDetector:
         if not self._is_loaded:
             self.load()
 
+        start_time = time.perf_counter()
+
         if self.engine_type == "yolo":
             results = self._model.predict(
                 source=frame,
@@ -176,34 +182,70 @@ class ObjectDetector:
                 verbose=verbose,
                 device=self.device,
             )
+            inference_time_ms = (time.perf_counter() - start_time) * 1000.0
+
             result = results[0]
             boxes = result.boxes
             if len(boxes) == 0:
-                return self._empty_result()
-            
-            return DetectionResult(
-                boxes=boxes.xyxy.cpu().numpy(),
-                scores=boxes.conf.cpu().numpy(),
-                class_ids=boxes.cls.cpu().numpy().astype(int),
-                class_names=[self._model.names.get(int(c), f"class_{int(c)}") for c in boxes.cls.cpu().numpy()],
-            )
+                raw_result = self._empty_result(inference_time_ms)
+            else:
+                raw_result = DetectionResult(
+                    boxes=boxes.xyxy.cpu().numpy(),
+                    scores=boxes.conf.cpu().numpy(),
+                    class_ids=boxes.cls.cpu().numpy().astype(int),
+                    class_names=[self._model.names.get(int(c), f"class_{int(c)}") for c in boxes.cls.cpu().numpy()],
+                    inference_time_ms=inference_time_ms,
+                )
         else:
             # Optimized engine inference
             input_tensor = self._preprocessor.to_tensor(frame)
             outputs = self._engine.predict(input_tensor)
+            inference_time_ms = (time.perf_counter() - start_time) * 1000.0
             
             # Sử dụng bộ giải mã NumPy tối ưu để xử lý output từ engine
-            return self._parse_engine_output(outputs, frame.shape)
+            raw_result = self._parse_engine_output(outputs, frame.shape, inference_time_ms)
 
-    def _empty_result(self) -> DetectionResult:
+        return self._filter_and_map_labels(raw_result)
+
+    def _filter_and_map_labels(self, result: DetectionResult) -> DetectionResult:
+        """Lọc bỏ 'adult' và map các class sang chuẩn labels.json"""
+        label_map = {
+            1: "child",
+            2: "knife",
+            3: "socket",  # Map outlet -> socket
+            4: "scissors"
+        }
+        
+        valid_indices = []
+        mapped_names = []
+        
+        for i, class_id in enumerate(result.class_ids):
+            if class_id in label_map:
+                valid_indices.append(i)
+                mapped_names.append(label_map[class_id])
+                
+        if len(valid_indices) == 0:
+            return self._empty_result(result.inference_time_ms)
+            
+        mask = np.array(valid_indices)
+        return DetectionResult(
+            boxes=result.boxes[mask],
+            scores=result.scores[mask],
+            class_ids=result.class_ids[mask],
+            class_names=mapped_names,
+            inference_time_ms=result.inference_time_ms,
+        )
+
+    def _empty_result(self, inference_time_ms: float = 0.0) -> DetectionResult:
         return DetectionResult(
             boxes=np.zeros((0, 4)),
             scores=np.zeros(0),
             class_ids=np.zeros(0, dtype=int),
             class_names=[],
+            inference_time_ms=inference_time_ms,
         )
 
-    def _parse_engine_output(self, outputs: list[np.ndarray], orig_shape: tuple) -> DetectionResult:
+    def _parse_engine_output(self, outputs: list[np.ndarray], orig_shape: tuple, inference_time_ms: float) -> DetectionResult:
         """
         Decode output từ YOLOv8/v11 (TensorRT/OpenVINO/ONNX).
         Giả định format: (1, 4 + n_classes, 8400)
@@ -223,7 +265,7 @@ class ObjectDetector:
         scores = scores[mask]
         
         if len(output) == 0:
-            return self._empty_result()
+            return self._empty_result(inference_time_ms)
 
         # 2. Extract boxes and classes
         boxes = output[:, :4]  # [cx, cy, w, h]
@@ -258,7 +300,7 @@ class ObjectDetector:
         )
 
         if len(indices) == 0:
-            return self._empty_result()
+            return self._empty_result(inference_time_ms)
         
         # indices có thể là list hoặc numpy array tùy version OpenCV
         if isinstance(indices, np.ndarray):
@@ -271,6 +313,7 @@ class ObjectDetector:
             scores=scores[indices],
             class_ids=class_ids[indices],
             class_names=[self.classes[i] if i < len(self.classes) else f"class_{i}" for i in class_ids[indices]],
+            inference_time_ms=inference_time_ms,
         )
 
     def train(

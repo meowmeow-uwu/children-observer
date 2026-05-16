@@ -67,7 +67,7 @@ def main():
     old_map50 = old_metrics.get("mAP50", 0.0)
 
     # Lấy điểm mAP50 mới từ Ultralytics results
-    new_map50 = getattr(results, "maps", [0])[0] if results else 0.0
+    new_map50 = results.box.map50 if results and hasattr(results, "box") else 0.0
 
     logger.info("=" * 50)
     logger.info(f"📊 Kết quả Training: mAP50 Mới = {new_map50:.4f} | mAP50 Cũ = {old_map50:.4f}")
@@ -88,6 +88,17 @@ def main():
                 if new_best_pt.exists():
                     shutil.copy2(new_best_pt, target_pt)
                     logger.info(f"Đã copy model từ {new_best_pt} -> {target_pt}")
+
+                    # Tự động export sang ONNX
+                    try:
+                        logger.info("Đang tiến hành export sang định dạng ONNX...")
+                        from ultralytics import YOLO
+                        export_model = YOLO(target_pt)
+                        export_model.export(format="onnx")
+                        logger.info(f"✅ Tự động Export ONNX thành công: {target_pt.with_suffix('.onnx')}")
+                    except Exception as export_e:
+                        logger.error(f"❌ Lỗi trong quá trình export ONNX: {export_e}")
+
                 else:
                     logger.warning(f"Không tìm thấy file {new_best_pt} để copy!")
         except Exception as e:
