@@ -77,7 +77,10 @@ class RiskAssessor:
         if self.roi_checker.has_zones and analysis.detections:
             children = analysis.detections.get_children()
             for i in range(len(children)):
-                intrusions = self.roi_checker.check_box_intrusion(children.boxes[i])
+                intrusions = self.roi_checker.check_box_intrusion(
+                    children.boxes[i], 
+                    frame_size=analysis.frame_size
+                )
                 if intrusions:
                     zone_names = [z.label for z in intrusions]
                     assessment.zone_intrusions.extend(zone_names)

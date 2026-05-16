@@ -38,6 +38,7 @@ class AppSettings(BaseSettings):
 
     # ---- AI Inference ----
     inference_device: str = "cuda:0"
+    inference_engine_type: Literal["yolo", "onnx", "tensorrt", "openvino"] = "onnx"
     inference_conf_threshold: float = Field(default=0.5, ge=0.0, le=1.0)
     inference_iou_threshold: float = Field(default=0.45, ge=0.0, le=1.0)
     yolo_model_path: Path = Path("./weights/yolo26n.pt")

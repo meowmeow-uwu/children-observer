@@ -29,15 +29,61 @@ class FramePreprocessor:
             frame: BGR image (H, W, 3)
 
         Returns:
-            Processed frame (target_size, target_size, 3)
+            Processed frame (target_size, target_size, 3) dtype=float32 nếu normalize,
+            hoặc uint8 nếu không normalize.
         """
         if frame is None:
             raise ValueError("Frame is None")
 
-        # Letterbox resize (giữ tỷ lệ)
+        # Letterbox resize (giữ tỷ lệ, padding xám)
         processed = self.letterbox(frame, self.target_size)
 
+        # Normalize pixel values về [0.0, 1.0]
+        if self.normalize:
+            processed = processed.astype(np.float32) / 255.0
+
         return processed
+
+    def to_tensor(self, frame: np.ndarray) -> np.ndarray:
+        """
+        Chuyển frame về NCHW tensor format cực nhanh bằng cv2.dnn.blobFromImage.
+
+        Hàm này thực hiện đồng thời:
+        - Resize về target_size
+        - Normalize pixel (1/255.0)
+        - Swap Channels (BGR -> RGB nếu cần)
+        - HWC -> NCHW conversion
+
+        Returns:
+            np.ndarray shape (1, 3, target_size, target_size) dtype=float32
+        """
+        if frame is None:
+            raise ValueError("Frame is None")
+
+        # Sử dụng OpenCV DNN blob function (tối ưu C++ SIMD)
+        # scalefactor = 1/255, size = (target_size, target_size), mean = (0,0,0), swapRB = True
+        blob = cv2.dnn.blobFromImage(
+            frame, 
+            scalefactor=1.0/255.0 if self.normalize else 1.0,
+            size=(self.target_size, self.target_size),
+            mean=(0, 0, 0),
+            swapRB=True, # YOLO thường yêu cầu RGB
+            crop=False
+        )
+        return blob
+
+    def batch_process(self, frames: list[np.ndarray]) -> np.ndarray:
+        """
+        Xử lý batch nhiều frame cùng lúc.
+
+        Args:
+            frames: List of BGR images.
+
+        Returns:
+            np.ndarray shape (N, 3, target_size, target_size) dtype=float32
+        """
+        tensors = [self.to_tensor(f) for f in frames]
+        return np.concatenate(tensors, axis=0)
 
     def letterbox(
         self,

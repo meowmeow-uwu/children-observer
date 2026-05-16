@@ -20,6 +20,8 @@ from loguru import logger
 
 from configs.settings import get_settings
 from module_ai_core.datasets.childsun_loader import CHILDSUN_CLASSES
+from module_edge_firmware.inference.engine import create_engine, BaseInferenceEngine
+from module_edge_firmware.ingestion.preprocessor import FramePreprocessor
 
 
 class DetectionResult:
@@ -99,39 +101,60 @@ class ObjectDetector:
         device: str | None = None,
         conf_threshold: float | None = None,
         iou_threshold: float | None = None,
+        engine_type: str = "yolo", # "yolo", "onnx", "tensorrt", "openvino"
     ):
         settings = get_settings()
         self.model_path = Path(model_path) if model_path else settings.yolo_model_path
         self.device = device or settings.inference_device
         self.conf_threshold = conf_threshold or settings.inference_conf_threshold
         self.iou_threshold = iou_threshold or settings.inference_iou_threshold
+        self.engine_type = engine_type
         self.classes = CHILDSUN_CLASSES
 
         self._model = None
+        self._engine: BaseInferenceEngine | None = None
+        self._preprocessor = FramePreprocessor(normalize=True)
         self._is_loaded = False
 
     def load(self) -> None:
-        """Load YOLO26 model vào memory."""
+        """Load model vào memory sử dụng engine tương ứng."""
         try:
-            from ultralytics import YOLO
-
-            if self.model_path.exists():
-                self._model = YOLO(str(self.model_path))
-                logger.info(f"Loaded YOLO model from: {self.model_path}")
+            if self.engine_type == "yolo":
+                from ultralytics import YOLO
+                if self.model_path.exists() and self.model_path.suffix == ".pt":
+                    self._model = YOLO(str(self.model_path))
+                    logger.info(f"Loaded YOLO .pt model: {self.model_path}")
+                else:
+                    logger.warning(f"Weights not found or invalid: {self.model_path}. Using yolo26n.pt")
+                    self._model = YOLO("yolo26n.pt")
+                self._model.to(self.device)
             else:
-                # Load pretrained YOLO26n nếu chưa có weights custom
-                logger.warning(
-                    f"Custom weights not found: {self.model_path}. "
-                    "Loading pretrained YOLO26n..."
-                )
-                self._model = YOLO("yolo26n.pt")
+                # Sử dụng optimized engine (TensorRT/OpenVINO/ONNX)
+                self._engine = create_engine(self.engine_type)
+                # Tự động tìm file engine phù hợp
+                ext_map = {"tensorrt": ".engine", "openvino": ".xml", "onnx": ".onnx"}
+                target_ext = ext_map.get(self.engine_type, ".onnx")
+                optimized_path = self.model_path.with_suffix(target_ext)
 
-            self._model.to(self.device)
+                if not optimized_path.exists() and self.engine_type == "tensorrt":
+                    # Tự động build engine từ ONNX nếu chưa có
+                    onnx_path = self.model_path.with_suffix(".onnx")
+                    if onnx_path.exists():
+                        logger.info(f"Building TensorRT engine from ONNX...")
+                        self._engine.load(onnx_path)
+                    else:
+                        raise FileNotFoundError(f"Cần file .onnx để build TensorRT engine: {onnx_path}")
+                else:
+                    self._engine.load(optimized_path)
+
+                # Warmup
+                self._engine.warmup()
+
             self._is_loaded = True
-            logger.info(f"ObjectDetector ready | device={self.device}")
+            logger.info(f"ObjectDetector ready | engine={self.engine_type} | device={self.device}")
 
         except Exception as e:
-            logger.error(f"Failed to load YOLO model: {e}")
+            logger.error(f"Failed to load ObjectDetector: {e}")
             raise
 
     def predict(self, frame: np.ndarray, verbose: bool = False) -> DetectionResult:
@@ -141,41 +164,113 @@ class ObjectDetector:
         Args:
             frame: np.ndarray (H, W, 3) BGR image.
             verbose: In chi tiết inference.
-
-        Returns:
-            DetectionResult chứa boxes, scores, class_ids.
         """
         if not self._is_loaded:
             self.load()
 
-        results = self._model.predict(
-            source=frame,
-            conf=self.conf_threshold,
-            iou=self.iou_threshold,
-            verbose=verbose,
-            device=self.device,
+        if self.engine_type == "yolo":
+            results = self._model.predict(
+                source=frame,
+                conf=self.conf_threshold,
+                iou=self.iou_threshold,
+                verbose=verbose,
+                device=self.device,
+            )
+            result = results[0]
+            boxes = result.boxes
+            if len(boxes) == 0:
+                return self._empty_result()
+            
+            return DetectionResult(
+                boxes=boxes.xyxy.cpu().numpy(),
+                scores=boxes.conf.cpu().numpy(),
+                class_ids=boxes.cls.cpu().numpy().astype(int),
+                class_names=[self._model.names.get(int(c), f"class_{int(c)}") for c in boxes.cls.cpu().numpy()],
+            )
+        else:
+            # Optimized engine inference
+            input_tensor = self._preprocessor.to_tensor(frame)
+            outputs = self._engine.predict(input_tensor)
+            
+            # Sử dụng bộ giải mã NumPy tối ưu để xử lý output từ engine
+            return self._parse_engine_output(outputs, frame.shape)
+
+    def _empty_result(self) -> DetectionResult:
+        return DetectionResult(
+            boxes=np.zeros((0, 4)),
+            scores=np.zeros(0),
+            class_ids=np.zeros(0, dtype=int),
+            class_names=[],
         )
 
-        # Parse results
-        result = results[0]
-        boxes = result.boxes
+    def _parse_engine_output(self, outputs: list[np.ndarray], orig_shape: tuple) -> DetectionResult:
+        """
+        Decode output từ YOLOv8/v11 (TensorRT/OpenVINO/ONNX).
+        Giả định format: (1, 4 + n_classes, 8400)
+        """
+        output = outputs[0]
+        if output.ndim == 3:
+            output = output[0]  # (84, 8400)
 
-        if len(boxes) == 0:
-            return DetectionResult(
-                boxes=np.zeros((0, 4)),
-                scores=np.zeros(0),
-                class_ids=np.zeros(0, dtype=int),
-                class_names=[],
-            )
+        # Transpose: (84, 8400) -> (8400, 84)
+        output = output.T
+
+        # 1. Lọc theo confidence score
+        # Confidence cao nhất trong các classes
+        scores = np.max(output[:, 4:], axis=1)
+        mask = scores > self.conf_threshold
+        output = output[mask]
+        scores = scores[mask]
+        
+        if len(output) == 0:
+            return self._empty_result()
+
+        # 2. Extract boxes and classes
+        boxes = output[:, :4]  # [cx, cy, w, h]
+        class_ids = np.argmax(output[:, 4:], axis=1)
+
+        # 3. Convert [cx, cy, w, h] -> [x1, y1, x2, y2]
+        # Chú ý: Bounding boxes ở đây đang ở kích thước 640x640
+        x1 = boxes[:, 0] - boxes[:, 2] / 2
+        y1 = boxes[:, 1] - boxes[:, 3] / 2
+        x2 = boxes[:, 0] + boxes[:, 2] / 2
+        y2 = boxes[:, 1] + boxes[:, 3] / 2
+        
+        boxes_xyxy = np.stack([x1, y1, x2, y2], axis=1)
+
+        # 4. Scale back to original image size
+        h_orig, w_orig = orig_shape[:2]
+        scale_info = self._preprocessor.get_scale_info(orig_shape, 640)
+        scale = scale_info["scale"]
+        pad_x = scale_info["pad_x"]
+        pad_y = scale_info["pad_y"]
+
+        boxes_xyxy[:, [0, 2]] = (boxes_xyxy[:, [0, 2]] - pad_x) / scale
+        boxes_xyxy[:, [1, 3]] = (boxes_xyxy[:, [1, 3]] - pad_y) / scale
+
+        # 5. Non-Maximum Suppression (NMS)
+        # Sử dụng cv2.dnn.NMSBoxes cho tốc độ cao
+        indices = cv2.dnn.NMSBoxes(
+            bboxes=boxes_xyxy.tolist(),
+            scores=scores.tolist(),
+            score_threshold=self.conf_threshold,
+            nms_threshold=self.iou_threshold
+        )
+
+        if len(indices) == 0:
+            return self._empty_result()
+        
+        # indices có thể là list hoặc numpy array tùy version OpenCV
+        if isinstance(indices, np.ndarray):
+            indices = indices.flatten()
+        else:
+            indices = [i[0] if isinstance(i, (list, np.ndarray)) else i for i in indices]
 
         return DetectionResult(
-            boxes=boxes.xyxy.cpu().numpy(),
-            scores=boxes.conf.cpu().numpy(),
-            class_ids=boxes.cls.cpu().numpy().astype(int),
-            class_names=[
-                self._model.names.get(int(c), f"class_{int(c)}")
-                for c in boxes.cls.cpu().numpy()
-            ],
+            boxes=boxes_xyxy[indices],
+            scores=scores[indices],
+            class_ids=class_ids[indices],
+            class_names=[self.classes[i] if i < len(self.classes) else f"class_{i}" for i in class_ids[indices]],
         )
 
     def train(
