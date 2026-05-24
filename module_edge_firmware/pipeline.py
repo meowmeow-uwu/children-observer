@@ -26,6 +26,8 @@ from module_edge_firmware.analysis.risk_assessor import RiskAssessor
 from module_edge_firmware.buffer.circular_buffer import CircularBuffer
 from module_edge_firmware.buffer.storage_manager import StorageManager
 from module_edge_firmware.alert.alert_manager import AlertManager
+from module_edge_firmware.feedback_accuracy import AccuracyFeedbackTracker
+from module_edge_firmware.mobile_gateway import MobileGateway
 
 
 class EdgePipeline:
@@ -54,6 +56,15 @@ class EdgePipeline:
             min_free_gb=1.0
         )
         self.alert_manager = AlertManager(buffer=self.buffer)
+        self.feedback_tracker = AccuracyFeedbackTracker()
+        self.mobile_gateway: MobileGateway | None = None
+        if self.settings.mobile_gateway_enabled:
+            self.mobile_gateway = MobileGateway(
+                host=self.settings.mobile_gateway_host,
+                port=self.settings.mobile_gateway_port,
+                request_handler=self._handle_mobile_message,
+            )
+        self.alert_manager.on_alert(self._on_alert_created)
 
         self._running = False
         self._health_thread: threading.Thread | None = None
@@ -69,6 +80,7 @@ class EdgePipeline:
         # Load AI models
         logger.info("Loading AI models...")
         self.ai_runner.load_all()
+        self._maybe_enable_mock_ai()
 
         # Warmup models to stabilize latency
         logger.info("Warming up models...")
@@ -76,6 +88,9 @@ class EdgePipeline:
         for _ in range(5):
             self.ai_runner.analyze_frame(dummy_frame)
         logger.info("Warmup completed.")
+
+        if self.mobile_gateway:
+            self.mobile_gateway.start()
 
         # Start RTSP capture
         self.capture.start()
@@ -99,8 +114,11 @@ class EdgePipeline:
         """Dừng pipeline."""
         logger.info("Stopping pipeline...")
         self._running = False
+        if self.mobile_gateway:
+            self.mobile_gateway.stop()
         self.capture.stop()
         self.ai_runner.shutdown()
+        self.buffer.shutdown()
         logger.info(f"Pipeline stopped. Stats: {self._stats}")
 
     def _process_loop(self) -> None:
@@ -209,3 +227,96 @@ class EdgePipeline:
         """Cập nhật ROI zones từ Mobile App."""
         self.risk_assessor.roi_checker.update_zones(zones_json)
         logger.info(f"ROI updated: {len(zones_json)} zones")
+
+    def _maybe_enable_mock_ai(self) -> None:
+        """Use mock inference only when explicitly enabled for local edge testing."""
+        active_count = getattr(self.ai_runner, "active_task_count", 0)
+        if active_count > 0:
+            logger.info(f"AI model integration ready: {self.ai_runner.active_tasks}")
+            return
+
+        logger.warning("No trained AI model loaded from registry.")
+        if not self.settings.edge_use_mock_ai_when_no_model:
+            logger.warning("EDGE_USE_MOCK_AI_WHEN_NO_MODEL=false; pipeline will run without AI alerts.")
+            return
+
+        from module_edge_firmware.inference.mock_ai_service import MockAIService
+
+        self.ai_runner.shutdown()
+        self.ai_runner = MockAIService()
+        self.ai_runner.load_all()
+        logger.warning("MockAIService enabled for local integration testing.")
+
+    def _on_alert_created(self, alert) -> None:
+        """Register predictions and push alert events to connected mobile clients."""
+        self.feedback_tracker.register_alert(alert)
+        if self.mobile_gateway:
+            self.mobile_gateway.broadcast("alert", alert.to_dict())
+
+    def _handle_mobile_message(self, message: dict) -> dict:
+        """Handle one JSON command from mobile."""
+        msg_type = message.get("type")
+
+        if msg_type == "ping":
+            return {"ok": True, "type": "pong"}
+
+        if msg_type == "status":
+            return {"ok": True, "type": "status", "payload": self._status_payload()}
+
+        if msg_type == "get_alerts":
+            limit = int(message.get("limit", 50))
+            return {
+                "ok": True,
+                "type": "alerts",
+                "payload": self.alert_manager.get_history(limit=limit),
+            }
+
+        if msg_type == "update_roi":
+            zones = message.get("zones")
+            if not isinstance(zones, list):
+                return {"ok": False, "error": "zones_must_be_list"}
+            self.update_roi(zones)
+            return {
+                "ok": True,
+                "type": "roi_updated",
+                "payload": {"zone_count": self.risk_assessor.roi_checker.zone_count},
+            }
+
+        if msg_type == "feedback":
+            alert_id = message.get("alert_id")
+            is_correct = message.get("is_correct")
+            if not alert_id or not isinstance(is_correct, bool):
+                return {"ok": False, "error": "alert_id_and_is_correct_required"}
+            summary = self.feedback_tracker.submit_feedback(
+                alert_id=alert_id,
+                is_correct=is_correct,
+                correct_label=message.get("correct_label"),
+                notes=message.get("notes", ""),
+            )
+            return {"ok": True, "type": "feedback_recorded", "payload": summary}
+
+        return {"ok": False, "error": f"unknown_type: {msg_type}"}
+
+    def _status_payload(self) -> dict:
+        active_tasks = getattr(self.ai_runner, "active_tasks", [])
+        if callable(active_tasks):
+            active_tasks = active_tasks()
+        return {
+            "running": self._running,
+            "stats": self._stats,
+            "models": {
+                "active_tasks": active_tasks,
+                "registry_ready": self.ai_runner.registry.get_ready_tasks()
+                if hasattr(self.ai_runner, "registry")
+                else [],
+            },
+            "roi": {
+                "enabled": self.risk_assessor.roi_checker.has_zones,
+                "zone_count": self.risk_assessor.roi_checker.zone_count,
+            },
+            "feedback": self.feedback_tracker.summary(),
+            "mobile": {
+                "enabled": self.mobile_gateway is not None,
+                "clients": self.mobile_gateway.client_count if self.mobile_gateway else 0,
+            },
+        }

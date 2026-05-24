@@ -255,6 +255,22 @@ class MultiTaskRunner:
     def _run_pose(self, frame: np.ndarray) -> PoseResult:
         return self._pose_estimator.predict(frame)
 
+    @property
+    def active_tasks(self) -> list[str]:
+        """Return model tasks currently loaded for edge inference."""
+        tasks = []
+        if self._det_loaded:
+            tasks.append("roi_detection")
+        if self._pose_loaded:
+            tasks.append("fall_detection")
+        if self._behavior_loaded:
+            tasks.append("violence_detection")
+        return tasks
+
+    @property
+    def active_task_count(self) -> int:
+        return len(self.active_tasks)
+
     def shutdown(self) -> None:
         """Shutdown executor."""
         self._executor.shutdown(wait=True)
