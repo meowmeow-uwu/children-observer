@@ -13,6 +13,7 @@ Features:
 from __future__ import annotations
 
 import time
+import cv2
 from pathlib import Path
 from typing import Any, TYPE_CHECKING
 import numpy as np
@@ -63,7 +64,7 @@ class DetectionResult:
 
     def get_dangerous_objects(self) -> "DetectionResult":
         """Lọc chỉ các vật thể nguy hiểm (không bao gồm 'child')."""
-        dangerous = [c for c in CHILDSUN_CLASSES if c != "child"]
+        dangerous = ["knife", "socket", "scissors"] 
         return self.filter_by_class(dangerous)
 
     def get_children(self) -> "DetectionResult":
@@ -124,12 +125,14 @@ class ObjectDetector:
         try:
             if self.engine_type == "yolo":
                 from ultralytics import YOLO
-                if self.model_path.exists() and self.model_path.suffix == ".pt":
-                    self._model = YOLO(str(self.model_path))
-                    logger.info(f"Loaded YOLO .pt model: {self.model_path}")
-                else:
-                    logger.warning(f"Weights not found or invalid: {self.model_path}. Using yolo26n.pt")
-                    self._model = YOLO("yolo26n.pt")
+                model_str = str(self.model_path)
+                # Cho phép Ultralytics tự động tải file (vd: yolo26s.pt) từ mạng
+                if not self.model_path.exists() and "yolo" not in model_str.lower():
+                    logger.warning(f"Weights not found or invalid: {self.model_path}. Fallback to yolo26n.pt")
+                    model_str = "yolo26n.pt"
+                    
+                self._model = YOLO(model_str)
+                logger.info(f"Loaded YOLO .pt model: {model_str}")
                 self._model.to(self.device)
             else:
                 # Sử dụng optimized engine (TensorRT/OpenVINO/ONNX)
@@ -248,65 +251,95 @@ class ObjectDetector:
     def _parse_engine_output(self, outputs: list[np.ndarray], orig_shape: tuple, inference_time_ms: float) -> DetectionResult:
         """
         Decode output từ YOLOv8/v11 (TensorRT/OpenVINO/ONNX).
-        Giả định format: (1, 4 + n_classes, 8400)
+        Hỗ trợ cả format cũ (1, 84, 8400) và YOLOv10/NMS format (1, 300, 6).
         """
         output = outputs[0]
         if output.ndim == 3:
-            output = output[0]  # (84, 8400)
+            output = output[0]  # (84, 8400) hoặc (300, 6)
 
-        # Transpose: (84, 8400) -> (8400, 84)
-        output = output.T
-
-        # 1. Lọc theo confidence score
-        # Confidence cao nhất trong các classes
-        scores = np.max(output[:, 4:], axis=1)
-        mask = scores > self.conf_threshold
-        output = output[mask]
-        scores = scores[mask]
-        
-        if len(output) == 0:
-            return self._empty_result(inference_time_ms)
-
-        # 2. Extract boxes and classes
-        boxes = output[:, :4]  # [cx, cy, w, h]
-        class_ids = np.argmax(output[:, 4:], axis=1)
-
-        # 3. Convert [cx, cy, w, h] -> [x1, y1, x2, y2]
-        # Chú ý: Bounding boxes ở đây đang ở kích thước 640x640
-        x1 = boxes[:, 0] - boxes[:, 2] / 2
-        y1 = boxes[:, 1] - boxes[:, 3] / 2
-        x2 = boxes[:, 0] + boxes[:, 2] / 2
-        y2 = boxes[:, 1] + boxes[:, 3] / 2
-        
-        boxes_xyxy = np.stack([x1, y1, x2, y2], axis=1)
-
-        # 4. Scale back to original image size
         h_orig, w_orig = orig_shape[:2]
         scale_info = self._preprocessor.get_scale_info(orig_shape, 640)
         scale = scale_info["scale"]
         pad_x = scale_info["pad_x"]
         pad_y = scale_info["pad_y"]
 
-        boxes_xyxy[:, [0, 2]] = (boxes_xyxy[:, [0, 2]] - pad_x) / scale
-        boxes_xyxy[:, [1, 3]] = (boxes_xyxy[:, [1, 3]] - pad_y) / scale
-
-        # 5. Non-Maximum Suppression (NMS)
-        # Sử dụng cv2.dnn.NMSBoxes cho tốc độ cao
-        indices = cv2.dnn.NMSBoxes(
-            bboxes=boxes_xyxy.tolist(),
-            scores=scores.tolist(),
-            score_threshold=self.conf_threshold,
-            nms_threshold=self.iou_threshold
-        )
-
-        if len(indices) == 0:
-            return self._empty_result(inference_time_ms)
-        
-        # indices có thể là list hoặc numpy array tùy version OpenCV
-        if isinstance(indices, np.ndarray):
-            indices = indices.flatten()
+        # Kéo dài cấu trúc YOLOv10 / End-to-End ONNX format [num_boxes, 6] -> [x1, y1, x2, y2, score, class_id]
+        if output.shape[1] == 6:
+            boxes_xyxy = output[:, :4]
+            scores = output[:, 4]
+            class_ids = output[:, 5].astype(int)
+            
+            mask = scores > self.conf_threshold
+            boxes_xyxy = boxes_xyxy[mask]
+            scores = scores[mask]
+            class_ids = class_ids[mask]
+            
+            if len(boxes_xyxy) == 0:
+                return self._empty_result(inference_time_ms)
+                
+            boxes_xyxy[:, [0, 2]] = (boxes_xyxy[:, [0, 2]] - pad_x) / scale
+            boxes_xyxy[:, [1, 3]] = (boxes_xyxy[:, [1, 3]] - pad_y) / scale
+            
+            # Khử nhiễu các hộp chồng lấn nhau (NMS)
+            indices = cv2.dnn.NMSBoxes(
+                bboxes=boxes_xyxy.tolist(),
+                scores=scores.tolist(),
+                score_threshold=self.conf_threshold,
+                nms_threshold=self.iou_threshold
+            )
+            
+            if len(indices) == 0:
+                return self._empty_result(inference_time_ms)
+                
+            if isinstance(indices, np.ndarray):
+                indices = indices.flatten()
+            else:
+                indices = [i[0] if isinstance(i, (list, np.ndarray)) else i for i in indices]
+            
         else:
-            indices = [i[0] if isinstance(i, (list, np.ndarray)) else i for i in indices]
+            # Format cũ của YOLOv8: (84, 8400)
+            if output.shape[0] < output.shape[1]:
+                output = output.T
+
+            # 1. Lọc theo confidence score
+            scores = np.max(output[:, 4:], axis=1)
+            mask = scores > self.conf_threshold
+            output = output[mask]
+            scores = scores[mask]
+            
+            if len(output) == 0:
+                return self._empty_result(inference_time_ms)
+
+            # 2. Extract boxes and classes
+            boxes = output[:, :4]  # [cx, cy, w, h]
+            class_ids = np.argmax(output[:, 4:], axis=1)
+
+            # 3. Convert [cx, cy, w, h] -> [x1, y1, x2, y2]
+            x1 = boxes[:, 0] - boxes[:, 2] / 2
+            y1 = boxes[:, 1] - boxes[:, 3] / 2
+            x2 = boxes[:, 0] + boxes[:, 2] / 2
+            y2 = boxes[:, 1] + boxes[:, 3] / 2
+            
+            boxes_xyxy = np.stack([x1, y1, x2, y2], axis=1)
+
+            boxes_xyxy[:, [0, 2]] = (boxes_xyxy[:, [0, 2]] - pad_x) / scale
+            boxes_xyxy[:, [1, 3]] = (boxes_xyxy[:, [1, 3]] - pad_y) / scale
+
+            # 5. Non-Maximum Suppression (NMS)
+            indices = cv2.dnn.NMSBoxes(
+                bboxes=boxes_xyxy.tolist(),
+                scores=scores.tolist(),
+                score_threshold=self.conf_threshold,
+                nms_threshold=self.iou_threshold
+            )
+
+            if len(indices) == 0:
+                return self._empty_result(inference_time_ms)
+            
+            if isinstance(indices, np.ndarray):
+                indices = indices.flatten()
+            else:
+                indices = [i[0] if isinstance(i, (list, np.ndarray)) else i for i in indices]
 
         return DetectionResult(
             boxes=boxes_xyxy[indices],

@@ -22,21 +22,35 @@ def main():
     detector.load()
     print("✅ Load mô hình thành công!")
 
-    # Khởi tạo Camera (0 thường là webcam mặc định của laptop)
-    cap = cv2.VideoCapture(0)
-    if not cap.isOpened():
-        print("❌ Không thể mở được Camera.")
-        return
-
-    print("🎥 Bắt đầu Inference Camera... Bấm 'q' để thoát.")
+    import sys
+    use_image = False
+    
+    if len(sys.argv) > 1:
+        use_image = True
+        img_path = sys.argv[1]
+        print(f"📷 Đang đọc ảnh từ: {img_path}")
+        frame_input = cv2.imread(img_path)
+        if frame_input is None:
+            print(f"❌ Không thể đọc ảnh!")
+            return
+    else:
+        # Khởi tạo Camera (0 thường là webcam mặc định của laptop)
+        cap = cv2.VideoCapture(0)
+        if not cap.isOpened():
+            print("❌ Không thể mở được Camera.")
+            return
+        print("🎥 Bắt đầu Inference Camera... Bấm 'q' để thoát.")
     
     # Khởi tạo thông số đếm FPS
     prev_time = time.time()
     
     while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
+        if use_image:
+            frame = frame_input.copy()
+        else:
+            ret, frame = cap.read()
+            if not ret:
+                break
             
         # 1. Gọi mô hình phân tích
         results = detector.predict(frame)
@@ -69,11 +83,17 @@ def main():
         # 4. Hiển thị lên màn hình
         cv2.imshow("ROI Detection Test", frame)
         
-        # Bấm phím 'q' để thoát
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        if use_image:
+            print("\n📸 Nhấn phím bất kỳ trên cửa sổ ảnh để thoát...")
+            cv2.waitKey(0)
             break
+        else:
+            # Bấm phím 'q' để thoát
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
 
-    cap.release()
+    if not use_image:
+        cap.release()
     cv2.destroyAllWindows()
 
 if __name__ == "__main__":

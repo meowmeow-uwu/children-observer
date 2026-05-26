@@ -22,7 +22,8 @@ from module_ai_core.models.object_detector import ObjectDetector
 
 def main():
     parser = argparse.ArgumentParser(description="Train ROI Object Detection")
-    parser.add_argument("--epochs", type=int, default=100)
+    parser.add_argument("--model", type=str, default="yolo26n.pt", help="Base model (vd: yolo26s.pt, yolo26m.pt)")
+    parser.add_argument("--epochs", type=int, default=50)
     parser.add_argument("--batch", type=int, default=16)
     parser.add_argument("--img-size", type=int, default=640)
     parser.add_argument("--data-yaml", type=str, default="./data/childsun/data.yaml")
@@ -43,6 +44,9 @@ def main():
 
     # Train
     detector = ObjectDetector(device=settings.inference_device)
+    # Ghi đè file model gốc để bắt đầu train từ model lớn hơn
+    detector.model_path = Path(args.model)
+    
     results = detector.train(
         data_yaml=args.data_yaml,
         epochs=args.epochs,
