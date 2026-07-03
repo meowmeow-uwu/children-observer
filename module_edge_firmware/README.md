@@ -36,3 +36,22 @@ pipeline.start()
 - `ROI_CONFIG_PATH`: Đường dẫn file cấu hình vùng an toàn.
 - `ALERT_COOLDOWN_SECONDS`: Thời gian nghỉ giữa 2 cảnh báo để tránh spam.
 - `ALERT_BUFFER_SECONDS`: Độ dài video lưu trữ trong bộ đệm.
+- `MOBILE_GATEWAY_HOST` / `MOBILE_GATEWAY_PORT`: TCP gateway để mobile gửi ROI, nhận alert và gửi feedback.
+
+## 📡 Mobile Gateway Protocol
+
+Gateway dùng newline-delimited JSON qua TCP. Mặc định lắng nghe tại `0.0.0.0:8765`.
+
+Mobile gửi:
+```json
+{"type":"ping"}
+{"type":"status"}
+{"type":"get_alerts","limit":20}
+{"type":"update_roi","zones":[{"zone_id":"kitchen","label":"danger","vertices":[[0.1,0.1],[0.4,0.1],[0.4,0.4],[0.1,0.4]]}]}
+{"type":"feedback","alert_id":"alert_000001","is_correct":false,"correct_label":"normal","notes":"false alarm"}
+```
+
+Edge broadcast alert tới các client đang kết nối:
+```json
+{"type":"alert","ok":true,"payload":{"alert_id":"alert_000001","risk_level":"high","reasons":["..."]}}
+```
