@@ -6,6 +6,8 @@ Main loop: Capture → Preprocess → AI Inference → Risk Assessment → Alert
 """
 
 from __future__ import annotations
+import asyncio
+import cv2
 
 import signal
 import time
@@ -28,6 +30,9 @@ from module_edge_firmware.buffer.storage_manager import StorageManager
 from module_edge_firmware.alert.alert_manager import AlertManager
 from module_edge_firmware.feedback_accuracy import AccuracyFeedbackTracker
 from module_edge_firmware.mobile_gateway import MobileGateway
+
+from module_edge_firmware.webrtc.video_track import AIVideoTrack
+from module_edge_firmware.webrtc.client import EdgeWebRTCClient
 
 
 class EdgePipeline:
@@ -320,3 +325,42 @@ class EdgePipeline:
                 "clients": self.mobile_gateway.client_count if self.mobile_gateway else 0,
             },
         }
+
+async def main():
+    # 1. Khởi tạo rãnh Video WebRTC
+    ai_video_track = AIVideoTrack()
+
+    # 2. Khởi tạo WebRTC Client (Thay thế IP bằng IP thực tế của Backend Server)
+    # Ví dụ backend chạy trên IP 192.168.1.100 port 8000
+    SIGNALING_URL = "ws://localhost:8007/ws/signaling"
+    CAMERA_ID = "camera_living_room_01"
+    
+    webrtc_client = EdgeWebRTCClient(SIGNALING_URL, CAMERA_ID, ai_video_track)
+
+    # Chạy Signaling Client ở chế độ nền (background task)
+    asyncio.create_task(webrtc_client.connect())
+
+    # 3. Luồng xử lý AI chính (Mô phỏng vòng lặp pipeline của bạn)
+    #cap = cv2.VideoCapture("rtsp://your_camera_ip/stream")
+    cap = cv2.VideoCapture("test_video.mp4")
+    
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            await asyncio.sleep(0.1)
+            continue
+            
+        # -- ĐOẠN XỬ LÝ AI CỦA BẠN SẼ NẰM Ở ĐÂY --
+        # detections = inference_engine.run(frame)
+        # frame_with_boxes = draw_boxes(frame, detections)
+        # ----------------------------------------
+        
+        # 4. Bơm khung hình đã vẽ hộp nhận diện vào WebRTC Track
+        # Trong ví dụ này ta ném luôn frame gốc vào
+        ai_video_track.update_frame(frame)
+        
+        # Nhường CPU cho các async task khác (WebRTC) chạy
+        await asyncio.sleep(0.01)
+
+if __name__ == "__main__":
+    asyncio.run(main())
