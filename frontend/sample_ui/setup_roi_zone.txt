@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SafeKid Monitor - Thiết lập vùng nguy hiểm</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "error-container": "#ffdad6",
+                "secondary-fixed-dim": "#adc6ff",
+                "surface-container": "#e5eeff",
+                "primary-fixed": "#dce1ff",
+                "on-secondary-fixed": "#001a42",
+                "secondary-fixed": "#d8e2ff",
+                "surface-bright": "#f8f9ff",
+                "tertiary-fixed": "#ffdbcb",
+                "surface-tint": "#4059aa",
+                "on-error": "#ffffff",
+                "primary-fixed-dim": "#b6c4ff",
+                "on-error-container": "#93000a",
+                "on-background": "#0b1c30",
+                "on-primary": "#ffffff",
+                "background": "#f8f9ff",
+                "on-secondary": "#ffffff",
+                "outline": "#757682",
+                "error": "#ba1a1a",
+                "outline-variant": "#c5c5d3",
+                "surface-container-lowest": "#ffffff",
+                "on-primary-container": "#90a8ff",
+                "tertiary": "#4b1c00",
+                "inverse-surface": "#213145",
+                "secondary": "#0058be",
+                "on-tertiary-fixed": "#341100",
+                "on-surface": "#0b1c30",
+                "on-secondary-container": "#fefcff",
+                "surface-dim": "#cbdbf5",
+                "tertiary-container": "#6e2c00",
+                "surface-container-high": "#dce9ff",
+                "primary": "#00236f",
+                "tertiary-fixed-dim": "#ffb691",
+                "secondary-container": "#2170e4",
+                "surface-container-low": "#eff4ff",
+                "on-tertiary": "#ffffff",
+                "inverse-primary": "#b6c4ff",
+                "primary-container": "#1e3a8a",
+                "on-tertiary-container": "#f39461",
+                "surface-variant": "#d3e4fe",
+                "surface": "#f8f9ff",
+                "on-surface-variant": "#444651",
+                "on-secondary-fixed-variant": "#004395",
+                "on-primary-fixed": "#00164e",
+                "on-primary-fixed-variant": "#264191",
+                "on-tertiary-fixed-variant": "#773205",
+                "surface-container-highest": "#d3e4fe",
+                "inverse-on-surface": "#eaf1ff"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "gutter": "16px",
+                "container-margin": "24px",
+                "xl": "32px",
+                "md": "16px",
+                "base": "4px",
+                "2xl": "48px",
+                "xs": "4px",
+                "lg": "24px",
+                "sm": "8px"
+        },
+        "fontFamily": {
+                "headline-lg": [
+                        "Be Vietnam Pro"
+                ],
+                "display-lg": [
+                        "Be Vietnam Pro"
+                ],
+                "headline-sm": [
+                        "Be Vietnam Pro"
+                ],
+                "body-sm": [
+                        "Inter"
+                ],
+                "label-sm": [
+                        "Inter"
+                ],
+                "headline-lg-mobile": [
+                        "Be Vietnam Pro"
+                ],
+                "body-lg": [
+                        "Inter"
+                ],
+                "label-md": [
+                        "Inter"
+                ],
+                "headline-md": [
+                        "Be Vietnam Pro"
+                ],
+                "body-md": [
+                        "Inter"
+                ]
+        },
+        "fontSize": {
+                "headline-lg": [
+                        "28px",
+                        {
+                                "lineHeight": "36px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "display-lg": [
+                        "36px",
+                        {
+                                "lineHeight": "44px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "headline-sm": [
+                        "18px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-sm": [
+                        "12px",
+                        {
+                                "lineHeight": "18px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "label-sm": [
+                        "12px",
+                        {
+                                "lineHeight": "16px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-lg": [
+                        "16px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "label-md": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "fontWeight": "500"
+                        }
+                ],
+                "headline-md": [
+                        "22px",
+                        {
+                                "lineHeight": "30px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-md": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "fontWeight": "400"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+    .draw-cursor {
+        cursor: crosshair;
+    }
+    .drag-point {
+        cursor: move;
+    }
+</style>
+</head>
+<body class="bg-surface text-on-surface font-body-md antialiased min-h-screen">
+<!-- SideNavBar -->
+<nav class="hidden md:flex flex-col bg-primary dark:bg-on-primary-fixed fixed left-0 top-0 h-screen w-[280px] shadow-md z-40">
+<div class="flex flex-col gap-2 py-6 h-full">
+<div class="px-6 mb-6">
+<div class="flex items-center gap-3">
+<img alt="SafeKid Monitor Logo" class="w-8 h-8 rounded-lg bg-white object-contain" data-alt="A clean, modern logo for a child safety monitoring app named SafeKid Monitor. The logo should feature a stylized, soft geometric shape representing protection, like a shield or an eye, using navy blue and white colors. The style is flat, professional, and trustworthy, suitable for a SaaS product dashboard." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAB3UMvgSZZlp8SXhOIga0zwxQMKE9_mn_nG2XN2C3LyoQVs6rapmx5E7b8Pz9Aga_UheEvF5s4AU1kSCjXKYZMGlKPLkoY8kN4DDZL6XQY0f51XmaxHmPSpk-9pMNdwSvHZ64jf0h0svGTWR8P-zMFrVSDsUC1eHOeQBk8QmZzjKTFTNrFD-fYz8ye9bZAiHv7gFgVZf2w-f-p_E_U6EML01_3q7vnthpdwzJ7XlskOct23jJF_0JhI9kR99cr-4CDCDP_uyiKbq84"/>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-white leading-tight">SafeKid Monitor</h1>
+<p class="text-secondary-fixed dark:text-primary-fixed-dim font-label-sm text-label-sm">Giám sát an toàn</p>
+</div>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto px-2">
+<a class="text-on-primary-container hover:bg-on-primary-fixed-variant rounded-lg mx-2 px-4 py-3 flex items-center gap-3 transition-colors mb-2" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-md text-label-md">Tổng quan</span>
+</a>
+<a class="text-on-primary-container hover:bg-on-primary-fixed-variant rounded-lg mx-2 px-4 py-3 flex items-center gap-3 transition-colors mb-2" href="#">
+<span class="material-symbols-outlined" data-icon="videocam">videocam</span>
+<span class="font-label-md text-label-md">Camera trực tiếp</span>
+</a>
+<a class="bg-secondary-container text-on-secondary-container rounded-lg mx-2 px-4 py-3 flex items-center gap-3 mb-2 scale-95 transition-transform shadow-sm" href="#">
+<span class="material-symbols-outlined" data-icon="detector_status" style="font-variation-settings: 'FILL' 1;">detector_status</span>
+<span class="font-label-md text-label-md font-bold">Vùng nguy hiểm ROI</span>
+</a>
+<a class="text-on-primary-container hover:bg-on-primary-fixed-variant rounded-lg mx-2 px-4 py-3 flex items-center gap-3 transition-colors mb-2" href="#">
+<span class="material-symbols-outlined" data-icon="notifications_active">notifications_active</span>
+<span class="font-label-md text-label-md">Cảnh báo</span>
+</a>
+<a class="text-on-primary-container hover:bg-on-primary-fixed-variant rounded-lg mx-2 px-4 py-3 flex items-center gap-3 transition-colors mb-2" href="#">
+<span class="material-symbols-outlined" data-icon="router">router</span>
+<span class="font-label-md text-label-md">Thiết bị</span>
+</a>
+<a class="text-on-primary-container hover:bg-on-primary-fixed-variant rounded-lg mx-2 px-4 py-3 flex items-center gap-3 transition-colors mb-2" href="#">
+<span class="material-symbols-outlined" data-icon="child_care">child_care</span>
+<span class="font-label-md text-label-md">Hồ sơ trẻ em</span>
+</a>
+</div>
+<div class="px-2 mt-auto">
+<a class="text-on-primary-container hover:bg-on-primary-fixed-variant rounded-lg mx-2 px-4 py-3 flex items-center gap-3 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Cài đặt</span>
+</a>
+</div>
+</div>
+</nav>
+<!-- TopNavBar -->
+<header class="hidden md:flex justify-between items-center w-full px-6 py-3 ml-[280px] max-w-[calc(100%-280px)] bg-surface dark:bg-surface-dim shadow-sm border-b border-outline-variant dark:border-outline fixed top-0 z-30 h-[72px]">
+<div class="flex items-center">
+<h2 class="font-headline-sm text-headline-sm text-primary dark:text-primary-fixed font-bold tracking-tight">Thiết lập Vùng nguy hiểm</h2>
+</div>
+<div class="flex items-center gap-4">
+<div class="bg-surface-container-low px-4 py-2 rounded-full border border-outline-variant flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Hệ thống đang hoạt động</span>
+</div>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary-container rounded-full">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary-container rounded-full">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="w-10 h-10 rounded-full border-2 border-surface-variant overflow-hidden cursor-pointer ml-2">
+<img alt="User profile" class="w-full h-full object-cover" data-alt="A portrait photo of a smiling adult user, intended for a profile picture in a SaaS application. The lighting is soft and professional. The background is a blurred, neutral office or home setting. The image should convey warmth and reliability, consistent with a family safety monitoring app." src="https://lh3.googleusercontent.com/aida-public/AB6AXuACFElJUMOPUlunEI2QSLqeG661vcZ6-xvUkBe0s16_RkI-buOUdIZ8pf3Pgj33xVN3bwz2oA4ZEYY3V8sy9NiuP0Wu8-TMXV8sAklY5UbROEIM7oCDsfdBEh-jwyit7ynDrvVhppdDWWUUmXE8Brj30E3t7lh6dL8nm7rEKg1KeD7RUl9Un3_aSdJqoeq0c9-BwTNEzpG5HTlgctjlM0ZgWVwVhg8RNGXz-lu0BBBrYElI7EIY-NU8kMlyItlWK7A7CJ4_hw5H8B5d"/>
+</div>
+</div>
+</header>
+<!-- BottomNavBar (Mobile) -->
+<nav class="md:hidden flex justify-around items-center px-4 py-3 bg-surface-container-lowest dark:bg-on-surface fixed bottom-0 left-0 w-full z-50 rounded-t-xl shadow-[0_-4px_20px_rgba(30,58,138,0.05)] border-t border-outline-variant">
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant scale-90 duration-150 transition-all active:bg-surface-container-high w-16 h-14 rounded-lg" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="dashboard">dashboard</span>
+<span class="font-label-sm-mobile text-label-sm-mobile">Tổng quan</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant scale-90 duration-150 transition-all active:bg-surface-container-high w-16 h-14 rounded-lg" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="videocam">videocam</span>
+<span class="font-label-sm-mobile text-label-sm-mobile">Camera</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-4 py-1 scale-90 duration-150 transition-all w-20 h-14 shadow-sm" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="detector_status" style="font-variation-settings: 'FILL' 1;">detector_status</span>
+<span class="font-label-sm-mobile text-label-sm-mobile font-bold truncate w-full text-center">Vùng ROI</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant scale-90 duration-150 transition-all active:bg-surface-container-high w-16 h-14 rounded-lg" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="warning">warning</span>
+<span class="font-label-sm-mobile text-label-sm-mobile">Cảnh báo</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant scale-90 duration-150 transition-all active:bg-surface-container-high w-16 h-14 rounded-lg" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="settings">settings</span>
+<span class="font-label-sm-mobile text-label-sm-mobile">Cài đặt</span>
+</a>
+</nav>
+<!-- Main Content -->
+<main class="pt-[72px] md:ml-[280px] pb-24 md:pb-8 min-h-screen bg-background">
+<div class="max-w-[1440px] mx-auto p-container-margin md:grid md:grid-cols-12 md:gap-gutter">
+<!-- Mobile Header (Hidden on Desktop) -->
+<div class="md:hidden col-span-4 mb-6">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold">Thiết lập vùng</h2>
+<p class="text-on-surface-variant mt-1 text-sm">Vẽ khu vực cần giám sát an toàn cho bé.</p>
+</div>
+<!-- Step Indicator -->
+<div class="col-span-full mb-8">
+<div class="flex items-center justify-between relative max-w-2xl mx-auto md:mx-0">
+<div class="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-surface-variant -z-10 rounded-full"></div>
+<div class="absolute left-0 top-1/2 -translate-y-1/2 w-[60%] h-1 bg-secondary -z-10 rounded-full"></div>
+<div class="flex flex-col items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-secondary text-white flex items-center justify-center font-bold text-sm shadow-md">
+<span class="material-symbols-outlined text-[18px]">check</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface">Chọn camera</span>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-secondary text-white flex items-center justify-center font-bold text-sm shadow-md ring-4 ring-secondary/20">2</div>
+<span class="font-label-sm text-label-sm text-primary font-bold">Vẽ vùng</span>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-surface-variant text-on-surface-variant flex items-center justify-center font-bold text-sm border-2 border-surface">3</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Thiết lập</span>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-surface-variant text-on-surface-variant flex items-center justify-center font-bold text-sm border-2 border-surface">4</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Lưu</span>
+</div>
+</div>
+</div>
+<!-- Drawing Canvas Area -->
+<div class="col-span-12 lg:col-span-8 flex flex-col gap-4">
+<div class="bg-surface-container-lowest rounded-xl shadow-[0_4px_20px_rgba(30,58,138,0.05)] overflow-hidden flex flex-col h-full border border-outline-variant/30">
+<!-- Canvas Header/Tools -->
+<div class="px-6 py-4 border-b border-surface-variant flex flex-wrap gap-4 justify-between items-center bg-surface/50">
+<div class="flex items-center gap-2 text-primary font-medium">
+<span class="material-symbols-outlined">info</span>
+<span class="font-body-md text-sm">Vẽ vùng nguy hiểm trực tiếp trên khung hình để thiết lập cảnh báo.</span>
+</div>
+<div class="flex bg-surface-container-low rounded-lg p-1 border border-outline-variant/50">
+<button aria-label="Vẽ đa giác" class="p-2 rounded-md bg-secondary-container text-on-secondary-container shadow-sm flex items-center justify-center tooltip-trigger group relative">
+<span class="material-symbols-outlined text-[20px]">polyline</span>
+<span class="absolute -top-10 scale-0 transition-all rounded bg-inverse-surface p-2 text-xs text-inverse-on-surface group-hover:scale-100 whitespace-nowrap z-50">Vẽ đa giác</span>
+</button>
+<button aria-label="Vẽ hình chữ nhật" class="p-2 rounded-md text-on-surface-variant hover:bg-surface-variant transition-colors flex items-center justify-center tooltip-trigger group relative">
+<span class="material-symbols-outlined text-[20px]">crop_square</span>
+<span class="absolute -top-10 scale-0 transition-all rounded bg-inverse-surface p-2 text-xs text-inverse-on-surface group-hover:scale-100 whitespace-nowrap z-50">Vẽ hình chữ nhật</span>
+</button>
+<button aria-label="Vẽ đường ranh giới" class="p-2 rounded-md text-on-surface-variant hover:bg-surface-variant transition-colors flex items-center justify-center tooltip-trigger group relative">
+<span class="material-symbols-outlined text-[20px]">show_chart</span>
+<span class="absolute -top-10 scale-0 transition-all rounded bg-inverse-surface p-2 text-xs text-inverse-on-surface group-hover:scale-100 whitespace-nowrap z-50">Vẽ đường ranh giới</span>
+</button>
+<div class="w-px h-6 bg-outline-variant mx-1 self-center"></div>
+<button aria-label="Xóa điểm" class="p-2 rounded-md text-on-surface-variant hover:text-error hover:bg-error-container/50 transition-colors flex items-center justify-center tooltip-trigger group relative">
+<span class="material-symbols-outlined text-[20px]">ink_eraser</span>
+<span class="absolute -top-10 scale-0 transition-all rounded bg-inverse-surface p-2 text-xs text-inverse-on-surface group-hover:scale-100 whitespace-nowrap z-50">Xóa điểm</span>
+</button>
+<button aria-label="Làm lại" class="p-2 rounded-md text-on-surface-variant hover:bg-surface-variant transition-colors flex items-center justify-center tooltip-trigger group relative">
+<span class="material-symbols-outlined text-[20px]">undo</span>
+<span class="absolute -top-10 scale-0 transition-all rounded bg-inverse-surface p-2 text-xs text-inverse-on-surface group-hover:scale-100 whitespace-nowrap z-50">Làm lại</span>
+</button>
+<button aria-label="Hoàn tất vùng" class="p-2 rounded-md text-on-surface-variant hover:bg-surface-variant transition-colors flex items-center justify-center tooltip-trigger group relative">
+<span class="material-symbols-outlined text-[20px]">done</span>
+<span class="absolute -top-10 scale-0 transition-all rounded bg-inverse-surface p-2 text-xs text-inverse-on-surface group-hover:scale-100 whitespace-nowrap z-50">Hoàn tất vùng</span>
+</button>
+</div>
+</div>
+<!-- Canvas Viewer -->
+<div class="relative w-full aspect-video bg-inverse-surface overflow-hidden group draw-cursor">
+<!-- Camera Feed Placeholder -->
+<div class="w-full h-full bg-cover bg-center opacity-80 mix-blend-luminosity grayscale-[20%] group-hover:grayscale-0 transition-all duration-500" data-alt="A static snapshot from a home security camera showing a bright, modern living room with a balcony door open. The lighting is natural daytime. The perspective is slightly elevated, typical of a wall-mounted security camera. The room is tidy, emphasizing a calm domestic environment." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCor5JwI8GAR7KiwNI5r1E7isy9j6J53IcHcvPGQaxEF7HJFK5h7HyLbIVdrWVwXcPzBlIMDzOQAd4gywvw8ULDGhRP49B-aOEdhihjxg7BggI9RIj5THIHTpw6zxenu30NclDzNXa7LwSOabs9BEQV5kAUEyPMGOWFyr2htYicrp-HPEdzX6Gf-pTt_ZhXK7vekHMEY0S28sHbpKTgXR9TqVLp1EyqdMpYDZX546aGDv1b-i7jkvRxzCz3VWkouSBpJDgnnLt30oGo')"></div>
+<!-- Drawing Overlay Simulation -->
+<div class="absolute inset-0 z-10">
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 100 100">
+<!-- Existing ROI Area -->
+<polygon class="animate-pulse pointer-events-none" fill="rgba(255, 87, 34, 0.25)" points="60,30 90,30 95,80 65,85" stroke="#FF5722" stroke-dasharray="2,1" stroke-width="0.5"></polygon>
+<!-- Active Drawing Area -->
+<polygon fill="rgba(239, 68, 68, 0.4)" points="10,60 30,55 35,90 15,95" stroke="#ef4444" stroke-width="0.8"></polygon>
+<!-- Points for Active Drawing -->
+<g class="drag-point">
+<circle cx="10" cy="60" fill="#ffffff" r="1.5" stroke="#ef4444" stroke-width="0.5"></circle>
+</g>
+<g class="drag-point">
+<circle cx="30" cy="55" fill="#ffffff" r="1.5" stroke="#ef4444" stroke-width="0.5"></circle>
+</g>
+<g class="drag-point">
+<circle cx="35" cy="90" fill="#ffffff" r="1.5" stroke="#ef4444" stroke-width="0.5"></circle>
+<text fill="#ffffff" font-family="Inter" font-size="2.5" x="38" y="93">Điểm kéo thả</text>
+</g>
+<g class="drag-point">
+<circle cx="15" cy="95" fill="#ffffff" r="1.5" stroke="#ef4444" stroke-width="0.5"></circle>
+</g>
+<!-- Connection Line to Cursor (Simulated) -->
+<line stroke="#ffffff" stroke-dasharray="1,1" stroke-width="0.3" x1="15" x2="25" y1="95" y2="75"></line>
+</svg>
+<!-- Labels Absolute Overlays for text positioning on canvas-->
+<div class="absolute text-white font-label-sm text-[10px] bg-black/50 px-1 py-0.5 rounded pointer-events-none" style="left: 20%; top: 70%; transform: translate(-50%, -50%);">
+                            Vùng đang chọn
+                        </div>
+<div class="absolute text-[#FF5722] font-label-sm text-[10px] bg-white/70 px-1 py-0.5 rounded pointer-events-none" style="left: 77%; top: 55%; transform: translate(-50%, -50%);">
+                            Chưa lưu
+                        </div>
+</div>
+<!-- Camera Info Overlay -->
+<div class="absolute bottom-4 left-4 bg-black/60 backdrop-blur-sm text-white px-3 py-1.5 rounded-lg flex items-center gap-2 border border-white/10 z-20">
+<span class="w-2 h-2 rounded-full bg-secondary-fixed animate-pulse"></span>
+<span class="font-label-sm text-label-sm tracking-wider">CAM_02_LIVINGROOM - 14:32:05</span>
+</div>
+<div class="absolute top-4 right-4 bg-error text-white px-3 py-1 rounded-full font-label-sm text-label-sm shadow-lg flex items-center gap-1 z-20">
+<span class="material-symbols-outlined text-[16px]">draw</span>
+                            Đang vẽ vùng
+                        </div>
+<!-- Other State Indicators Examples (Hidden by default, shown for context) -->
+<!--
+                        <div class="absolute top-4 right-4 bg-emerald-600 text-white px-3 py-1 rounded-full font-label-sm text-label-sm shadow-lg flex items-center gap-1 z-20">
+                            <span class="material-symbols-outlined text-[16px]">check_circle</span>
+                            Đã hoàn tất vùng
+                        </div>
+                        <div class="absolute top-14 right-4 bg-amber-600 text-white px-3 py-1 rounded-full font-label-sm text-label-sm shadow-lg flex items-center gap-1 z-20">
+                            <span class="material-symbols-outlined text-[16px]">warning</span>
+                            Chưa lưu thiết lập
+                        </div>
+                        -->
+</div>
+</div>
+<!-- Preview Card -->
+<div class="mt-6 bg-surface-container-low rounded-xl p-4 border border-outline-variant/30 flex gap-4 items-center">
+<div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[24px]">visibility</span>
+</div>
+<div class="flex-1">
+<h4 class="font-label-md text-on-surface font-semibold">Tóm tắt vùng giám sát</h4>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2 font-body-sm">
+<div>
+<span class="text-on-surface-variant block">Camera</span>
+<span class="font-medium text-on-surface">CAM_02_LIVINGROOM</span>
+</div>
+<div>
+<span class="text-on-surface-variant block">Tên vùng</span>
+<span class="font-medium text-on-surface">Khu vực Ban công</span>
+</div>
+<div>
+<span class="text-on-surface-variant block">Quy tắc</span>
+<span class="font-medium text-on-surface">Đi vào vùng</span>
+</div>
+<div>
+<span class="text-on-surface-variant block">Độ nhạy</span>
+<span class="font-medium text-on-surface">Trung bình</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Settings Panel Area -->
+<div class="col-span-12 lg:col-span-4 flex flex-col gap-4 mt-6 lg:mt-0">
+<div class="bg-surface-container-lowest rounded-xl shadow-[0_4px_20px_rgba(30,58,138,0.05)] p-6 border border-outline-variant/30 h-full flex flex-col">
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary">tune</span>
+                        Cài đặt vùng giám sát
+                    </h3>
+<form class="flex-1 flex flex-col gap-6">
+<!-- Tên vùng -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-2" for="zone-name">Tên khu vực nhận diện</label>
+<div class="relative">
+<input class="w-full bg-surface border border-outline-variant rounded-lg px-4 py-3 text-on-surface focus:outline-none focus:ring-2 focus:ring-secondary focus:border-secondary transition-shadow font-body-md" id="zone-name" placeholder="Ví dụ: Ban công, Cầu thang..." type="text" value="Khu vực Ban công"/>
+<span class="material-symbols-outlined absolute right-3 top-3 text-outline-variant">edit</span>
+</div>
+<p class="font-body-sm text-error mt-1.5 hidden" id="zone-name-error">Vui lòng đặt tên vùng nguy hiểm trước khi lưu.</p>
+</div>
+<hr class="border-outline-variant/50"/>
+<!-- Quy tắc cảnh báo -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-3">Quy tắc kích hoạt cảnh báo</label>
+<div class="space-y-3">
+<label class="flex items-start gap-3 cursor-pointer group p-2 hover:bg-surface-container-low rounded-lg transition-colors -ml-2">
+<div class="relative flex items-center mt-0.5">
+<input checked="" class="peer sr-only" type="checkbox"/>
+<div class="w-5 h-5 border-2 border-outline rounded bg-surface peer-checked:bg-secondary peer-checked:border-secondary transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined text-[16px] text-white opacity-0 peer-checked:opacity-100 scale-50 peer-checked:scale-100 transition-all">check</span>
+</div>
+</div>
+<div>
+<span class="block font-body-md text-on-surface group-hover:text-primary transition-colors">Phát hiện trẻ đi vào vùng</span>
+<span class="block font-body-sm text-on-surface-variant mt-0.5">Cảnh báo ngay lập tức khi phát hiện</span>
+</div>
+</label>
+<label class="flex items-start gap-3 cursor-pointer group p-2 hover:bg-surface-container-low rounded-lg transition-colors -ml-2">
+<div class="relative flex items-center mt-0.5">
+<input class="peer sr-only" type="checkbox"/>
+<div class="w-5 h-5 border-2 border-outline rounded bg-surface peer-checked:bg-secondary peer-checked:border-secondary transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined text-[16px] text-white opacity-0 peer-checked:opacity-100 scale-50 peer-checked:scale-100 transition-all">check</span>
+</div>
+</div>
+<div>
+<span class="block font-body-md text-on-surface group-hover:text-primary transition-colors">Đứng quá thời gian quy định</span>
+<div class="flex items-center gap-2 mt-2">
+<input class="w-16 border border-outline-variant rounded p-1 text-center font-body-sm focus:ring-1 focus:ring-secondary disabled:opacity-50" disabled="" type="number" value="5"/>
+<span class="font-body-sm text-on-surface-variant">giây</span>
+</div>
+</div>
+</label>
+</div>
+</div>
+<hr class="border-outline-variant/50"/>
+<!-- Độ nhạy -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-3 flex justify-between items-center">
+                                Độ nhạy nhận diện AI
+                                <span class="material-symbols-outlined text-[18px] text-outline cursor-help" title="Mức độ cao sẽ nhạy hơn nhưng có thể cảnh báo nhầm.">help</span>
+</label>
+<div class="grid grid-cols-3 gap-2 p-1 bg-surface-container-low rounded-lg">
+<label class="cursor-pointer relative">
+<input class="peer sr-only" name="sensitivity" type="radio" value="low"/>
+<div class="text-center py-2 rounded-md font-label-sm text-on-surface-variant peer-checked:bg-surface-container-lowest peer-checked:text-primary peer-checked:shadow-sm transition-all border border-transparent peer-checked:border-outline-variant/30">
+                                        Thấp
+                                    </div>
+</label>
+<label class="cursor-pointer relative">
+<input checked="" class="peer sr-only" name="sensitivity" type="radio" value="medium"/>
+<div class="text-center py-2 rounded-md font-label-sm text-on-surface-variant peer-checked:bg-surface-container-lowest peer-checked:text-primary peer-checked:shadow-sm transition-all border border-transparent peer-checked:border-outline-variant/30">
+                                        Trung bình
+                                    </div>
+</label>
+<label class="cursor-pointer relative">
+<input class="peer sr-only" name="sensitivity" type="radio" value="high"/>
+<div class="text-center py-2 rounded-md font-label-sm text-on-surface-variant peer-checked:bg-surface-container-lowest peer-checked:text-error peer-checked:shadow-sm transition-all border border-transparent peer-checked:border-outline-variant/30">
+                                        Cao
+                                    </div>
+</label>
+</div>
+<p class="font-body-sm text-outline mt-2 text-center">Khuyên dùng: Trung bình để cân bằng độ chính xác.</p>
+</div>
+<!-- Action Buttons -->
+<div class="mt-auto pt-6 flex flex-col sm:flex-row gap-3 border-t border-outline-variant/30">
+<button class="order-2 sm:order-1 flex-1 py-3 px-4 rounded-lg border border-outline font-label-md text-on-surface hover:bg-surface-variant transition-colors text-center focus:ring-2 focus:ring-outline-variant outline-none" type="button">
+                                Hủy bỏ
+                            </button>
+<button class="order-1 sm:order-2 flex-1 py-3 px-4 rounded-lg bg-primary text-white font-headline-sm hover:bg-on-primary-fixed-variant shadow-md hover:shadow-lg transition-all text-center flex items-center justify-center gap-2 focus:ring-2 focus:ring-secondary outline-none" onclick="document.getElementById('zone-name-error').classList.toggle('hidden', document.getElementById('zone-name').value.trim() !== ''); return false;" type="submit">
+<span class="material-symbols-outlined text-[24px]">save</span>
+                                Lưu thiết lập
+                            </button>
+</div>
+</form>
+</div>
+</div>
+</div>
+</main>
+</body></html>
