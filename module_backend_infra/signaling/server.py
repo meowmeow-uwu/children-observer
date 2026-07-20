@@ -37,6 +37,19 @@ class ConnectionManager:
         else:
             logger.warning(f"Không tìm thấy client đích: {target_id} để gửi tin nhắn.")
 
+    async def broadcast(self, message: dict):
+        # Gửi tin nhắn tới tất cả client đang kết nối
+        logger.info(f"Broadcast tin nhắn type='{message.get('type')}' tới {len(self.active_connections)} kết nối WebSocket.")
+        disconnected = []
+        for client_id, ws in list(self.active_connections.items()):
+            try:
+                await ws.send_json(message)
+            except Exception as e:
+                logger.warning(f"Lỗi gửi broadcast tới {client_id}: {e}")
+                disconnected.append(client_id)
+        for client_id in disconnected:
+            self.disconnect(client_id)
+
 # Khởi tạo một đối tượng quản lý kết nối duy nhất (Singleton)
 manager = ConnectionManager()
 

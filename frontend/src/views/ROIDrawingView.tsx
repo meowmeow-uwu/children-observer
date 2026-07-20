@@ -133,7 +133,7 @@ export const ROIDrawingView: React.FC = () => {
 
           {/* SVG Canvas drawing tool */}
           <ROISVGOverlay
-            imageSrc="https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=1200&auto=format&fit=crop"
+            cameraId={cam.id}
             cameraName={cam.name}
           />
 

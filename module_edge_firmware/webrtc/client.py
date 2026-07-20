@@ -3,6 +3,7 @@ import json
 import logging
 import websockets
 from aiortc import RTCPeerConnection, RTCSessionDescription, RTCIceCandidate
+from module_edge_firmware.webrtc.video_track import AIVideoTrack, SharedFrameSource
 
 logger = logging.getLogger("EdgeWebRTC")
 logging.basicConfig(level=logging.INFO)
@@ -11,22 +12,44 @@ class EdgeWebRTCClient:
     def __init__(self, signaling_url: str, client_id: str, video_track):
         self.signaling_url = f"{signaling_url}/{client_id}"
         self.client_id = client_id
-        self.video_track = video_track
+        
+        # Lưu trữ nguổn frame (có thể là AIVideoTrack cũ hoặc SharedFrameSource)
+        if isinstance(video_track, AIVideoTrack):
+            self.frame_source = video_track.frame_source
+        else:
+            self.frame_source = video_track
+            
         self.pc = None # RTCPeerConnection object
         self.websocket = None
 
     async def create_peer_connection(self):
+        # Đảm bảo đóng kết nối cũ nếu có trước khi tạo kết nối mới
+        if self.pc is not None:
+            try:
+                await self.pc.close()
+            except Exception:
+                pass
+            self.pc = None
+
         # STUN server giúp thiết bị vượt qua router NAT để tìm IP Public
         self.pc = RTCPeerConnection()
         
+        # Tạo mới một AIVideoTrack cho mỗi kết nối PeerConnection
+        # Điều này tránh việc tái sử dụng Track cũ đã bị ngắt (ended state) bởi aiortc
+        new_track = AIVideoTrack(self.frame_source)
+
         # Gắn luồng Video từ AI vào PeerConnection
-        self.pc.addTrack(self.video_track)
+        self.pc.addTrack(new_track)
 
         @self.pc.on("iceconnectionstatechange")
         async def on_iceconnectionstatechange():
-            logger.info(f"ICE Connection State: {self.pc.iceConnectionState}")
-            if self.pc.iceConnectionState == "failed":
-                await self.pc.close()
+            if self.pc:
+                logger.info(f"ICE Connection State: {self.pc.iceConnectionState}")
+                if self.pc.iceConnectionState in ["failed", "closed"]:
+                    try:
+                        await self.pc.close()
+                    except Exception:
+                        pass
 
     async def handle_signaling_message(self, message: dict):
         msg_type = message.get("type")
@@ -55,7 +78,7 @@ class EdgeWebRTCClient:
         elif msg_type == "candidate":
             # Xử lý ICE Candidate (các tuyến đường kết nối mạng)
             candidate_info = message.get("candidate")
-            if candidate_info:
+            if candidate_info and self.pc:
                 candidate = RTCIceCandidate(
                     sdpMid=candidate_info["sdpMid"],
                     sdpMLineIndex=candidate_info["sdpMLineIndex"],

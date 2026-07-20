@@ -6,9 +6,13 @@ import { Topbar } from "../components/Topbar";
 import { MobileBottomNav } from "../components/MobileBottomNav";
 import { PWAInstallPrompt } from "../components/PWAInstallPrompt";
 import { OfflineBanner } from "../components/OfflineBanner";
+import { useRealtimeAlerts } from "../hooks/useRealtimeAlerts";
 
 export const Layout: React.FC = () => {
   const { isAuthenticated } = useAuth();
+
+  // Lắng nghe cảnh báo thời gian thực từ Backend
+  useRealtimeAlerts();
 
   // Redirect to login if not authenticated
   if (!isAuthenticated) {

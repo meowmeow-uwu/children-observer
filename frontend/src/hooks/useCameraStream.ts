@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useCameraStore } from "../store/cameraStore";
 import {
@@ -27,7 +27,7 @@ export const useCameraStream = (cameraId: string) => {
     }
   }, [cameraId]);
 
-  const startStream = () => {
+  const startStream = useCallback(() => {
     if (!videoRef.current) return;
     
     setErrorMessage(null);
@@ -45,19 +45,19 @@ export const useCameraStream = (cameraId: string) => {
         setErrorMessage(err);
       }
     });
-  };
+  }, [cameraId, user?.id]);
 
-  const stopStream = () => {
+  const stopStream = useCallback(() => {
     stopCameraConnection(cameraId);
     setStreamStatus("idle");
     setIsStreaming(false);
-  };
+  }, [cameraId]);
 
-  const retryStream = () => {
+  const retryStream = useCallback(() => {
     if (!videoRef.current) return;
     setErrorMessage(null);
     reconnectCamera(cameraId);
-  };
+  }, [cameraId]);
 
   // Automatic cleanup on unmount or cameraId change
   useEffect(() => {

@@ -1,0 +1,22 @@
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV UV_PYTHON_PREFERENCE=only-system
+
+WORKDIR /app
+
+# Cài đặt thư viện hệ thống cần thiết cho OpenCV
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip install uv
+
+COPY pyproject.toml uv.lock ./
+RUN uv sync
+
+COPY . /app
+
+CMD ["uv", "run", "module_edge_firmware/pipeline.py"]
