@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Quyền riêng tư &amp; dữ liệu - SafeKid Monitor</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error-container": "#ffdad6",
+                        "secondary-fixed-dim": "#adc6ff",
+                        "surface-container": "#e5eeff",
+                        "primary-fixed": "#dce1ff",
+                        "on-secondary-fixed": "#001a42",
+                        "secondary-fixed": "#d8e2ff",
+                        "surface-bright": "#f8f9ff",
+                        "tertiary-fixed": "#ffdbcb",
+                        "surface-tint": "#4059aa",
+                        "on-error": "#ffffff",
+                        "primary-fixed-dim": "#b6c4ff",
+                        "on-error-container": "#93000a",
+                        "on-background": "#0b1c30",
+                        "on-primary": "#ffffff",
+                        "background": "#f8f9ff",
+                        "on-secondary": "#ffffff",
+                        "outline": "#757682",
+                        "error": "#ba1a1a",
+                        "outline-variant": "#c5c5d3",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-container": "#90a8ff",
+                        "tertiary": "#4b1c00",
+                        "inverse-surface": "#213145",
+                        "secondary": "#0058be",
+                        "on-tertiary-fixed": "#341100",
+                        "on-surface": "#0b1c30",
+                        "on-secondary-container": "#fefcff",
+                        "surface-dim": "#cbdbf5",
+                        "tertiary-container": "#6e2c00",
+                        "surface-container-high": "#dce9ff",
+                        "primary": "#00236f",
+                        "tertiary-fixed-dim": "#ffb691",
+                        "secondary-container": "#2170e4",
+                        "surface-container-low": "#eff4ff",
+                        "on-tertiary": "#ffffff",
+                        "inverse-primary": "#b6c4ff",
+                        "primary-container": "#1e3a8a",
+                        "on-tertiary-container": "#f39461",
+                        "surface-variant": "#d3e4fe",
+                        "surface": "#f8f9ff",
+                        "on-surface-variant": "#444651",
+                        "on-secondary-fixed-variant": "#004395",
+                        "on-primary-fixed": "#00164e",
+                        "on-primary-fixed-variant": "#264191",
+                        "on-tertiary-fixed-variant": "#773205",
+                        "surface-container-highest": "#d3e4fe",
+                        "inverse-on-surface": "#eaf1ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "container-margin": "24px",
+                        "xl": "32px",
+                        "md": "16px",
+                        "base": "4px",
+                        "2xl": "48px",
+                        "xs": "4px",
+                        "lg": "24px",
+                        "sm": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Be Vietnam Pro"],
+                        "display-lg": ["Be Vietnam Pro"],
+                        "headline-sm": ["Be Vietnam Pro"],
+                        "body-sm": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-lg-mobile": ["Be Vietnam Pro"],
+                        "body-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-md": ["Be Vietnam Pro"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["28px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "display-lg": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "headline-md": ["22px", { "lineHeight": "30px", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- SideNavBar -->
+<aside class="hidden md:flex bg-primary dark:bg-on-primary-fixed fixed left-0 top-0 h-screen w-[280px] shadow-md z-40 flex-col py-6">
+<div class="px-6 mb-8 flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-primary-container fill text-2xl">child_care</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-white tracking-tight">SafeKid Monitor</h1>
+<p class="font-body-sm text-body-sm text-secondary-fixed opacity-80">Giám sát an toàn</p>
+</div>
+</div>
+<nav class="flex flex-col gap-2 flex-1">
+<a class="text-on-primary-container hover:bg-on-primary-fixed-variant rounded-lg mx-2 px-4 py-3 flex items-center gap-3 transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md text-label-md">Tổng quan</span>
+</a>
+<a class="text-on-primary-container hover:bg-on-primary-fixed-variant rounded-lg mx-2 px-4 py-3 flex items-center gap-3 transition-colors" href="#">
+<span class="material-symbols-outlined">videocam</span>
+<span class="font-label-md text-label-md">Camera trực tiếp</span>
+</a>
+<a class="text-on-primary-container hover:bg-on-primary-fixed-variant rounded-lg mx-2 px-4 py-3 flex items-center gap-3 transition-colors" href="#">
+<span class="material-symbols-outlined">detector_status</span>
+<span class="font-label-md text-label-md">Vùng nguy hiểm ROI</span>
+</a>
+<a class="text-on-primary-container hover:bg-on-primary-fixed-variant rounded-lg mx-2 px-4 py-3 flex items-center gap-3 transition-colors" href="#">
+<span class="material-symbols-outlined">notifications_active</span>
+<span class="font-label-md text-label-md">Cảnh báo</span>
+</a>
+<a class="text-on-primary-container hover:bg-on-primary-fixed-variant rounded-lg mx-2 px-4 py-3 flex items-center gap-3 transition-colors" href="#">
+<span class="material-symbols-outlined">router</span>
+<span class="font-label-md text-label-md">Thiết bị</span>
+</a>
+<a class="text-on-primary-container hover:bg-on-primary-fixed-variant rounded-lg mx-2 px-4 py-3 flex items-center gap-3 transition-colors" href="#">
+<span class="material-symbols-outlined">child_care</span>
+<span class="font-label-md text-label-md">Hồ sơ trẻ em</span>
+</a>
+<a class="bg-secondary-container text-on-secondary-container rounded-lg mx-2 px-4 py-3 flex items-center gap-3 scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined fill">settings</span>
+<span class="font-label-md text-label-md">Cài đặt</span>
+</a>
+</nav>
+</aside>
+<!-- Main Content Wrapper -->
+<div class="flex-1 flex flex-col md:ml-[280px] min-h-screen">
+<!-- TopNavBar -->
+<header class="hidden md:flex bg-surface dark:bg-surface-dim border-b border-outline-variant dark:border-outline shadow-sm justify-between items-center w-full px-6 py-3 sticky top-0 z-30">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">security</span>
+<span class="font-label-md text-label-md text-on-surface font-medium">Hệ thống đang hoạt động</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-variant hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary-container">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-variant hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary-container">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="w-9 h-9 rounded-full bg-surface-container-high overflow-hidden border border-outline-variant cursor-pointer">
+<img alt="User profile" class="w-full h-full object-cover" data-alt="A detailed, realistic portrait of a professional adult looking forward confidently, set against a clean, light blue solid background, high resolution, soft studio lighting, creating a calm and trustworthy mood suitable for a user profile avatar." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD7E4wQ6ikYUBfwnfT7fG6yICfwaP_MY7y1qmuJBssWDkxnsLliMIZwZ2G8WB3RLuIT8T1KKJg_cDshSa8sDkiZvTIJ25LExQzxiyy_ouxDtNONNakSiewoLikfNQnnPPgRsWXtCG1I05uiMnaEdRlvS8Z0biwcBFMxwvlBOwe2VNNeR8wzzZ29iGuxihuMqCZN9uHQ-zx-75Ja3-pxy7ZF4dBb107nvujxturBP0CAs95_Y39gwWhLD3otz4GxtqNi9mKiLnszV7KV"/>
+</div>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="flex-1 p-4 md:p-container-margin pb-24 md:pb-container-margin overflow-y-auto">
+<div class="max-w-[800px] mx-auto">
+<!-- Page Header -->
+<div class="mb-8 flex items-center gap-4">
+<button class="md:hidden w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-variant text-on-surface">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Quyền riêng tư &amp; dữ liệu</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Quản lý cách dữ liệu của bạn được lưu trữ và truy cập</p>
+</div>
+</div>
+<div class="grid gap-6">
+<!-- Section 1: Data Retention -->
+<section class="bg-surface-container-lowest rounded-xl shadow-[0_4px_20px_rgba(30,58,138,0.05)] border border-outline-variant/30 overflow-hidden">
+<div class="p-6 border-b border-outline-variant/30 flex items-center gap-3 bg-surface/50">
+<span class="material-symbols-outlined text-primary">history_toggle_off</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Thời gian lưu ảnh cảnh báo</h3>
+</div>
+<div class="p-6">
+<p class="font-body-md text-body-md text-on-surface-variant mb-4">Chọn thời gian hệ thống lưu trữ hình ảnh cắt từ các cảnh báo phát hiện nguy hiểm.</p>
+<div class="space-y-3">
+<label class="flex items-center gap-3 p-3 rounded-lg border border-outline-variant cursor-pointer hover:bg-surface-variant/30 transition-colors">
+<input checked="" class="w-5 h-5 text-primary focus:ring-primary border-outline" name="retention" type="radio" value="7"/>
+<div class="flex-1">
+<div class="font-label-md text-label-md text-on-surface">7 ngày (Khuyên dùng)</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Đủ thời gian để xem xét các sự kiện gần đây</div>
+</div>
+</label>
+<label class="flex items-center gap-3 p-3 rounded-lg border border-outline-variant cursor-pointer hover:bg-surface-variant/30 transition-colors">
+<input class="w-5 h-5 text-primary focus:ring-primary border-outline" name="retention" type="radio" value="30"/>
+<div class="flex-1">
+<div class="font-label-md text-label-md text-on-surface">30 ngày</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Lưu trữ dài hạn, yêu cầu dung lượng cao hơn</div>
+</div>
+</label>
+<label class="flex items-center gap-3 p-3 rounded-lg border border-outline-variant cursor-pointer hover:bg-surface-variant/30 transition-colors">
+<input class="w-5 h-5 text-primary focus:ring-primary border-outline" name="retention" type="radio" value="0"/>
+<div class="flex-1">
+<div class="font-label-md text-label-md text-on-surface">Không lưu sau khi đã xem</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Bảo mật tối đa, ảnh sẽ bị xóa ngay sau khi được mở</div>
+</div>
+</label>
+</div>
+</div>
+</section>
+<!-- Section 2: Camera Access -->
+<section class="bg-surface-container-lowest rounded-xl shadow-[0_4px_20px_rgba(30,58,138,0.05)] border border-outline-variant/30 overflow-hidden">
+<div class="p-6 border-b border-outline-variant/30 flex items-center gap-3 bg-surface/50">
+<span class="material-symbols-outlined text-primary">group</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Quyền truy cập camera</h3>
+</div>
+<div class="p-0">
+<div class="divide-y divide-outline-variant/30">
+<!-- Role 1 -->
+<div class="p-6 flex items-start sm:items-center justify-between gap-4 flex-col sm:flex-row hover:bg-surface-variant/10 transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined">admin_panel_settings</span>
+</div>
+<div>
+<div class="font-label-md text-label-md text-on-surface">Phụ huynh (Quản trị viên)</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Toàn quyền xem camera, thay đổi cài đặt và chia sẻ.</div>
+</div>
+</div>
+<button class="font-label-sm text-label-sm text-secondary hover:text-primary px-3 py-1.5 rounded bg-surface-container-low transition-colors whitespace-nowrap">Quản lý (1)</button>
+</div>
+<!-- Role 2 -->
+<div class="p-6 flex items-start sm:items-center justify-between gap-4 flex-col sm:flex-row hover:bg-surface-variant/10 transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-secondary-container/20 text-secondary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined">family_home</span>
+</div>
+<div>
+<div class="font-label-md text-label-md text-on-surface">Người giám hộ</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Xem camera trực tiếp và nhận cảnh báo. Không thay đổi cài đặt.</div>
+</div>
+</div>
+<button class="font-label-sm text-label-sm text-secondary hover:text-primary px-3 py-1.5 rounded bg-surface-container-low transition-colors whitespace-nowrap">Quản lý (2)</button>
+</div>
+<!-- Role 3 -->
+<div class="p-6 flex items-start sm:items-center justify-between gap-4 flex-col sm:flex-row hover:bg-surface-variant/10 transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-variant text-on-surface-variant flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined">visibility</span>
+</div>
+<div>
+<div class="font-label-md text-label-md text-on-surface">Người xem</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Chỉ xem camera khi được cấp quyền tạm thời.</div>
+</div>
+</div>
+<button class="font-label-sm text-label-sm text-secondary hover:text-primary px-3 py-1.5 rounded bg-surface-container-low transition-colors whitespace-nowrap">Thêm người xem</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 3: Access Log -->
+<section class="bg-surface-container-lowest rounded-xl shadow-[0_4px_20px_rgba(30,58,138,0.05)] border border-outline-variant/30 overflow-hidden">
+<div class="p-6 border-b border-outline-variant/30 flex items-center justify-between bg-surface/50">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">list_alt</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Lịch sử truy cập</h3>
+</div>
+<button class="font-label-sm text-label-sm text-secondary hover:underline">Xem tất cả</button>
+</div>
+<div class="p-0 overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="bg-surface-variant/30 border-b border-outline-variant/30">
+<th class="font-label-sm text-label-sm text-on-surface-variant p-4 font-medium">Người dùng</th>
+<th class="font-label-sm text-label-sm text-on-surface-variant p-4 font-medium">Hành động</th>
+<th class="font-label-sm text-label-sm text-on-surface-variant p-4 font-medium">Thời gian</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/20 font-body-sm text-body-sm text-on-surface">
+<tr class="hover:bg-surface-variant/10">
+<td class="p-4 flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center text-[10px] font-bold">N</div>
+                                            Nguyễn Văn A
+                                        </td>
+<td class="p-4 text-on-surface-variant">Xem camera phòng khách</td>
+<td class="p-4 text-on-surface-variant">10 phút trước</td>
+</tr>
+<tr class="hover:bg-surface-variant/10">
+<td class="p-4 flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-tertiary-container text-on-tertiary-container flex items-center justify-center text-[10px] font-bold">T</div>
+                                            Trần Thị B
+                                        </td>
+<td class="p-4 text-on-surface-variant">Mở ảnh cảnh báo</td>
+<td class="p-4 text-on-surface-variant">Hôm nay, 08:30</td>
+</tr>
+<tr class="hover:bg-surface-variant/10">
+<td class="p-4 flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center text-[10px] font-bold">N</div>
+                                            Nguyễn Văn A
+                                        </td>
+<td class="p-4 text-on-surface-variant">Thay đổi cài đặt ROI</td>
+<td class="p-4 text-on-surface-variant">Hôm qua, 21:15</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- Section 4: Delete Data -->
+<section class="bg-surface-container-lowest rounded-xl shadow-[0_4px_20px_rgba(30,58,138,0.05)] border border-error/20 overflow-hidden">
+<div class="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-error">delete_forever</span>
+                                    Xóa dữ liệu
+                                </h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Xóa ngay lập tức tất cả hình ảnh cảnh báo đã lưu trên hệ thống.</p>
+</div>
+<button class="bg-error-container hover:bg-error text-on-error-container hover:text-on-error font-label-md text-label-md px-4 py-2 rounded-lg transition-colors whitespace-nowrap border border-error/30 hover:border-error">
+                                Xóa ảnh đã lưu
+                            </button>
+</div>
+</section>
+<!-- Trust Note -->
+<div class="text-center mt-4 p-4 rounded-lg bg-surface-variant/30 flex items-center justify-center gap-3">
+<span class="material-symbols-outlined text-primary text-xl">verified_user</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant italic max-w-xl">
+                            Hình ảnh chỉ được sử dụng để phát hiện tình huống nguy hiểm và gửi cảnh báo cho tài khoản được cấp quyền. Dữ liệu của bạn được mã hóa an toàn.
+                        </p>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- BottomNavBar (Mobile) -->
+<nav class="md:hidden bg-surface-container-lowest dark:bg-on-surface fixed bottom-0 left-0 w-full z-50 rounded-t-xl shadow-[0_-4px_20px_rgba(30,58,138,0.05)] border-t border-outline-variant flex justify-around items-center px-4 py-3 pb-safe">
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant active:bg-surface-container-high scale-90 duration-150 transition-all" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-sm-mobile text-label-sm-mobile mt-1">Tổng quan</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant active:bg-surface-container-high scale-90 duration-150 transition-all" href="#">
+<span class="material-symbols-outlined">videocam</span>
+<span class="font-label-sm-mobile text-label-sm-mobile mt-1">Camera</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant active:bg-surface-container-high scale-90 duration-150 transition-all" href="#">
+<span class="material-symbols-outlined">warning</span>
+<span class="font-label-sm-mobile text-label-sm-mobile mt-1">Cảnh báo</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant active:bg-surface-container-high scale-90 duration-150 transition-all" href="#">
+<span class="material-symbols-outlined">router</span>
+<span class="font-label-sm-mobile text-label-sm-mobile mt-1">Thiết bị</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-4 py-1 scale-90 duration-150 transition-all" href="#">
+<span class="material-symbols-outlined fill">settings</span>
+<span class="font-label-sm-mobile text-label-sm-mobile mt-1">Cài đặt</span>
+</a>
+</nav>
+<style>
+        /* Safe area padding for mobile notches */
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+            .pb-safe {
+                padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+            }
+        }
+    </style>
+</body></html>

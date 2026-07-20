@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Dashboard - SafeKid Monitor</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "error-container": "#ffdad6",
+                "secondary-fixed-dim": "#adc6ff",
+                "surface-container": "#e5eeff",
+                "primary-fixed": "#dce1ff",
+                "on-secondary-fixed": "#001a42",
+                "secondary-fixed": "#d8e2ff",
+                "surface-bright": "#f8f9ff",
+                "tertiary-fixed": "#ffdbcb",
+                "surface-tint": "#4059aa",
+                "on-error": "#ffffff",
+                "primary-fixed-dim": "#b6c4ff",
+                "on-error-container": "#93000a",
+                "on-background": "#0b1c30",
+                "on-primary": "#ffffff",
+                "background": "#f8f9ff",
+                "on-secondary": "#ffffff",
+                "outline": "#757682",
+                "error": "#ba1a1a",
+                "outline-variant": "#c5c5d3",
+                "surface-container-lowest": "#ffffff",
+                "on-primary-container": "#90a8ff",
+                "tertiary": "#4b1c00",
+                "inverse-surface": "#213145",
+                "secondary": "#0058be",
+                "on-tertiary-fixed": "#341100",
+                "on-surface": "#0b1c30",
+                "on-secondary-container": "#fefcff",
+                "surface-dim": "#cbdbf5",
+                "tertiary-container": "#6e2c00",
+                "surface-container-high": "#dce9ff",
+                "primary": "#00236f",
+                "tertiary-fixed-dim": "#ffb691",
+                "secondary-container": "#2170e4",
+                "surface-container-low": "#eff4ff",
+                "on-tertiary": "#ffffff",
+                "inverse-primary": "#b6c4ff",
+                "primary-container": "#1e3a8a",
+                "on-tertiary-container": "#f39461",
+                "surface-variant": "#d3e4fe",
+                "surface": "#f8f9ff",
+                "on-surface-variant": "#444651",
+                "on-secondary-fixed-variant": "#004395",
+                "on-primary-fixed": "#00164e",
+                "on-primary-fixed-variant": "#264191",
+                "on-tertiary-fixed-variant": "#773205",
+                "surface-container-highest": "#d3e4fe",
+                "inverse-on-surface": "#eaf1ff"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "gutter": "16px",
+                "container-margin": "24px",
+                "xl": "32px",
+                "md": "16px",
+                "base": "4px",
+                "2xl": "48px",
+                "xs": "4px",
+                "lg": "24px",
+                "sm": "8px"
+        },
+        "fontFamily": {
+                "headline-lg": [
+                        "Be Vietnam Pro"
+                ],
+                "display-lg": [
+                        "Be Vietnam Pro"
+                ],
+                "headline-sm": [
+                        "Be Vietnam Pro"
+                ],
+                "body-sm": [
+                        "Inter"
+                ],
+                "label-sm": [
+                        "Inter"
+                ],
+                "headline-lg-mobile": [
+                        "Be Vietnam Pro"
+                ],
+                "body-lg": [
+                        "Inter"
+                ],
+                "label-md": [
+                        "Inter"
+                ],
+                "headline-md": [
+                        "Be Vietnam Pro"
+                ],
+                "body-md": [
+                        "Inter"
+                ]
+        },
+        "fontSize": {
+                "headline-lg": [
+                        "28px",
+                        {
+                                "lineHeight": "36px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "display-lg": [
+                        "36px",
+                        {
+                                "lineHeight": "44px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "headline-sm": [
+                        "18px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-sm": [
+                        "12px",
+                        {
+                                "lineHeight": "18px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "label-sm": [
+                        "12px",
+                        {
+                                "lineHeight": "16px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-lg": [
+                        "16px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "label-md": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "fontWeight": "500"
+                        }
+                ],
+                "headline-md": [
+                        "22px",
+                        {
+                                "lineHeight": "30px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-md": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "fontWeight": "400"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .filled-icon {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .soft-shadow {
+            box-shadow: 0px 4px 20px rgba(30, 58, 138, 0.05);
+        }
+        .popover-shadow {
+            box-shadow: 0px 10px 30px rgba(30, 58, 138, 0.12);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md antialiased h-screen overflow-hidden flex">
+<!-- SideNavBar -->
+<aside class="hidden md:flex bg-primary dark:bg-on-primary-fixed fixed left-0 top-0 h-screen w-[280px] flex-col gap-2 py-6 shadow-md z-20">
+<div class="px-6 mb-4 flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container-lowest flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-2xl filled-icon">security</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-white">SafeKid Monitor</h1>
+<p class="text-secondary-fixed dark:text-primary-fixed-dim font-label-sm text-label-sm">Giám sát an toàn</p>
+</div>
+</div>
+<nav class="flex-1 overflow-y-auto mt-4 px-2">
+<ul class="space-y-1">
+<!-- Active Item -->
+<li>
+<a class="bg-secondary-container text-on-secondary-container rounded-lg mx-2 px-4 py-3 flex items-center gap-3 scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md text-label-md">Tổng quan</span>
+</a>
+</li>
+<!-- Inactive Items -->
+<li>
+<a class="text-on-primary-container hover:bg-on-primary-fixed-variant rounded-lg mx-2 px-4 py-3 flex items-center gap-3 transition-colors" href="#">
+<span class="material-symbols-outlined">videocam</span>
+<span class="font-label-md text-label-md">Camera trực tiếp</span>
+</a>
+</li>
+<li>
+<a class="text-on-primary-container hover:bg-on-primary-fixed-variant rounded-lg mx-2 px-4 py-3 flex items-center gap-3 transition-colors" href="#">
+<span class="material-symbols-outlined">detector_status</span>
+<span class="font-label-md text-label-md">Vùng nguy hiểm ROI</span>
+</a>
+</li>
+<li>
+<a class="text-on-primary-container hover:bg-on-primary-fixed-variant rounded-lg mx-2 px-4 py-3 flex items-center gap-3 transition-colors" href="#">
+<span class="material-symbols-outlined">notifications_active</span>
+<span class="font-label-md text-label-md">Cảnh báo</span>
+</a>
+</li>
+<li>
+<a class="text-on-primary-container hover:bg-on-primary-fixed-variant rounded-lg mx-2 px-4 py-3 flex items-center gap-3 transition-colors" href="#">
+<span class="material-symbols-outlined">router</span>
+<span class="font-label-md text-label-md">Thiết bị</span>
+</a>
+</li>
+<li>
+<a class="text-on-primary-container hover:bg-on-primary-fixed-variant rounded-lg mx-2 px-4 py-3 flex items-center gap-3 transition-colors" href="#">
+<span class="material-symbols-outlined">child_care</span>
+<span class="font-label-md text-label-md">Hồ sơ trẻ em</span>
+</a>
+</li>
+</ul>
+</nav>
+<div class="mt-auto px-2">
+<a class="text-on-primary-container hover:bg-on-primary-fixed-variant rounded-lg mx-2 px-4 py-3 flex items-center gap-3 transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">Cài đặt</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Wrapper -->
+<div class="flex-1 flex flex-col md:ml-[280px] h-screen overflow-hidden">
+<!-- TopNavBar -->
+<header class="bg-surface dark:bg-surface-dim border-b border-outline-variant dark:border-outline shadow-sm flex justify-between items-center w-full px-6 py-3 shrink-0 z-10">
+<div class="flex items-center gap-4">
+<button class="md:hidden text-on-surface-variant p-2 -ml-2 rounded-full hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h2 class="font-headline-sm text-headline-sm text-primary font-bold">Tổng quan Dashboard</h2>
+</div>
+<div class="flex items-center gap-md">
+<div class="flex items-center gap-2">
+<button class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed hover:bg-surface-container-high transition-colors focus:outline-none focus:ring-2 focus:ring-primary-container relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2.5 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed hover:bg-surface-container-high transition-colors focus:outline-none focus:ring-2 focus:ring-primary-container">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant ml-2">
+<img alt="User profile" class="w-full h-full object-cover" data-alt="A professional headshot of a smiling parent in a bright, modern living room setting. The image is cropped closely, showcasing a warm and approachable demeanor suitable for a user profile avatar. Soft, natural lighting. High definition." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfMyD6gjCe8vpn60J432v-LPOTfDIAXhE0Jb7LOlk8m5b8EvsB-gaVxtZ2abyvG6eTHbxbJy63ooDwCbNoA1d9OlJdnk_dzAKIc8YzMqz3QWqLx6ytF3Js1zvVLoYFfoRaz6cihWdwR1x0OrZFxOkEIjjjKrUUC-ZACtkfXO9Pn8de-5ow52lwAF0JNF6FTh1s4nM15yyRuGOez-wGufnjQ6qaOpJ1gCEKGhF2zyHhGDr6hU4jhTWqYyBZn9ItzZF2EakxPdzyuA0k"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="flex-1 overflow-y-auto p-4 md:p-container-margin bg-background">
+<div class="max-w-[1440px] mx-auto space-y-lg">
+<!-- System Status Card -->
+<div class="bg-surface-container-lowest rounded-xl p-md soft-shadow border border-outline-variant/30 flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center text-success shrink-0">
+<span class="material-symbols-outlined filled-icon">check_circle</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Hệ thống đang hoạt động bình thường</h3>
+<p class="text-on-surface-variant font-body-sm text-body-sm mt-0.5">Tất cả camera và cảm biến kết nối ổn định.</p>
+</div>
+</div>
+<!-- Stats Row (Bento Style) -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<!-- Stat Card 1 -->
+<div class="bg-surface-container-lowest rounded-xl p-md soft-shadow border border-outline-variant/30 flex items-start justify-between relative overflow-hidden group">
+<div class="z-10">
+<p class="text-on-surface-variant font-label-md text-label-md mb-1">Thiết bị</p>
+<h3 class="font-headline-lg text-headline-lg text-on-surface">4<span class="text-on-surface-variant font-body-lg text-body-lg ml-1">/ 4</span></h3>
+<div class="mt-2 flex items-center gap-1 text-success font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px]">check_circle</span> Hoạt động
+                            </div>
+</div>
+<div class="w-12 h-12 rounded-full bg-primary-container/10 flex items-center justify-center text-primary z-10 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined filled-icon">router</span>
+</div>
+<div class="absolute -right-4 -bottom-4 w-24 h-24 bg-primary-container/5 rounded-full blur-xl"></div>
+</div>
+<!-- Stat Card 2 -->
+<div class="bg-surface-container-lowest rounded-xl p-md soft-shadow border border-outline-variant/30 flex items-start justify-between relative overflow-hidden group">
+<div class="z-10">
+<p class="text-on-surface-variant font-label-md text-label-md mb-1">Cảnh báo nay</p>
+<h3 class="font-headline-lg text-headline-lg text-on-surface">12</h3>
+<div class="mt-2 flex items-center gap-1 text-error font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px]">trending_up</span> +3
+                            </div>
+</div>
+<div class="w-12 h-12 rounded-full bg-error/10 flex items-center justify-center text-error z-10 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined filled-icon">notifications_active</span>
+</div>
+<div class="absolute -right-4 -bottom-4 w-24 h-24 bg-error/5 rounded-full blur-xl"></div>
+</div>
+<!-- Stat Card 3 -->
+<div class="bg-surface-container-lowest rounded-xl p-md soft-shadow border border-outline-variant/30 flex items-start justify-between relative overflow-hidden group">
+<div class="z-10">
+<p class="text-on-surface-variant font-label-md text-label-md mb-1">Vùng ROI</p>
+<h3 class="font-headline-lg text-headline-lg text-on-surface">2</h3>
+<div class="mt-2 flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px]">info</span> Ban công, Cầu thang
+                            </div>
+</div>
+<div class="w-12 h-12 rounded-full bg-tertiary-container/10 flex items-center justify-center text-tertiary-container z-10 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined filled-icon">detector_status</span>
+</div>
+</div>
+<!-- Stat Card 4 -->
+<div class="bg-surface-container-lowest rounded-xl p-md soft-shadow border border-outline-variant/30 flex items-start justify-between relative overflow-hidden group">
+<div class="z-10">
+<p class="text-on-surface-variant font-label-md text-label-md mb-1">Cảnh báo cuối</p>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mt-2">10:45 AM</h3>
+<div class="mt-1 flex items-center gap-1 text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[16px]">location_on</span> Ban công
+                            </div>
+</div>
+<div class="w-12 h-12 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant z-10 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined filled-icon">schedule</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-lg">
+<!-- Cameras Section (2/3 width on large screens) -->
+<div class="xl:col-span-2 space-y-md">
+<div class="flex items-center justify-between">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Camera Trực Tiếp</h3>
+<button class="text-secondary font-label-md text-label-md hover:underline flex items-center gap-1">
+                                Xem tất cả <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<!-- Cam Card 1 -->
+<div class="bg-surface-container-lowest rounded-xl soft-shadow border border-outline-variant/30 overflow-hidden group flex flex-col">
+<div class="relative h-48 bg-surface-variant overflow-hidden">
+<div class="bg-cover bg-center w-full h-full transform group-hover:scale-105 transition-transform duration-500" data-alt="A wide-angle security camera view of a modern, well-lit living room. Sunlight streams through large windows. The aesthetic is clean, soft-toned, and structured, typical of a modern home interior. A faint HUD overlay suggests it is a live camera feed. High definition, realistic rendering." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCrHaZZ1eMF-Ypx55VNf-JrRAQruCdMRcHg4fof7dSRqRHLEcNuZDWRnsPpRHpJYpdTZsZZoJhsnGUtNpXEcX3j4Tm_6P_IderDivauOSjrcQ8pnOygBSzTjCrr16S1ryiwojCh7i4dOAfGtSHh3qbTjJGF1PbO8LNChh4QYf0vUONO5PTcaGkttfKRucgoKpULT-ZBj4ZZJBCOLGy3W6cUWBnorEDQxYzAQZCt1tw9uWtt5uVbWV4wXapeQ5Uh2--AK4u1kNWFpd9K')"></div>
+<div class="absolute top-3 left-3 bg-black/50 backdrop-blur-md text-white px-2 py-1 rounded font-label-sm text-label-sm flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-error animate-pulse"></span> LIVE
+                                    </div>
+<div class="absolute top-3 right-3 bg-black/50 backdrop-blur-md text-white px-2 py-1 rounded font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">nest_cam_iq</span> Tín hiệu Tốt
+                                    </div>
+</div>
+<div class="p-4 flex flex-col gap-3 bg-surface-container-lowest">
+<div class="flex items-center justify-between">
+<h4 class="font-label-md text-label-md text-on-surface font-semibold">Phòng khách</h4>
+<div class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">warning</span> Cảnh báo lúc 08:30
+                                        </div>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex gap-2">
+<span class="bg-surface-variant text-on-surface-variant px-2 py-1 rounded font-label-sm text-label-sm">0 ROI</span>
+</div>
+<button class="bg-surface border border-outline-variant hover:border-secondary hover:text-secondary text-on-surface px-4 py-2 rounded-lg font-label-sm text-label-sm transition-colors">
+                                        Chi tiết
+                                    </button>
+</div>
+</div>
+</div>
+<!-- Cam Card 2 -->
+<div class="bg-surface-container-lowest rounded-xl soft-shadow border border-outline-variant/30 overflow-hidden group flex flex-col">
+<div class="relative h-48 bg-surface-variant overflow-hidden">
+<div class="bg-cover bg-center w-full h-full transform group-hover:scale-105 transition-transform duration-500" data-alt="A security camera view of a modern apartment balcony with glass railings. The lighting is bright daylight. A virtual red bounding box indicates a Region of Interest (ROI) for safety monitoring. The overall aesthetic is clean, professional SaaS monitoring interface style. High resolution." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuByj36tHoFYBTO41xxgB9jaKKVAIrn_E2LXOPxCfZ2KIW-8xe3jUjsn7zYegGHwvQWLj58wtIBXY9PAmeK0xKT3WDIY_QttD_WmuXhCPRsQL81gxOgrYK3FTdj6HtwZyOv18xEHF-vrSvlernM5yFpRDbKeXIfkK0qpzGnQ7QixB02wIjdEz4G1RBYwelDJ-CAZDRZhQefEfu_cm_69PC0W_8S7lLSJIvag61mZICaBYf2Nc2KPXW73sIxFfPWn0qzgtYW4I0NzRe5N')"></div>
+<div class="absolute top-3 left-3 bg-black/50 backdrop-blur-md text-white px-2 py-1 rounded font-label-sm text-label-sm flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-error animate-pulse"></span> LIVE
+                                    </div>
+<div class="absolute top-3 right-3 bg-black/50 backdrop-blur-md text-white px-2 py-1 rounded font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">nest_cam_iq</span> Tín hiệu Tốt
+                                    </div>
+</div>
+<div class="p-4 flex flex-col gap-3 bg-surface-container-lowest">
+<div class="flex items-center justify-between">
+<h4 class="font-label-md text-label-md text-on-surface font-semibold">Ban công</h4>
+<div class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">warning</span> Cảnh báo lúc 10:45
+                                        </div>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex gap-2">
+<span class="bg-error/10 text-error px-2 py-1 rounded font-label-sm text-label-sm">1 ROI Active</span>
+</div>
+<button class="bg-surface border border-outline-variant hover:border-secondary hover:text-secondary text-on-surface px-4 py-2 rounded-lg font-label-sm text-label-sm transition-colors">
+                                        Chi tiết
+                                    </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Alerts Section (1/3 width) -->
+<div class="space-y-md flex flex-col h-full">
+<div class="flex items-center justify-between shrink-0">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Cảnh Báo Gần Đây</h3>
+<button class="w-8 h-8 rounded-full hover:bg-surface-variant flex items-center justify-center text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+<div class="bg-surface-container-lowest rounded-xl soft-shadow border border-outline-variant/30 overflow-hidden flex flex-col flex-1">
+<div class="p-3 space-y-2 flex-1 overflow-y-auto">
+<!-- Alert Item 1 (Unread) -->
+<div class="flex gap-3 p-3 rounded-lg bg-error-container/30 hover:bg-error-container/50 transition-colors cursor-pointer border border-transparent hover:border-error-container">
+<div class="w-12 h-12 rounded overflow-hidden shrink-0 bg-surface-variant">
+<img alt="Alert snapshot" class="w-full h-full object-cover" data-alt="A cropped security camera snapshot showing a toddler near a balcony glass door. The image has a faint red tint and bounding box overlaid to signify an alert event. Clean, high contrast, typical of professional monitoring software." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-gRJDo3RZwsRoKLv_AyTihL94GeNsmph4WAGuy8d7pd7YLRV8kv7A5oExq5IlszdREk7kNbqsaDk9wnqU_fDe0HyyShBOo3rjHEO1fhK08Gt6AZklNZVVSPV97lX3kJ5sr8DV37_1Th6LvOjtLAFauac-uaNMGNZzk33P3-pA1BfL0lkcUFLkHRC3RNB9uMtMGh2VAy1Oi6a0k2XHDuFnTV-ssSvU1z2vcSKWwlLaSKCSwFc8-FvJG1PKbOcwVgsZmeaoVFhz5Vly"/>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start">
+<h4 class="font-label-md text-label-md text-on-surface truncate pr-2">Phát hiện người ở Ban công</h4>
+<span class="font-label-sm text-label-sm text-error bg-error/10 px-2 py-0.5 rounded whitespace-nowrap">Chưa xem</span>
+</div>
+<div class="flex items-center gap-2 mt-1 text-on-surface-variant font-body-sm text-body-sm">
+<span class="flex items-center gap-0.5"><span class="material-symbols-outlined text-[14px]">schedule</span> 10:45 AM</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="truncate">Ban công</span>
+</div>
+</div>
+</div>
+<!-- Alert Item 2 (Read) -->
+<div class="flex gap-3 p-3 rounded-lg hover:bg-surface-variant transition-colors cursor-pointer border border-transparent">
+<div class="w-12 h-12 rounded overflow-hidden shrink-0 bg-surface-variant">
+<img alt="Alert snapshot" class="w-full h-full object-cover" data-alt="A cropped security camera snapshot showing movement near the top of a modern wooden staircase. The lighting is slightly dim, indicating late afternoon. Clean, structured aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDWCSjBo6TnUsRWlJ2tjs-e3OaL7W2tW2n11xdmVvynBce6uvUvI3pe3tSUVlrrekzMsM-wvH0FK7JWVTD2DexHLv6rY8e2hgKEZP_Ggq7jdeH5_uVElfQkeDlGHwJJdxY3bOKvxNdJBqO8yBpMW3Zeu_mEXvjtFEZvqWg6hNE5k3Y63Jm_G34e1ZN464jc41DV_PyLaUsd6l-neyJ2WLi3cizEpihamSkrRnxSe2D7MtYWLqydFR00Xe5xnpdjFmY5erdJI3RY-2i_"/>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start">
+<h4 class="font-label-md text-label-md text-on-surface truncate pr-2">Chuyển động gần Cầu thang</h4>
+<span class="font-label-sm text-label-sm text-on-surface-variant bg-surface-variant px-2 py-0.5 rounded whitespace-nowrap">Đã xem</span>
+</div>
+<div class="flex items-center gap-2 mt-1 text-on-surface-variant font-body-sm text-body-sm">
+<span class="flex items-center gap-0.5"><span class="material-symbols-outlined text-[14px]">schedule</span> 09:15 AM</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="truncate">Cầu thang</span>
+</div>
+</div>
+</div>
+<!-- Alert Item 3 (Read) -->
+<div class="flex gap-3 p-3 rounded-lg hover:bg-surface-variant transition-colors cursor-pointer border border-transparent">
+<div class="w-12 h-12 rounded overflow-hidden shrink-0 bg-surface-variant flex items-center justify-center text-outline">
+<span class="material-symbols-outlined">kitchen</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start">
+<h4 class="font-label-md text-label-md text-on-surface truncate pr-2">Phát hiện tiếng khóc</h4>
+<span class="font-label-sm text-label-sm text-on-surface-variant bg-surface-variant px-2 py-0.5 rounded whitespace-nowrap">Đã xem</span>
+</div>
+<div class="flex items-center gap-2 mt-1 text-on-surface-variant font-body-sm text-body-sm">
+<span class="flex items-center gap-0.5"><span class="material-symbols-outlined text-[14px]">schedule</span> 08:30 AM</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="truncate">Nhà bếp</span>
+</div>
+</div>
+</div>
+</div>
+<div class="p-4 border-t border-outline-variant/30 text-center shrink-0">
+<button class="bg-surface border border-outline-variant hover:border-secondary hover:text-secondary text-on-surface w-full px-4 py-2 rounded-lg font-label-sm text-label-sm transition-colors">
+                            Xem toàn bộ lịch sử
+                        </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 rounded-t-xl bg-surface-container-lowest dark:bg-on-surface shadow-[0_-4px_20px_rgba(30,58,138,0.05)] border-t border-outline-variant flex justify-around items-center px-4 py-3 pb-safe">
+<a class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-4 py-1 scale-90 duration-150 transition-all" href="#">
+<span class="material-symbols-outlined filled-icon text-[20px]">dashboard</span>
+<span class="font-label-sm-mobile text-label-sm-mobile mt-1">Tổng quan</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant active:bg-surface-container-high rounded-full px-4 py-1 scale-90 duration-150 transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">videocam</span>
+<span class="font-label-sm-mobile text-label-sm-mobile mt-1">Camera</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant active:bg-surface-container-high rounded-full px-4 py-1 scale-90 duration-150 transition-all relative" href="#">
+<span class="material-symbols-outlined text-[20px]">warning</span>
+<span class="absolute top-1 right-3 w-2 h-2 bg-error rounded-full"></span>
+<span class="font-label-sm-mobile text-label-sm-mobile mt-1">Cảnh báo</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant active:bg-surface-container-high rounded-full px-4 py-1 scale-90 duration-150 transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">router</span>
+<span class="font-label-sm-mobile text-label-sm-mobile mt-1">Thiết bị</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant active:bg-surface-container-high rounded-full px-4 py-1 scale-90 duration-150 transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span class="font-label-sm-mobile text-label-sm-mobile mt-1">Cài đặt</span>
+</a>
+</nav>
+<style>
+        /* iOS safe area padding for bottom nav */
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+            .pb-safe {
+                padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+            }
+        }
+    </style>
+</body></html>
