@@ -1,0 +1,10 @@
+{
+  "roi_detection": {
+    "status": "ready",
+    "path": "weights/roi_detection/best.pt",
+    "format": "pytorch",
+    "metrics": {
+      "mAP50": 0.9354065207584832
+    }
+  }
+}
