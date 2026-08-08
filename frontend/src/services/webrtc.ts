@@ -19,6 +19,7 @@ export interface WebRTCConnectionHandle {
   reconnectCount: number;
   isExplicitlyClosed: boolean;
   reconnectTimer?: number;
+  stopTimer?: number;
   onStatusChange?: (state: Camera["streamStatus"]) => void;
   onError?: (error: string) => void;
 }
@@ -178,12 +179,30 @@ export const connectToCamera = async (
 ): Promise<void> => {
   const { cameraId, userId, videoElement, onStatusChange, onError } = options;
 
-  // Cleanup existing connection if any
+  // Reuse existing connection if any
   const existing = activeConnections.get(cameraId);
   if (existing) {
+    if (existing.stopTimer) {
+      window.clearTimeout(existing.stopTimer);
+      existing.stopTimer = undefined;
+    }
+    
+    // Update handle with new component's references
+    existing.videoElement = videoElement;
+    existing.onStatusChange = onStatusChange;
+    existing.onError = onError;
+
+    if (existing.stream) {
+      videoElement.srcObject = existing.stream;
+      videoElement.play().catch(e => console.error("Play auto-resume failed:", e));
+    }
+
     if (existing.pc || existing.ws) {
-      // Don't duplicate connection
-      return;
+      // Immediately notify the new component of the current stream status
+      if (onStatusChange) {
+        onStatusChange(useCameraStore.getState().cameras.find(c => c.id === cameraId)?.streamStatus || "connected");
+      }
+      return; // Connection is active, don't duplicate
     }
   }
 
@@ -346,12 +365,18 @@ export const reconnectCamera = (cameraId: string) => {
 
 /**
  * Explicitly requests closing a specific camera connection
+ * Uses a debounce timer to allow reusing the connection when navigating between views
  */
 export const stopCameraConnection = (cameraId: string) => {
   const handle = activeConnections.get(cameraId);
   if (handle) {
-    handle.isExplicitlyClosed = true;
-    disconnectCamera(cameraId);
+    if (handle.stopTimer) {
+      window.clearTimeout(handle.stopTimer);
+    }
+    handle.stopTimer = window.setTimeout(() => {
+      handle.isExplicitlyClosed = true;
+      disconnectCamera(cameraId);
+    }, 250); // 250ms debounce
   }
 };
 

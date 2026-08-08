@@ -4,6 +4,8 @@ import { useRoiStore } from "../../store/roiStore";
 import { useCameraStore } from "../../store/cameraStore";
 import { useToast } from "../Toast";
 
+import { saveCameraRoiApi } from "../../services/api";
+
 export const ROISettingsPanel: React.FC = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -31,11 +33,20 @@ export const ROISettingsPanel: React.FC = () => {
 
   const camera = cameras.find((c) => c.id === draftZone.cameraId);
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     const success = saveDraftZone();
     if (success) {
-      showToast("Đã lưu vùng nguy hiểm thành công!", "success");
+      const currentZone = useRoiStore.getState().zones.find((z) => z.id === draftZone.id);
+      if (currentZone) {
+        await saveCameraRoiApi(draftZone.cameraId, [{
+          name: currentZone.name,
+          points: currentZone.points,
+          sensitivity: currentZone.sensitivity,
+          enabled: currentZone.enabled
+        }]);
+      }
+      showToast("Đã lưu và đồng bộ vùng nguy hiểm thành công!", "success");
       navigate(`/cameras/${draftZone.cameraId}`);
     } else {
       showToast(validationError || "Thông tin cấu hình chưa hợp lệ!", "error");

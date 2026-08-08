@@ -31,6 +31,14 @@ export const CameraDetailView: React.FC = () => {
     isStreaming
   } = useCameraStream(id || "");
 
+  // Tự động kết nối/duy trì luồng video khi mở hoặc quay lại trang chi tiết Camera
+  React.useEffect(() => {
+    if (cam && cam.status === "online") {
+      startStream();
+    }
+    // eslint-disable-next-deps
+  }, [id, cam?.status]);
+
   if (!cam) {
     return (
       <div className="p-6">
@@ -86,6 +94,14 @@ export const CameraDetailView: React.FC = () => {
         <div className="lg:col-span-2 space-y-4">
           <div className="bg-black aspect-video rounded-2xl overflow-hidden border border-outline-variant/30 relative flex items-center justify-center shadow-md">
             
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className={`w-full h-full object-contain absolute inset-0 z-0 ${streamStatus === "connected" ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+            />
+
             {cam.status === "offline" ? (
               <div className="text-center p-6 text-outline">
                 <span className="material-symbols-outlined text-[56px] text-error mb-2">videocam_off</span>
@@ -147,37 +163,17 @@ export const CameraDetailView: React.FC = () => {
                       
                       return (
                         <g key={zone.id}>
-                          {/* Polygon zone highlight */}
+                          {/* Thin, elegant ROI zone polygon */}
                           <polygon
                             points={pointsStr}
-                            className="fill-error/25 stroke-error stroke-[1.5] animate-pulse"
+                            className="fill-error/15 stroke-error stroke-[0.4]"
                           />
-                          {/* Text indicator for ROI name at the first point */}
-                          {zone.points.length > 0 && (
-                            <foreignObject
-                              x={zone.points[0].x * 100}
-                              y={zone.points[0].y * 100 - 6}
-                              width="50"
-                              height="8"
-                              className="overflow-visible"
-                            >
-                              <div className="bg-error text-white font-bold text-[3px] px-1.5 py-0.5 rounded shadow-sm inline-block whitespace-nowrap">
-                                ⚠️ Vùng ROI: {zone.name}
-                              </div>
-                            </foreignObject>
-                          )}
                         </g>
                       );
                     })}
                 </svg>
 
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="w-full h-full object-contain"
-                />
+                {/* Video element is now rendered absolutely at the top level to preserve ref */}
 
                 <div className="absolute top-4 left-4 z-20 flex gap-2">
                   <span className="px-2.5 py-1 bg-red-600 text-white rounded-md text-xs font-bold tracking-wider animate-pulse uppercase">LIVE</span>

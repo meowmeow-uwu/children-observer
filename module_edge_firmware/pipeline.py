@@ -6,6 +6,13 @@ Main loop: Capture → Preprocess → AI Inference → Risk Assessment → Alert
 """
 
 from __future__ import annotations
+import asyncio
+import cv2
+import sys
+from pathlib import Path
+
+# Add project root to sys.path to resolve 'configs' module
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 import signal
 import time
@@ -28,6 +35,9 @@ from module_edge_firmware.buffer.storage_manager import StorageManager
 from module_edge_firmware.alert.alert_manager import AlertManager
 from module_edge_firmware.feedback_accuracy import AccuracyFeedbackTracker
 from module_edge_firmware.mobile_gateway import MobileGateway
+
+from module_edge_firmware.webrtc.video_track import AIVideoTrack
+from module_edge_firmware.webrtc.client import EdgeWebRTCClient
 
 
 class EdgePipeline:
@@ -320,3 +330,70 @@ class EdgePipeline:
                 "clients": self.mobile_gateway.client_count if self.mobile_gateway else 0,
             },
         }
+
+async def main():
+    # 1. Khởi tạo rãnh Video WebRTC
+    ai_video_track = AIVideoTrack()
+
+    # 2. Khởi tạo WebRTC Client
+    SIGNALING_URL = "ws://localhost:8007/ws/signaling"
+    CAMERA_ID = "camera_living_room_01"
+    
+    # --- BỔ SUNG BƯỚC 3: Đồng bộ ROI từ Backend REST API ---
+    import urllib.request
+    import json
+    
+    logger.info(f"Đang đồng bộ cấu hình ROI cho [{CAMERA_ID}] từ Backend REST API...")
+    try:
+        with urllib.request.urlopen(f"http://localhost:8007/api/cameras/{CAMERA_ID}/roi", timeout=3) as resp:
+            if resp.status == 200:
+                roi_data = json.loads(resp.read().decode('utf-8'))
+                logger.info(f"✅ [SYNC] Đã tải thành công {len(roi_data)} vùng ROI thực tế từ Backend API!")
+                for r in roi_data:
+                    logger.info(f"   📍 Vùng: '{r.get('name')}' | Tọa độ: {r.get('points')}")
+    except Exception as e:
+        logger.warning(f"⚠️ [SYNC] Chưa lấy được ROI từ Backend ({e}). Sẽ sử dụng cấu hình mặc định.")
+
+    webrtc_client = EdgeWebRTCClient(SIGNALING_URL, CAMERA_ID, ai_video_track)
+
+    # Chạy Signaling Client ở chế độ nền (background task)
+    asyncio.create_task(webrtc_client.connect())
+
+    # 3. Luồng xử lý AI chính (Mô phỏng vòng lặp pipeline)
+    cap = cv2.VideoCapture("module_edge_firmware/test_video.mp4")
+    
+    frame_count = 0
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            # Restart video loop
+            cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+            await asyncio.sleep(0.1)
+            continue
+            
+        frame_count += 1
+        # Mô phỏng AI phát hiện trẻ chạm ROI ở frame thứ 100 và đẩy alert tự động lên Backend
+        if frame_count == 100:
+            try:
+                alert_payload = json.dumps({
+                    "camera_id": CAMERA_ID,
+                    "camera_name": "Phòng khách",
+                    "title": "Phát hiện trẻ đi vào vùng nguy hiểm (Đồng bộ Edge -> Backend)",
+                    "severity": "danger",
+                    "roi_name": "Khu vực TV & Cầu thang",
+                    "status": "unread"
+                }).encode('utf-8')
+                req = urllib.request.Request("http://localhost:8007/api/alerts", data=alert_payload, headers={'Content-Type': 'application/json'})
+                with urllib.request.urlopen(req, timeout=3) as res:
+                    logger.info("🚨 [AI ALERT] AI vừa phát hiện trẻ vi phạm vùng ROI -> Đã đẩy nhật ký Cảnh báo thành công lên Backend!")
+            except Exception as ex:
+                logger.error(f"Lỗi gửi cảnh báo từ Edge: {ex}")
+
+        # 4. Bơm khung hình đã qua xử lý vào WebRTC Track
+        ai_video_track.update_frame(frame)
+        
+        # Nhường CPU cho các async task khác (WebRTC) chạy
+        await asyncio.sleep(0.01)
+
+if __name__ == "__main__":
+    asyncio.run(main())

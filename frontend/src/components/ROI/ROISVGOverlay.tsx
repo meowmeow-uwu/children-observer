@@ -2,15 +2,23 @@ import React, { useRef, useState, useEffect } from "react";
 import { useRoiStore } from "../../store/roiStore";
 import { createRectangleFromTwoPoints, clampPoint } from "../../utils/roiGeometry";
 import type { ROIPoint } from "../../types";
+import { useCameraStream } from "../../hooks/useCameraStream";
 
 interface ROISVGOverlayProps {
-  imageSrc: string;
+  cameraId: string;
   cameraName: string;
 }
 
-export const ROISVGOverlay: React.FC<ROISVGOverlayProps> = ({ imageSrc, cameraName }) => {
+export const ROISVGOverlay: React.FC<ROISVGOverlayProps> = ({ cameraId, cameraName }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+  
+  const { videoRef, streamStatus, startStream } = useCameraStream(cameraId);
+
+  useEffect(() => {
+    // Automatically start the stream when drawing UI loads
+    startStream();
+  }, [startStream]);
   
   const {
     draftPoints,
@@ -148,11 +156,31 @@ export const ROISVGOverlay: React.FC<ROISVGOverlayProps> = ({ imageSrc, cameraNa
         className="w-full relative aspect-video bg-black rounded-2xl overflow-hidden shadow-inner border border-outline-variant/30 select-none touch-none"
       >
         {/* Media Underlay */}
-        <img
-          src={imageSrc}
-          alt={cameraName}
-          className="w-full h-full object-contain pointer-events-none select-none"
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          className={`absolute inset-0 w-full h-full object-contain pointer-events-none select-none transition-opacity duration-300 ${
+            streamStatus === "connected" ? "opacity-100" : "opacity-0"
+          }`}
         />
+
+        {streamStatus !== "connected" && (
+          <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-surface-container-high text-on-surface-variant flex-col gap-3 pointer-events-none select-none z-10">
+            {streamStatus === "connecting" || streamStatus === "reconnecting" ? (
+              <>
+                <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-xs font-medium">Đang kết nối luồng camera...</span>
+              </>
+            ) : (
+              <>
+                <span className="material-symbols-outlined text-[32px]">videocam_off</span>
+                <span className="text-xs font-medium">Camera mất kết nối</span>
+              </>
+            )}
+          </div>
+        )}
 
         {/* SVG Drawing Layer */}
         <svg
