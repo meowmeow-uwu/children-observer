@@ -12,8 +12,9 @@ import torch.nn.functional as F
 from loguru import logger
 
 from violence_detection.config import ViolenceDetectionConfig
-from violence_detection.model.loader import load_model
+from violence_detection.inference.engine import InferenceEngineFactory, BaseInferenceEngine
 from violence_detection.preprocessing.video import preprocess_frames
+from violence_detection.preprocessing.person_filter import PersonFilter
 from violence_detection.inference.smoothing import TemporalSmoother
 from violence_detection.types import ViolencePrediction
 
@@ -21,11 +22,13 @@ from violence_detection.types import ViolencePrediction
 class ViolenceDetector:
     """
     Main Violence Detector class for clip prediction and video stream processing.
+    Supports PyTorch and ONNX inference engines seamlessly via Strategy Pattern.
+    Optionally includes a PersonFilter layer to skip inference when persons are absent.
     """
 
     def __init__(self, config: ViolenceDetectionConfig | None = None):
         """
-        Initialize detector and load pretrained model.
+        Initialize detector, inference engine, and optional PersonFilter.
 
         Args:
             config: ViolenceDetectionConfig instance. If None, default config is used.
@@ -33,8 +36,18 @@ class ViolenceDetector:
         self.config = config or ViolenceDetectionConfig()
         self.device = self.config.get_resolved_device()
 
-        # Load model once during detector lifecycle
-        self.model = load_model(self.config)
+        # Initialize Strategy Inference Engine (PyTorch or ONNX)
+        self.engine: BaseInferenceEngine = InferenceEngineFactory.create_engine(self.config)
+
+        # Initialize Person Filter if enabled
+        self.person_filter: PersonFilter | None = None
+        if self.config.enable_person_filter:
+            logger.info("ViolenceDetector: PersonFilter layer enabled.")
+            self.person_filter = PersonFilter(
+                min_persons=self.config.min_persons_required,
+                conf_threshold=self.config.person_conf_threshold,
+                backend=self.config.person_filter_backend,
+            )
 
         # Initialize temporal smoother
         self.smoother = TemporalSmoother(
@@ -61,6 +74,25 @@ class ViolenceDetector:
         """
         start_time = time.perf_counter()
 
+        # Optional Person Filter check
+        if self.person_filter is not None:
+            has_persons, count = self.person_filter.has_required_persons(frames)
+            if not has_persons:
+                elapsed_ms = (time.perf_counter() - start_time) * 1000.0
+                smoothed_prob, is_alert = self.smoother.update(0.0)
+                logger.debug(
+                    f"PersonFilter: Found {count} person(s) (< {self.config.min_persons_required}). "
+                    f"Skipping violence inference."
+                )
+                return ViolencePrediction(
+                    violence=False,
+                    confidence=smoothed_prob,
+                    raw_probability=0.0,
+                    smoothed_probability=smoothed_prob,
+                    timestamp=timestamp,
+                    inference_ms=elapsed_ms,
+                )
+
         # Preprocess input frames
         clip_tensor = preprocess_frames(
             frames=frames,
@@ -68,18 +100,10 @@ class ViolenceDetector:
             spatial_size=self.config.spatial_size,
             mean=self.config.mean,
             std=self.config.std,
-        ).to(self.device)
+        )
 
-        # Inference in mode without gradients
-        with torch.inference_mode():
-            logits = self.model(clip_tensor)
-            probs = F.softmax(logits, dim=1)
-
-            if self.device.type == "cuda":
-                torch.cuda.synchronize()
-
-            # Index 1 is violence class
-            raw_prob = float(probs[0, 1].item())
+        # Delegate inference to current strategy engine
+        raw_prob = self.engine.predict_raw_prob(clip_tensor)
 
         elapsed_ms = (time.perf_counter() - start_time) * 1000.0
 

@@ -47,6 +47,15 @@ class ViolenceDetectionConfig:
 
     device: str = "auto"
 
+    backend: str = "pytorch"  # 'pytorch', 'onnx', or 'auto'
+    onnx_model_path: str = "weights/x3d_violence.onnx"
+    onnx_providers: list[str] | None = None
+
+    enable_person_filter: bool = False
+    min_persons_required: int = 2
+    person_conf_threshold: float = 0.35
+    person_filter_backend: str = "auto"  # 'auto', 'yolo', or 'hog'
+
     def get_resolved_device(self) -> torch.device:
         """
         Resolve 'auto' device selection.

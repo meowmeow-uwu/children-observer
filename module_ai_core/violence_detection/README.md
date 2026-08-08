@@ -70,6 +70,18 @@ python examples/rtsp_demo.py --source "rtsp://admin:password@192.168.1.100:554/l
 ```
 *Lưu ý: Mọi thông tin tài khoản đăng nhập RTSP trong log sẽ tự động được ẩn mã hóa để đảm bảo an toàn bảo mật.*
 
+### D. Export sang ONNX & Chạy Demo ONNX Runtime (Dành cho Edge/Embedded)
+1. **Xuất mô hình sang định dạng ONNX:**
+```bash
+python scripts/export_onnx.py --output weights/x3d_violence.onnx --opset 16
+```
+*(Script sẽ tự động kiểm tra cấu trúc ONNX và đối chiếu sai số đầu ra giữa PyTorch và ONNX Runtime).*
+
+2. **Chạy suy luận với ONNX Runtime (Không cần PyTorch):**
+```bash
+python examples/onnx_video_demo.py --model weights/x3d_violence.onnx --video path/to/sample.mp4
+```
+
 ---
 
 ## 4. Tích hợp Python Interface (API)
@@ -123,6 +135,10 @@ for result in detector.process_stream(source="sample.mp4"):
 | `smoothing_window` | `5` | Độ dài cửa sổ mượt thời gian (Temporal Smoothing Window) |
 | `alert_min_consecutive` | `2` | Số lượng clip liên tiếp vượt ngưỡng để phát cảnh báo chính thức |
 | `device` | `"auto"` | Thiết bị chạy (`"auto"`, `"cuda"`, `"cpu"`) |
+| `backend` | `"pytorch"` | Động cơ suy luận (`"pytorch"`, `"onnx"`, hoặc `"auto"`) |
+| `enable_person_filter` | `False` | Bật/Tắt lớp lọc phát hiện người trước khi chạy suy luận bạo lực |
+| `min_persons_required` | `2` | Số lượng người tối thiểu trong khung hình để kích hoạt AI bạo lực |
+| `person_filter_backend` | `"auto"` | Động cơ lọc người (`"auto"`, `"yolo"`, hoặc `"hog"`) |
 
 ---
 
