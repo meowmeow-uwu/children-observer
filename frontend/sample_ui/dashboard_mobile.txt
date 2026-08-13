@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SafeKid Monitor - Dashboard</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-surface": "#0b1c30",
+                      "secondary-container": "#2170e4",
+                      "on-secondary-fixed": "#001a42",
+                      "secondary-fixed": "#d8e2ff",
+                      "primary-container": "#1e3a8a",
+                      "on-primary-container": "#90a8ff",
+                      "tertiary": "#4b1c00",
+                      "outline": "#757682",
+                      "tertiary-fixed-dim": "#ffb691",
+                      "surface": "#f8f9ff",
+                      "surface-container-lowest": "#ffffff",
+                      "on-primary-fixed-variant": "#264191",
+                      "surface-bright": "#f8f9ff",
+                      "on-secondary": "#ffffff",
+                      "on-error": "#ffffff",
+                      "surface-container-low": "#eff4ff",
+                      "on-tertiary": "#ffffff",
+                      "on-surface-variant": "#444651",
+                      "inverse-on-surface": "#eaf1ff",
+                      "tertiary-container": "#6e2c00",
+                      "background": "#f8f9ff",
+                      "on-tertiary-fixed": "#341100",
+                      "error": "#ba1a1a",
+                      "primary-fixed-dim": "#b6c4ff",
+                      "surface-container": "#e5eeff",
+                      "error-container": "#ffdad6",
+                      "secondary-fixed-dim": "#adc6ff",
+                      "secondary": "#0058be",
+                      "on-primary": "#ffffff",
+                      "primary": "#00236f",
+                      "on-secondary-fixed-variant": "#004395",
+                      "surface-tint": "#4059aa",
+                      "surface-variant": "#d3e4fe",
+                      "primary-fixed": "#dce1ff",
+                      "surface-dim": "#cbdbf5",
+                      "on-secondary-container": "#fefcff",
+                      "surface-container-highest": "#d3e4fe",
+                      "outline-variant": "#c5c5d3",
+                      "on-tertiary-container": "#f39461",
+                      "on-error-container": "#93000a",
+                      "on-primary-fixed": "#00164e",
+                      "on-background": "#0b1c30",
+                      "tertiary-fixed": "#ffdbcb",
+                      "surface-container-high": "#dce9ff",
+                      "inverse-surface": "#213145",
+                      "on-tertiary-fixed-variant": "#773205",
+                      "inverse-primary": "#b6c4ff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "md": "16px",
+                      "sm": "8px",
+                      "xs": "4px",
+                      "container-margin": "24px",
+                      "xl": "32px",
+                      "base": "4px",
+                      "lg": "24px",
+                      "2xl": "48px",
+                      "gutter": "16px"
+              },
+              "fontFamily": {
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "body-sm": [
+                              "Inter"
+                      ],
+                      "headline-sm": [
+                              "Be Vietnam Pro"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "label-sm": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Be Vietnam Pro"
+                      ],
+                      "headline-lg-mobile": [
+                              "Be Vietnam Pro"
+                      ],
+                      "headline-lg": [
+                              "Be Vietnam Pro"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "display-lg": [
+                              "Be Vietnam Pro"
+                      ]
+              },
+              "fontSize": {
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "18px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-sm": [
+                              "18px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-sm-mobile": [
+                              "10px",
+                              {
+                                      "lineHeight": "14px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-md": [
+                              "22px",
+                              {
+                                      "lineHeight": "30px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "36px",
+                              {
+                                      "lineHeight": "44px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-surface font-body-md text-on-surface antialiased">
+<div class="min-h-screen flex flex-col pb-[90px]">
+<!-- Mobile Top App Bar -->
+<header class="flex justify-between items-center w-full px-4 py-4 bg-surface border-b border-outline-variant shadow-sm sticky top-0 z-40">
+<h1 class="font-headline-md text-headline-md text-primary font-bold tracking-tight">SafeKid Monitor</h1>
+<div class="flex items-center gap-3">
+<img class="w-9 h-9 rounded-full border-2 border-outline-variant object-cover shadow-sm" data-alt="A small, professional circular profile picture of an Asian parent with a calm, friendly expression. The lighting is soft and natural, emphasizing trust and stability. The background is a slightly blurred, warm neutral tone to match a clean SaaS aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCI0FXHpLQfLFj-6UNQcNILtpX4Ajx_iVZ6ArMjZMDlobInLvawDiinSEI1I4aGrVGi411KmsEIXi_HFWgdRRFXimVDuO1VFNikXE0rAYlLvQVvqxFC8kxXeNJYUDyF7q_FCNC8ksbh__0ZzS1sjElTAOMfQcSfTOam24TsQebg6WDKnObDWlL-VSEU69WzQ7U9xhmZYDIWTOd6aYZXOoqVwKbBd2YlDUXwNDK0ypE2CEM5OBRbxCmp728suzlZ_obf1nTO9IDfxjP"/>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="flex-1 flex flex-col gap-6 px-4 pt-6 pb-6">
+<!-- System Status Card -->
+<section class="bg-surface-container-lowest rounded-2xl shadow-sm p-5 flex flex-col gap-2 border border-surface-container-high">
+<div class="flex items-center justify-between">
+<h2 class="font-headline-sm text-headline-sm text-primary">Trạng thái hệ thống</h2>
+<div class="bg-secondary-fixed text-on-secondary-fixed px-3 py-1.5 rounded-full font-label-sm text-label-sm flex items-center gap-1.5 border border-secondary-fixed-dim">
+<span class="material-symbols-outlined fill text-[16px] text-secondary">shield</span> An toàn
+                </div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Hệ thống đang hoạt động bình thường</p>
+<p class="font-body-sm text-body-sm text-outline flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-[14px]">sync</span> Cập nhật: 1 phút trước
+            </p>
+</section>
+<!-- Latest Alert Banner -->
+<section class="bg-error-container border border-error/20 rounded-2xl p-5 flex gap-4 items-start shadow-sm relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-error/5 to-transparent pointer-events-none"></div>
+<div class="bg-error/10 p-2 rounded-full relative z-10 shrink-0">
+<span class="material-symbols-outlined fill text-error text-[24px]">warning</span>
+</div>
+<div class="relative z-10 flex-1">
+<h3 class="font-label-md text-label-md text-on-error-container">Phát hiện chuyển động ở cửa sau</h3>
+<p class="font-body-sm text-body-sm text-on-error-container/80 mt-1">2 phút trước • Camera Sân Sau</p>
+</div>
+<button class="relative z-10 text-on-error-container hover:bg-error/10 p-2 rounded-full transition-colors self-center">
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</button>
+</section>
+<!-- Camera List Section -->
+<section class="flex flex-col gap-5 mt-2">
+<div class="flex justify-between items-end px-1">
+<h2 class="font-headline-sm text-headline-sm text-primary">Camera trực tiếp</h2>
+<button class="font-label-sm text-label-sm text-secondary hover:underline">Xem tất cả</button>
+</div>
+<!-- Camera Card 1 -->
+<div class="bg-surface-container-lowest rounded-2xl shadow-sm overflow-hidden flex flex-col border border-surface-container-high group active:scale-[0.98] transition-transform duration-200 cursor-pointer hover:shadow-md">
+<div class="relative w-full aspect-video bg-surface-variant">
+<img class="w-full h-full object-cover" data-alt="A wide-angle, high-definition security camera view of a brightly lit, modern children's playroom. The room features soft padded floors, colorful educational toys neatly organized on shelves, and large windows letting in natural sunlight. The image should look like a clean, reassuring live video feed within a professional monitoring app." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDJIVxmBk2Y8-co0gZJezIGlaic7ByuG0kFdo9_iDBCmjfTb6nnh3oZ_-2doAQc8kyu4Oty7V7BJPelOfNuUbqKPnaXmy4xbp4_UaCC_RtQdeFqhH0njEHBEol42rrB-mDSDAMvivh9lvNow4kmeN37jDPRZDw--0_JOSv7_i5DqV4Tyr_75gHYfao6UOZPZ3lnv5vlAiNnN8GQCw80GrWedE6GY8sE_eVH7DEBgj4EcUNlHIFI-el2Jtd1VPm_Ycpv0qcckG7wVmqB"/>
+<div class="absolute top-3 left-3 bg-inverse-surface/80 backdrop-blur-md text-inverse-on-surface px-3 py-1.5 rounded-lg font-label-sm text-label-sm flex items-center gap-2 shadow-sm">
+<span class="w-2.5 h-2.5 rounded-full bg-error animate-pulse shadow-[0_0_8px_rgba(186,26,26,0.6)]"></span> Trực tiếp
+                        </div>
+</div>
+<div class="p-4 flex flex-col gap-3 bg-surface-container-lowest">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Phòng khách / Khu vui chơi</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Đang hoạt động tốt</p>
+</div>
+<button class="w-10 h-10 flex items-center justify-center text-outline hover:text-on-surface rounded-full hover:bg-surface-container active:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="flex gap-4 border-t border-surface-variant pt-3">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline">Độ phân giải</span>
+<span class="font-body-sm text-body-sm text-on-surface mt-0.5">1080p HD</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline">Khu vực ROI</span>
+<span class="font-body-sm text-body-sm text-on-surface mt-0.5">2 khu vực an toàn</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Camera Card 2 -->
+<div class="bg-surface-container-lowest rounded-2xl shadow-sm overflow-hidden flex flex-col border border-surface-container-high group active:scale-[0.98] transition-transform duration-200 cursor-pointer hover:shadow-md">
+<div class="relative w-full aspect-video bg-surface-variant">
+<img class="w-full h-full object-cover" data-alt="A clear, daytime security camera perspective of a safe, enclosed suburban backyard. The scene includes a small swing set on well-maintained green grass, surrounded by a sturdy wooden fence. The lighting is sunny and calm, conveying a secure outdoor environment for children, rendered in a crisp digital video feed style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCom-u3mNauK37nItu_xrMGHdZncJ4RlCSYjlGlltCti6QzAIe9qO5WdEtfjJGvsge_GPkZQt9KJuuxnJXOILX7JCDMeBB8xod0OapZbHIjd3jWhYSXOrNnNOCdvmeY5JtRGTCZChC8v-WLuv-xGWq0tMwZYLy-4Wp82yTfdyjDiN4gFSq-2hUlG8AvUsU6fsmgRDyBsC1ZWxO_pbIc0u7ZcPg6U5-ydXf8J3sxEgZq-WHvsmpDkUUEJHm1Gm1zKdd8YE_NKMWluqf"/>
+<div class="absolute top-3 left-3 bg-inverse-surface/80 backdrop-blur-md text-inverse-on-surface px-3 py-1.5 rounded-lg font-label-sm text-label-sm flex items-center gap-2 shadow-sm">
+<span class="w-2.5 h-2.5 rounded-full bg-error animate-pulse shadow-[0_0_8px_rgba(186,26,26,0.6)]"></span> Trực tiếp
+                        </div>
+</div>
+<div class="p-4 flex flex-col gap-3 bg-surface-container-lowest">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Sân sau</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Đang hoạt động tốt</p>
+</div>
+<button class="w-10 h-10 flex items-center justify-center text-outline hover:text-on-surface rounded-full hover:bg-surface-container active:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="flex gap-4 border-t border-surface-variant pt-3">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline">Độ phân giải</span>
+<span class="font-body-sm text-body-sm text-on-surface mt-0.5">720p HD</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline">Khu vực ROI</span>
+<span class="font-body-sm text-body-sm text-on-surface mt-0.5">1 khu vực cảnh báo</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Shell -->
+<nav class="bg-surface-container-lowest shadow-lg border-t border-outline-variant fixed bottom-0 left-0 w-full z-50 rounded-t-2xl flex justify-around items-center px-2 py-3 pb-safe shadow-[0_-4px_24px_rgba(0,0,0,0.06)]">
+<!-- Active Item: Tổng quan -->
+<button class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-2xl px-5 py-2 scale-95 duration-200 transition-all">
+<span class="material-symbols-outlined fill text-[24px]">dashboard</span>
+<span class="font-label-sm-mobile text-label-sm-mobile mt-1 font-bold">Tổng quan</span>
+</button>
+<!-- Inactive Item: Camera -->
+<button class="flex flex-col items-center justify-center text-on-surface-variant active:bg-surface-container-high rounded-2xl px-4 py-2 scale-95 duration-200 transition-all hover:text-primary hover:bg-surface-container">
+<span class="material-symbols-outlined text-[24px]">videocam</span>
+<span class="font-label-sm-mobile text-label-sm-mobile mt-1">Camera</span>
+</button>
+<!-- Inactive Item: Cảnh báo -->
+<button class="flex flex-col items-center justify-center text-on-surface-variant active:bg-surface-container-high rounded-2xl px-4 py-2 scale-95 duration-200 transition-all hover:text-primary hover:bg-surface-container relative">
+<!-- Notification dot -->
+<span class="absolute top-2 right-4 w-2.5 h-2.5 bg-error rounded-full border-2 border-surface-container-lowest"></span>
+<span class="material-symbols-outlined text-[24px]">warning</span>
+<span class="font-label-sm-mobile text-label-sm-mobile mt-1">Cảnh báo</span>
+</button>
+<!-- Inactive Item: Thiết bị -->
+<button class="flex flex-col items-center justify-center text-on-surface-variant active:bg-surface-container-high rounded-2xl px-4 py-2 scale-95 duration-200 transition-all hover:text-primary hover:bg-surface-container">
+<span class="material-symbols-outlined text-[24px]">router</span>
+<span class="font-label-sm-mobile text-label-sm-mobile mt-1">Thiết bị</span>
+</button>
+<!-- Inactive Item: Cài đặt -->
+<button class="flex flex-col items-center justify-center text-on-surface-variant active:bg-surface-container-high rounded-2xl px-4 py-2 scale-95 duration-200 transition-all hover:text-primary hover:bg-surface-container">
+<span class="material-symbols-outlined text-[24px]">settings</span>
+<span class="font-label-sm-mobile text-label-sm-mobile mt-1">Cài đặt</span>
+</button>
+</nav>
+</div>
+</body></html>

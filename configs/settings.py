@@ -39,6 +39,7 @@ class AppSettings(BaseSettings):
     # ---- AI Inference ----
     inference_device: str = "cuda:0"
     inference_engine_type: Literal["yolo", "onnx", "tensorrt", "openvino"] = "onnx"
+    edge_use_mock_ai_when_no_model: bool = False
     inference_conf_threshold: float = Field(default=0.5, ge=0.0, le=1.0)
     inference_iou_threshold: float = Field(default=0.45, ge=0.0, le=1.0)
     yolo_model_path: Path = Path("./weights/yolo26n.pt")
@@ -58,6 +59,12 @@ class AppSettings(BaseSettings):
     backend_url: str = "http://localhost:8000"
     auth_jwt_secret: str
     auth_2fa_issuer: str = "AIChildGuardian"
+
+    # ---- Mobile Gateway ----
+    mobile_gateway_enabled: bool = True
+    mobile_gateway_host: str = "0.0.0.0"
+    mobile_gateway_port: int = Field(default=8765, ge=1024, le=65535)
+    feedback_log_dir: Path = Path("./data/feedback")
 
     # ---- Federated Learning ----
     federated_server_url: str = "http://localhost:9000"

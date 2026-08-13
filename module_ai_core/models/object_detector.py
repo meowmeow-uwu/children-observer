@@ -12,16 +12,17 @@ Features:
 
 from __future__ import annotations
 
+import time
+import cv2
 from pathlib import Path
-from typing import Any
-
+from typing import Any, TYPE_CHECKING
 import numpy as np
 from loguru import logger
-
 from configs.settings import get_settings
 from module_ai_core.datasets.childsun_loader import CHILDSUN_CLASSES
 
-
+if TYPE_CHECKING:
+    from module_edge_firmware.inference.engine import BaseInferenceEngine
 class DetectionResult:
     """Kết quả phát hiện vật thể cho một frame."""
 
@@ -31,6 +32,7 @@ class DetectionResult:
         scores: np.ndarray,
         class_ids: np.ndarray,
         class_names: list[str],
+        inference_time_ms: float = 0.0,
     ):
         """
         Args:
@@ -38,28 +40,31 @@ class DetectionResult:
             scores: np.ndarray shape (N,) - confidence scores
             class_ids: np.ndarray shape (N,) - class IDs
             class_names: list[str] - corresponding class names
+            inference_time_ms: float - thời gian inference (ms)
         """
         self.boxes = boxes
         self.scores = scores
         self.class_ids = class_ids
         self.class_names = class_names
+        self.inference_time_ms = inference_time_ms
 
     def __len__(self) -> int:
         return len(self.boxes)
 
     def filter_by_class(self, target_classes: list[str]) -> "DetectionResult":
         """Lọc kết quả theo danh sách class cụ thể."""
-        mask = np.array([name in target_classes for name in self.class_names])
+        mask = np.array([name in target_classes for name in self.class_names], dtype=bool)
         return DetectionResult(
             boxes=self.boxes[mask],
             scores=self.scores[mask],
             class_ids=self.class_ids[mask],
             class_names=[n for n, m in zip(self.class_names, mask) if m],
+            inference_time_ms=self.inference_time_ms,
         )
 
     def get_dangerous_objects(self) -> "DetectionResult":
         """Lọc chỉ các vật thể nguy hiểm (không bao gồm 'child')."""
-        dangerous = [c for c in CHILDSUN_CLASSES if c != "child"]
+        dangerous = ["knife", "socket", "scissors"] 
         return self.filter_by_class(dangerous)
 
     def get_children(self) -> "DetectionResult":
@@ -110,7 +115,8 @@ class ObjectDetector:
         self.classes = CHILDSUN_CLASSES
 
         self._model = None
-        self._engine: BaseInferenceEngine | None = None
+        self._engine: "BaseInferenceEngine | None" = None
+        from module_edge_firmware.ingestion.preprocessor import FramePreprocessor
         self._preprocessor = FramePreprocessor(normalize=True)
         self._is_loaded = False
 
@@ -119,15 +125,18 @@ class ObjectDetector:
         try:
             if self.engine_type == "yolo":
                 from ultralytics import YOLO
-                if self.model_path.exists() and self.model_path.suffix == ".pt":
-                    self._model = YOLO(str(self.model_path))
-                    logger.info(f"Loaded YOLO .pt model: {self.model_path}")
-                else:
-                    logger.warning(f"Weights not found or invalid: {self.model_path}. Using yolo26n.pt")
-                    self._model = YOLO("yolo26n.pt")
+                model_str = str(self.model_path)
+                # Cho phép Ultralytics tự động tải file (vd: yolo26s.pt) từ mạng
+                if not self.model_path.exists() and "yolo" not in model_str.lower():
+                    logger.warning(f"Weights not found or invalid: {self.model_path}. Fallback to yolo26n.pt")
+                    model_str = "yolo26n.pt"
+                    
+                self._model = YOLO(model_str)
+                logger.info(f"Loaded YOLO .pt model: {model_str}")
                 self._model.to(self.device)
             else:
                 # Sử dụng optimized engine (TensorRT/OpenVINO/ONNX)
+                from module_edge_firmware.inference.engine import create_engine
                 self._engine = create_engine(self.engine_type)
                 # Tự động tìm file engine phù hợp
                 ext_map = {"tensorrt": ".engine", "openvino": ".xml", "onnx": ".onnx"}
@@ -166,6 +175,8 @@ class ObjectDetector:
         if not self._is_loaded:
             self.load()
 
+        start_time = time.perf_counter()
+
         if self.engine_type == "yolo":
             results = self._model.predict(
                 source=frame,
@@ -174,101 +185,168 @@ class ObjectDetector:
                 verbose=verbose,
                 device=self.device,
             )
+            inference_time_ms = (time.perf_counter() - start_time) * 1000.0
+
             result = results[0]
             boxes = result.boxes
             if len(boxes) == 0:
-                return self._empty_result()
-            
-            return DetectionResult(
-                boxes=boxes.xyxy.cpu().numpy(),
-                scores=boxes.conf.cpu().numpy(),
-                class_ids=boxes.cls.cpu().numpy().astype(int),
-                class_names=[self._model.names.get(int(c), f"class_{int(c)}") for c in boxes.cls.cpu().numpy()],
-            )
+                raw_result = self._empty_result(inference_time_ms)
+            else:
+                raw_result = DetectionResult(
+                    boxes=boxes.xyxy.cpu().numpy(),
+                    scores=boxes.conf.cpu().numpy(),
+                    class_ids=boxes.cls.cpu().numpy().astype(int),
+                    class_names=[self._model.names.get(int(c), f"class_{int(c)}") for c in boxes.cls.cpu().numpy()],
+                    inference_time_ms=inference_time_ms,
+                )
         else:
             # Optimized engine inference
             input_tensor = self._preprocessor.to_tensor(frame)
             outputs = self._engine.predict(input_tensor)
+            inference_time_ms = (time.perf_counter() - start_time) * 1000.0
             
             # Sử dụng bộ giải mã NumPy tối ưu để xử lý output từ engine
-            return self._parse_engine_output(outputs, frame.shape)
+            raw_result = self._parse_engine_output(outputs, frame.shape, inference_time_ms)
 
-    def _empty_result(self) -> DetectionResult:
+        return self._filter_and_map_labels(raw_result)
+
+    def _filter_and_map_labels(self, result: DetectionResult) -> DetectionResult:
+        """Lọc bỏ 'adult' và map các class sang chuẩn labels.json"""
+        label_map = {
+            1: "child",
+            2: "knife",
+            3: "socket",  # Map outlet -> socket
+            4: "scissors"
+        }
+        
+        valid_indices = []
+        mapped_names = []
+        
+        for i, class_id in enumerate(result.class_ids):
+            if class_id in label_map:
+                valid_indices.append(i)
+                mapped_names.append(label_map[class_id])
+                
+        if len(valid_indices) == 0:
+            return self._empty_result(result.inference_time_ms)
+            
+        mask = np.array(valid_indices)
+        return DetectionResult(
+            boxes=result.boxes[mask],
+            scores=result.scores[mask],
+            class_ids=result.class_ids[mask],
+            class_names=mapped_names,
+            inference_time_ms=result.inference_time_ms,
+        )
+
+    def _empty_result(self, inference_time_ms: float = 0.0) -> DetectionResult:
         return DetectionResult(
             boxes=np.zeros((0, 4)),
             scores=np.zeros(0),
             class_ids=np.zeros(0, dtype=int),
             class_names=[],
+            inference_time_ms=inference_time_ms,
         )
 
-    def _parse_engine_output(self, outputs: list[np.ndarray], orig_shape: tuple) -> DetectionResult:
+    def _parse_engine_output(self, outputs: list[np.ndarray], orig_shape: tuple, inference_time_ms: float) -> DetectionResult:
         """
         Decode output từ YOLOv8/v11 (TensorRT/OpenVINO/ONNX).
-        Giả định format: (1, 4 + n_classes, 8400)
+        Hỗ trợ cả format cũ (1, 84, 8400) và YOLOv10/NMS format (1, 300, 6).
         """
         output = outputs[0]
         if output.ndim == 3:
-            output = output[0]  # (84, 8400)
+            output = output[0]  # (84, 8400) hoặc (300, 6)
 
-        # Transpose: (84, 8400) -> (8400, 84)
-        output = output.T
-
-        # 1. Lọc theo confidence score
-        # Confidence cao nhất trong các classes
-        scores = np.max(output[:, 4:], axis=1)
-        mask = scores > self.conf_threshold
-        output = output[mask]
-        scores = scores[mask]
-        
-        if len(output) == 0:
-            return self._empty_result()
-
-        # 2. Extract boxes and classes
-        boxes = output[:, :4]  # [cx, cy, w, h]
-        class_ids = np.argmax(output[:, 4:], axis=1)
-
-        # 3. Convert [cx, cy, w, h] -> [x1, y1, x2, y2]
-        # Chú ý: Bounding boxes ở đây đang ở kích thước 640x640
-        x1 = boxes[:, 0] - boxes[:, 2] / 2
-        y1 = boxes[:, 1] - boxes[:, 3] / 2
-        x2 = boxes[:, 0] + boxes[:, 2] / 2
-        y2 = boxes[:, 1] + boxes[:, 3] / 2
-        
-        boxes_xyxy = np.stack([x1, y1, x2, y2], axis=1)
-
-        # 4. Scale back to original image size
         h_orig, w_orig = orig_shape[:2]
         scale_info = self._preprocessor.get_scale_info(orig_shape, 640)
         scale = scale_info["scale"]
         pad_x = scale_info["pad_x"]
         pad_y = scale_info["pad_y"]
 
-        boxes_xyxy[:, [0, 2]] = (boxes_xyxy[:, [0, 2]] - pad_x) / scale
-        boxes_xyxy[:, [1, 3]] = (boxes_xyxy[:, [1, 3]] - pad_y) / scale
-
-        # 5. Non-Maximum Suppression (NMS)
-        # Sử dụng cv2.dnn.NMSBoxes cho tốc độ cao
-        indices = cv2.dnn.NMSBoxes(
-            bboxes=boxes_xyxy.tolist(),
-            scores=scores.tolist(),
-            score_threshold=self.conf_threshold,
-            nms_threshold=self.iou_threshold
-        )
-
-        if len(indices) == 0:
-            return self._empty_result()
-        
-        # indices có thể là list hoặc numpy array tùy version OpenCV
-        if isinstance(indices, np.ndarray):
-            indices = indices.flatten()
+        # Kéo dài cấu trúc YOLOv10 / End-to-End ONNX format [num_boxes, 6] -> [x1, y1, x2, y2, score, class_id]
+        if output.shape[1] == 6:
+            boxes_xyxy = output[:, :4]
+            scores = output[:, 4]
+            class_ids = output[:, 5].astype(int)
+            
+            mask = scores > self.conf_threshold
+            boxes_xyxy = boxes_xyxy[mask]
+            scores = scores[mask]
+            class_ids = class_ids[mask]
+            
+            if len(boxes_xyxy) == 0:
+                return self._empty_result(inference_time_ms)
+                
+            boxes_xyxy[:, [0, 2]] = (boxes_xyxy[:, [0, 2]] - pad_x) / scale
+            boxes_xyxy[:, [1, 3]] = (boxes_xyxy[:, [1, 3]] - pad_y) / scale
+            
+            # Khử nhiễu các hộp chồng lấn nhau (NMS)
+            indices = cv2.dnn.NMSBoxes(
+                bboxes=boxes_xyxy.tolist(),
+                scores=scores.tolist(),
+                score_threshold=self.conf_threshold,
+                nms_threshold=self.iou_threshold
+            )
+            
+            if len(indices) == 0:
+                return self._empty_result(inference_time_ms)
+                
+            if isinstance(indices, np.ndarray):
+                indices = indices.flatten()
+            else:
+                indices = [i[0] if isinstance(i, (list, np.ndarray)) else i for i in indices]
+            
         else:
-            indices = [i[0] if isinstance(i, (list, np.ndarray)) else i for i in indices]
+            # Format cũ của YOLOv8: (84, 8400)
+            if output.shape[0] < output.shape[1]:
+                output = output.T
+
+            # 1. Lọc theo confidence score
+            scores = np.max(output[:, 4:], axis=1)
+            mask = scores > self.conf_threshold
+            output = output[mask]
+            scores = scores[mask]
+            
+            if len(output) == 0:
+                return self._empty_result(inference_time_ms)
+
+            # 2. Extract boxes and classes
+            boxes = output[:, :4]  # [cx, cy, w, h]
+            class_ids = np.argmax(output[:, 4:], axis=1)
+
+            # 3. Convert [cx, cy, w, h] -> [x1, y1, x2, y2]
+            x1 = boxes[:, 0] - boxes[:, 2] / 2
+            y1 = boxes[:, 1] - boxes[:, 3] / 2
+            x2 = boxes[:, 0] + boxes[:, 2] / 2
+            y2 = boxes[:, 1] + boxes[:, 3] / 2
+            
+            boxes_xyxy = np.stack([x1, y1, x2, y2], axis=1)
+
+            boxes_xyxy[:, [0, 2]] = (boxes_xyxy[:, [0, 2]] - pad_x) / scale
+            boxes_xyxy[:, [1, 3]] = (boxes_xyxy[:, [1, 3]] - pad_y) / scale
+
+            # 5. Non-Maximum Suppression (NMS)
+            indices = cv2.dnn.NMSBoxes(
+                bboxes=boxes_xyxy.tolist(),
+                scores=scores.tolist(),
+                score_threshold=self.conf_threshold,
+                nms_threshold=self.iou_threshold
+            )
+
+            if len(indices) == 0:
+                return self._empty_result(inference_time_ms)
+            
+            if isinstance(indices, np.ndarray):
+                indices = indices.flatten()
+            else:
+                indices = [i[0] if isinstance(i, (list, np.ndarray)) else i for i in indices]
 
         return DetectionResult(
             boxes=boxes_xyxy[indices],
             scores=scores[indices],
             class_ids=class_ids[indices],
             class_names=[self.classes[i] if i < len(self.classes) else f"class_{i}" for i in class_ids[indices]],
+            inference_time_ms=inference_time_ms,
         )
 
     def train(
@@ -278,6 +356,9 @@ class ObjectDetector:
         batch_size: int = 16,
         img_size: int = 640,
         name: str = "childsun_yolo26",
+        output_dir: str | Path | None = None,
+        workers: int = 8,
+        cache: bool | str = False,
         **kwargs: Any,
     ) -> dict:
         """
@@ -289,6 +370,9 @@ class ObjectDetector:
             batch_size: Batch size.
             img_size: Kích thước ảnh.
             name: Tên experiment.
+            output_dir: Thư mục lưu kết quả training.
+            workers: Số CPU threads để load dữ liệu song song.
+            cache: Cache ảnh vào RAM ('ram') hoặc disk ('disk') để tăng tốc.
 
         Returns:
             Dict chứa training metrics.
@@ -298,10 +382,10 @@ class ObjectDetector:
 
         logger.info(
             f"Starting training | epochs={epochs} | batch={batch_size} | "
-            f"img_size={img_size}"
+            f"img_size={img_size} | workers={workers} | cache={cache}"
         )
 
-        results = self._model.train(
+        train_args = dict(
             data=str(data_yaml),
             epochs=epochs,
             batch=batch_size,
@@ -312,8 +396,14 @@ class ObjectDetector:
             save=True,
             save_period=10,
             plots=True,
+            workers=workers,
+            cache=cache,
             **kwargs,
         )
+        if output_dir:
+            train_args["project"] = str(output_dir)
+
+        results = self._model.train(**train_args)
 
         logger.info(f"Training completed: {name}")
         return results

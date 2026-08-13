@@ -38,29 +38,13 @@ module_ai_core/datasets/Falling-pose-estimation-4/*
 module_ai_core/datasets/*.zip
 
 
-# Media & Video files (Video clips, snapshots, annotated outputs)
-clips/
-snapshots/
-runs/
-*.mp4
-*.avi
-*.mov
-*.mkv
-*.webm
-
-# Logs, Storage & Database
-logs/
-*.log
-*.db
-*.sqlite
-*.sqlite3
-
 # OS generated files
 .DS_Store
 Thumbs.db
 desktop.ini
 
-readme_task_namtrung.md
+namtrung1.md
+namtrung2.md
 *.jpg
 *.png
 module_ai_core/fall_detection/yolo26n.pt

@@ -16,3 +16,9 @@ Module này quản lý hạ tầng phía máy chủ, tập trung vào việc c�
 - `BACKEND_URL`: URL của server backend.
 - `FEDERATED_SERVER_URL`: URL server quản lý cập nhật mô hình.
 - `AUTH_JWT_SECRET`: Khóa dùng để ký các token xác thực.
+
+{
+    "type": "offer", 
+    "target": "edge_camera_01",
+    "sdp": "v=0\r\no=- 461173... (thông số mã hóa video)"
+}
