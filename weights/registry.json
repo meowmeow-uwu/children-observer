@@ -1,0 +1,23 @@
+{
+  "roi_detection": {
+    "status": "not_started",
+    "path": null,
+    "format": "pytorch",
+    "metrics": {},
+    "note": ""
+  },
+  "violence_detection": {
+    "status": "not_started",
+    "path": null,
+    "format": "pytorch",
+    "metrics": {},
+    "note": ""
+  },
+  "fall_detection": {
+    "status": "ready",
+    "path": "weights\\fall_detection\\yolo11n-pose-pretrained-20260723-142618.pt",
+    "format": "pytorch",
+    "note": "pretrained",
+    "updated_at": "2026-07-23 14:26:20"
+  }
+}

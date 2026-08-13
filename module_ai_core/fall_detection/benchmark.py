@@ -56,3 +56,15 @@ def benchmark_fps(num_frames=100):
 
 if __name__ == "__main__":
     fps = benchmark_fps()
+'''
+Test logic: $env:PYTHONIOENCODING="utf-8"; .\.venv\Scripts\python.exe test_fall_logic.py
+
+Test video: $env:PYTHONIOENCODING="utf-8"; .\.venv\Scripts\python.exe test_fall_detection_video.py path/to/video_cua_ban.mp4
+
+Test tích hợp với Module Đánh Giá Rủi Ro & Cảnh Báo: $env:PYTHONIOENCODING="utf-8"; .\.venv\Scripts\python.exe test_risk_assessment.py
+
+Test tích hợp với Pipeline Đa Nhiệm (MultiTaskRunner / Edge Firmware): $env:PYTHONIOENCODING="utf-8"; .\.venv\Scripts\python.exe test_multitask_integration.py
+
+Test đo hiệu năng & Tốc độ xử lý (Benchmark FPS & Latency): $env:PYTHONIOENCODING="utf-8"; .\.venv\Scripts\python.exe -m module_ai_core.fall_detection.benchmark
+
+'''

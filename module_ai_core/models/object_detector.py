@@ -20,8 +20,6 @@ from loguru import logger
 
 from configs.settings import get_settings
 from module_ai_core.datasets.childsun_loader import CHILDSUN_CLASSES
-from module_edge_firmware.inference.engine import create_engine, BaseInferenceEngine
-from module_edge_firmware.ingestion.preprocessor import FramePreprocessor
 
 
 class DetectionResult:

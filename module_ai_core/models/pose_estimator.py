@@ -1,7 +1,7 @@
 """
-YOLO26-Pose Estimator.
+YOLO11-Pose Estimator.
 
-Wrapper cho YOLO26-Pose để trích xuất skeleton keypoints.
+Wrapper cho YOLO11-Pose để trích xuất skeleton keypoints.
 """
 
 from __future__ import annotations
@@ -79,7 +79,7 @@ class PoseResult:
 
 
 class PoseEstimator:
-    """YOLO26-Pose wrapper cho pose estimation."""
+    """YOLO11-Pose wrapper cho pose estimation."""
 
     def __init__(self, model_path=None, device=None, conf_threshold=None):
         settings = get_settings()
@@ -91,7 +91,7 @@ class PoseEstimator:
 
     def load(self) -> None:
         from ultralytics import YOLO
-        if self.model_path.exists():
+        if self.model_path and self.model_path.exists():
             self._model = YOLO(str(self.model_path))
         else:
             logger.warning(f"Pose weights not found: {self.model_path}. Using pretrained.")
@@ -121,6 +121,48 @@ class PoseEstimator:
         path = self._model.export(format=format, **kwargs)
         logger.info(f"Pose model exported to: {path}")
         return Path(path)
+
+    def train(
+        self,
+        data_yaml: str,
+        epochs: int = 30,
+        batch_size: int = 8,
+        output_dir: str = "weights/fall_detection",
+        device: str | int | None = None,
+        workers: int = 2,
+        **kwargs: Any,
+    ) -> None:
+        """Huấn luyện (Fine-tuning) mô hình dựa trên nền tảng kiến trúc YOLO11n-pose."""
+        from ultralytics import YOLO
+
+        target_device = device if device is not None else self.device
+        logger.info(f"Khởi tạo mô hình nền gốc yolo11n-pose.pt để chuẩn bị Fine-tuning trên device={target_device}...")
+        # Ép buộc nạp cấu trúc và trọng số khởi tạo của mô hình YOLO11n-pose
+        self._model = YOLO("yolo11n-pose.pt")
+
+        logger.info(f"Bắt đầu quá trình huấn luyện: data={data_yaml}, epochs={epochs}, batch={batch_size}, device={target_device}, workers={workers}")
+        # Kích hoạt hàm train của Ultralytics với các tham số truyền từ script chính
+        results = self._model.train(
+            data=data_yaml,
+            epochs=epochs,
+            batch=batch_size,
+            project=output_dir,
+            name="train_results",
+            device=target_device,
+            workers=workers,  # Giới hạn số luồng nạp dữ liệu CPU để hạ nhiệt độ máy
+            exist_ok=True,  # Ghi đè vào cùng thư mục để dễ quản lý file kết quả đầu ra
+            **kwargs,
+        )
+
+        # Sau khi huấn luyện xong, tự động cập nhật lại trạng thái nạp mô hình bằng file best.pt vừa học được
+        best_model_path = Path(output_dir) / "train_results" / "weights" / "best.pt"
+        if best_model_path.exists():
+            self._model = YOLO(str(best_model_path))
+            self.model_path = best_model_path
+            self._is_loaded = True
+            logger.info(f"Huấn luyện thành công! Mô hình tốt nhất lưu tại: {best_model_path}")
+        else:
+            logger.error("Không tìm thấy file trọng số sau khi kết thúc huấn luyện.")
 
     @property
     def is_loaded(self) -> bool:

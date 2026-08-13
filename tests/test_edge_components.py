@@ -12,7 +12,7 @@ import numpy as np
 import time
 from pathlib import Path
 import json
-
+    
 from module_edge_firmware.ingestion.preprocessor import FramePreprocessor
 from module_edge_firmware.analysis.roi_checker import ROIChecker
 from module_edge_firmware.buffer.circular_buffer import CircularBuffer

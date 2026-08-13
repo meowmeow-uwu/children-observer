@@ -6,6 +6,15 @@ import numpy as np
 import time
 
 
+def create_standing_pose_result(offset_y=0):
+    """Create synthetic standing pose result."""
+    kps = np.zeros((1, 17, 3), dtype=np.float32)
+    kps[0, :, 0] = 300  # Narrow
+    kps[0, :, 1] = np.linspace(100, 500, 17) + offset_y  # Tall
+    kps[0, :, 2] = 0.9
+    return PoseResult(kps, np.array([0.9]), np.array([[200, 100, 400, 500]]))
+
+
 def create_lying_pose_result():
     """Create synthetic lying pose result."""
     kps = np.zeros((1, 17, 3), dtype=np.float32)
@@ -22,8 +31,13 @@ def test_injury_fall_triggers_critical():
     assessor = RiskAssessor()
     analysis = FrameAnalysis()
 
-    # Simulate fall sequence
-    for i in range(100):  # 3+ seconds
+    # 1. Simulate rapid downward motion (fall velocity)
+    for i in range(5):
+        analysis.poses = create_standing_pose_result(offset_y=i * 60)
+        assessor.assess(analysis)
+
+    # 2. Simulate lying still for > 2 seconds
+    for i in range(250):
         analysis.poses = create_lying_pose_result()
         assessment = assessor.assess(analysis)
 
@@ -46,7 +60,8 @@ def test_injury_fall_triggers_critical():
             print(f"   Reasons: {assessment.reasons}")
             return True
 
-        time.sleep(0.01)
+        if i % 10 == 0:
+            time.sleep(0.1)
 
     print("❌ Injury fall not detected")
     return False
