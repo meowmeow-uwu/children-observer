@@ -1,0 +1,545 @@
+2026-05-25 20:49:48.439 | INFO     | configs.logging_config:setup_logging:60 | Logging configured | level=DEBUG | env=development
+2026-05-25 20:49:48.440 | INFO     | __main__:main:79 | AI Child Guardian starting | mode=edge
+2026-05-25 20:49:54.896 | INFO     | module_edge_firmware.analysis.roi_checker:_load_config:93 | No ROI config found. Running without zone protection.
+2026-05-25 20:49:54.897 | INFO     | module_edge_firmware.buffer.circular_buffer:__init__:59 | CircularBuffer initialized: 15s @ 25fps (max 375 frames)
+2026-05-25 20:49:54.902 | INFO     | configs.logging_config:setup_logging:60 | Logging configured | level=DEBUG | env=development
+2026-05-25 20:49:54.902 | INFO     | module_edge_firmware.pipeline:start:65 | ============================================================
+2026-05-25 20:49:54.902 | INFO     | module_edge_firmware.pipeline:start:66 | AI Child Guardian - Edge Pipeline Starting
+2026-05-25 20:49:54.902 | INFO     | module_edge_firmware.pipeline:start:67 | ============================================================
+2026-05-25 20:49:54.902 | INFO     | module_edge_firmware.pipeline:start:70 | Loading AI models...
+2026-05-25 20:49:54.903 | INFO     | module_edge_firmware.inference.multi_task_runner:load_all:127 | Model Registry Status:
+  ❌ roi_detection: not_started | path=None
+  ❌ violence_detection: not_started | path=None
+  ✅ fall_detection: ready | path=weights\fall_detection\yolo-pose-best.pt
+2026-05-25 20:49:54.903 | WARNING  | module_edge_firmware.inference.multi_task_runner:load_all:149 | ⏭️ ROI Detection: SKIPPED (model not ready)
+2026-05-25 20:49:57.224 | INFO     | module_ai_core.models.pose_estimator:load:101 | PoseEstimator ready | device=cpu
+2026-05-25 20:49:57.224 | INFO     | module_edge_firmware.inference.multi_task_runner:load_all:160 | ✅ Fall Detection (Pose): LOADED
+2026-05-25 20:49:57.225 | WARNING  | module_edge_firmware.inference.multi_task_runner:load_all:179 | ⏭️ Violence Detection: SKIPPED (model not ready)
+2026-05-25 20:49:57.225 | INFO     | module_edge_firmware.inference.multi_task_runner:load_all:183 | ==================================================
+2026-05-25 20:49:57.225 | INFO     | module_edge_firmware.inference.multi_task_runner:load_all:184 | MultiTaskRunner: 1/3 models loaded → ['fall_detection']
+2026-05-25 20:49:57.225 | INFO     | module_edge_firmware.inference.multi_task_runner:load_all:187 | ==================================================
+2026-05-25 20:49:57.226 | INFO     | module_edge_firmware.pipeline:start:74 | Warming up models...
+2026-05-25 20:49:57.790 | INFO     | module_edge_firmware.pipeline:start:78 | Warmup completed.
+2026-05-25 20:49:57.792 | INFO     | module_edge_firmware.ingestion.rtsp_capture:start:64 | RTSP capture started: C:/children-observer/data/test_videos/fall.mp4
+2026-05-25 20:49:57.793 | INFO     | module_edge_firmware.pipeline:start:93 | Pipeline started. Monitoring...
+2026-05-25 20:49:57.937 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:49:58.797 | INFO     | module_edge_firmware.pipeline:_health_monitor_loop:183 | HEALTH: CPU=820.3% | RAM=657.8MB | Disk=57.0GB | Camera=True | FPS=0.3
+2026-05-25 20:49:59.048 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=96.8
+2026-05-25 20:49:59.994 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:50:00.250 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:50:00.297 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:50:00.379 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 101.2ms (Target < 33ms)
+2026-05-25 20:50:01.414 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=96.8
+2026-05-25 20:50:02.412 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:50:02.641 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:50:02.686 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:50:02.749 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 110.4ms (Target < 33ms)
+2026-05-25 20:50:03.309 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 100 frames | avg_latency=52.0ms | alerts=0 | buffer=593.3 MB
+2026-05-25 20:50:03.803 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=96.8
+2026-05-25 20:50:04.773 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:50:05.042 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:50:05.079 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:50:06.184 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=62.4
+2026-05-25 20:50:07.222 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:50:07.453 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:50:07.504 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:50:07.557 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 109.9ms (Target < 33ms)
+2026-05-25 20:50:08.336 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 118.3ms (Target < 33ms)
+2026-05-25 20:50:09.093 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=269.8
+2026-05-25 20:50:09.402 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 200 frames | avg_latency=72.2ms | alerts=0 | buffer=1186.5 MB
+2026-05-25 20:50:09.633 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=60.5
+2026-05-25 20:50:09.772 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:50:09.829 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:50:09.955 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 151.9ms (Target < 33ms)
+2026-05-25 20:50:10.446 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 142.9ms (Target < 33ms)
+2026-05-25 20:50:10.687 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 237.6ms (Target < 33ms)
+2026-05-25 20:50:10.967 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=96.8
+2026-05-25 20:50:11.719 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 105.3ms (Target < 33ms)
+2026-05-25 20:50:11.958 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=66.2
+2026-05-25 20:50:12.161 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:50:12.217 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:50:13.354 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=62.4
+2026-05-25 20:50:14.280 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:50:14.512 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:50:14.562 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:50:14.681 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 108.8ms (Target < 33ms)
+2026-05-25 20:50:14.988 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 108.1ms (Target < 33ms)
+2026-05-25 20:50:16.089 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=245.1
+2026-05-25 20:50:16.747 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=63.9
+2026-05-25 20:50:16.930 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:50:16.989 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:50:17.309 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 300 frames | avg_latency=69.8ms | alerts=0 | buffer=1779.8 MB
+2026-05-25 20:50:18.163 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=62.4
+2026-05-25 20:50:19.142 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=66.2
+2026-05-25 20:50:19.360 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:50:19.410 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:50:19.553 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 102.6ms (Target < 33ms)
+2026-05-25 20:50:21.042 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=234.0
+2026-05-25 20:50:21.554 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=66.2
+2026-05-25 20:50:21.760 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:50:21.816 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:50:22.941 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=107.4
+2026-05-25 20:50:23.962 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=66.2
+2026-05-25 20:50:24.203 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:50:24.233 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 400 frames | avg_latency=65.7ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:50:24.247 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:50:24.352 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 116.1ms (Target < 33ms)
+2026-05-25 20:50:25.361 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=62.4
+2026-05-25 20:50:26.263 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=63.9
+2026-05-25 20:50:26.514 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:50:26.563 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:50:26.638 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 116.1ms (Target < 33ms)
+2026-05-25 20:50:27.990 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=245.1
+2026-05-25 20:50:28.598 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:50:28.788 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:50:28.837 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:50:29.812 | INFO     | module_edge_firmware.pipeline:_health_monitor_loop:183 | HEALTH: CPU=851.6% | RAM=2768.5MB | Disk=57.0GB | Camera=True | FPS=24.5
+2026-05-25 20:50:29.976 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=96.8
+2026-05-25 20:50:30.973 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=63.9
+2026-05-25 20:50:30.974 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 500 frames | avg_latency=62.3ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:50:31.179 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:50:31.230 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:50:31.266 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 114.1ms (Target < 33ms)
+2026-05-25 20:50:32.347 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=96.8
+2026-05-25 20:50:33.320 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=60.5
+2026-05-25 20:50:33.500 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:50:33.549 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:50:34.747 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=62.4
+2026-05-25 20:50:35.745 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=60.5
+2026-05-25 20:50:35.963 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:50:36.015 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:50:37.143 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=96.8
+2026-05-25 20:50:37.500 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 600 frames | avg_latency=61.0ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:50:38.098 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=63.9
+2026-05-25 20:50:38.347 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:50:38.393 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:50:39.793 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=245.1
+2026-05-25 20:50:40.428 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=60.5
+2026-05-25 20:50:40.603 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:50:40.656 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:50:41.832 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=62.4
+2026-05-25 20:50:42.826 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=60.5
+2026-05-25 20:50:43.007 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:50:43.050 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:50:44.134 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 700 frames | avg_latency=62.9ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:50:44.465 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 117.4ms (Target < 33ms)
+2026-05-25 20:50:44.528 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=245.1
+2026-05-25 20:50:45.138 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=60.5
+2026-05-25 20:50:45.338 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:50:45.381 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:50:45.504 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 114.9ms (Target < 33ms)
+2026-05-25 20:50:46.602 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=96.8
+2026-05-25 20:50:47.594 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:50:47.803 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:50:47.849 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:50:48.958 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=62.4
+2026-05-25 20:50:49.866 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:50:50.136 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 800 frames | avg_latency=55.1ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:50:50.183 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:50:50.234 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:50:50.298 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 102.8ms (Target < 33ms)
+2026-05-25 20:50:51.347 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=96.8
+2026-05-25 20:50:52.347 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=66.2
+2026-05-25 20:50:52.523 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:50:52.578 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:50:54.233 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=234.0
+2026-05-25 20:50:54.890 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=62.5
+2026-05-25 20:50:55.078 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:50:55.129 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:50:56.406 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 900 frames | avg_latency=59.5ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:50:56.788 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=245.1
+2026-05-25 20:50:57.243 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=63.9
+2026-05-25 20:50:57.439 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:50:57.482 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:50:58.546 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=96.8
+2026-05-25 20:50:59.512 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=60.5
+2026-05-25 20:50:59.755 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:50:59.792 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:51:00.824 | INFO     | module_edge_firmware.pipeline:_health_monitor_loop:183 | HEALTH: CPU=837.5% | RAM=2768.1MB | Disk=57.0GB | Camera=True | FPS=24.3
+2026-05-25 20:51:00.924 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=62.4
+2026-05-25 20:51:01.937 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:51:02.181 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:51:02.227 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:51:02.631 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 1000 frames | avg_latency=59.4ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:51:03.316 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=62.4
+2026-05-25 20:51:04.300 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:51:04.507 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 102.0ms (Target < 33ms)
+2026-05-25 20:51:04.514 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:51:04.550 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:51:05.721 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=62.4
+2026-05-25 20:51:06.560 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=63.9
+2026-05-25 20:51:06.757 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:51:06.798 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:51:08.229 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=245.1
+2026-05-25 20:51:08.780 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 1100 frames | avg_latency=64.1ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:51:08.841 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=60.5
+2026-05-25 20:51:09.017 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:51:09.065 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:51:10.146 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=96.8
+2026-05-25 20:51:11.110 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:51:11.320 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:51:11.370 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:51:12.979 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=234.0
+2026-05-25 20:51:13.450 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=63.9
+2026-05-25 20:51:13.763 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:51:13.808 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:51:13.901 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 106.5ms (Target < 33ms)
+2026-05-25 20:51:14.970 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=96.8
+2026-05-25 20:51:15.786 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 1200 frames | avg_latency=71.0ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:51:15.933 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 144.8ms (Target < 33ms)
+2026-05-25 20:51:16.013 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=62.5
+2026-05-25 20:51:16.184 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:51:16.234 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:51:17.726 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=245.1
+2026-05-25 20:51:18.398 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:51:18.611 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:51:18.668 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:51:18.778 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 135.5ms (Target < 33ms)
+2026-05-25 20:51:20.170 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=245.1
+2026-05-25 20:51:20.823 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=66.2
+2026-05-25 20:51:21.026 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:51:21.076 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:51:22.743 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=245.1
+2026-05-25 20:51:23.267 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=66.2
+2026-05-25 20:51:23.452 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:51:23.479 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 1300 frames | avg_latency=72.2ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:51:23.504 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:51:24.995 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=245.1
+2026-05-25 20:51:25.620 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=66.2
+2026-05-25 20:51:25.828 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:51:25.874 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:51:27.004 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=96.8
+2026-05-25 20:51:28.055 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=60.5
+2026-05-25 20:51:28.248 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:51:28.302 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:51:28.380 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 101.8ms (Target < 33ms)
+2026-05-25 20:51:29.137 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 168.0ms (Target < 33ms)
+2026-05-25 20:51:29.480 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=62.4
+2026-05-25 20:51:30.225 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 105.1ms (Target < 33ms)
+2026-05-25 20:51:30.379 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 150.8ms (Target < 33ms)
+2026-05-25 20:51:30.456 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=63.9
+2026-05-25 20:51:30.671 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:51:30.709 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:51:30.991 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 1400 frames | avg_latency=75.3ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:51:31.836 | INFO     | module_edge_firmware.pipeline:_health_monitor_loop:183 | HEALTH: CPU=803.1% | RAM=2768.4MB | Disk=57.0GB | Camera=True | FPS=24.5
+2026-05-25 20:51:32.078 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=245.1
+2026-05-25 20:51:32.722 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 124.5ms (Target < 33ms)
+2026-05-25 20:51:32.790 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=62.5
+2026-05-25 20:51:32.929 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:51:32.976 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:51:34.077 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=96.8
+2026-05-25 20:51:35.088 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:51:35.299 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:51:35.337 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:51:36.414 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=62.4
+2026-05-25 20:51:37.138 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 1500 frames | avg_latency=55.1ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:51:37.362 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:51:37.550 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:51:37.587 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:51:38.651 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=96.8
+2026-05-25 20:51:39.684 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:51:39.876 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:51:39.915 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:51:41.095 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=62.4
+2026-05-25 20:51:42.090 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=60.5
+2026-05-25 20:51:42.337 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:51:42.373 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:51:42.959 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 1600 frames | avg_latency=55.8ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:51:43.477 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=62.4
+2026-05-25 20:51:44.461 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=63.9
+2026-05-25 20:51:44.690 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:51:44.721 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:51:46.220 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=245.1
+2026-05-25 20:51:46.840 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=60.5
+2026-05-25 20:51:47.067 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:51:47.101 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:51:48.237 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=62.4
+2026-05-25 20:51:48.781 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 1700 frames | avg_latency=56.5ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:51:49.208 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=60.5
+2026-05-25 20:51:49.426 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:51:49.463 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:51:50.888 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=245.1
+2026-05-25 20:51:51.543 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=63.9
+2026-05-25 20:51:51.840 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:51:51.870 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:51:53.444 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=234.0
+2026-05-25 20:51:54.093 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=60.5
+2026-05-25 20:51:54.357 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:51:54.393 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:51:54.473 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 132.7ms (Target < 33ms)
+2026-05-25 20:51:54.866 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 1800 frames | avg_latency=60.5ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:51:55.557 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=62.4
+2026-05-25 20:51:56.681 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=66.2
+2026-05-25 20:51:56.940 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:51:56.972 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:51:57.984 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=96.8
+2026-05-25 20:51:59.121 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=63.9
+2026-05-25 20:51:59.405 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:51:59.438 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:52:00.692 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 1900 frames | avg_latency=61.0ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:52:01.036 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 119.3ms (Target < 33ms)
+2026-05-25 20:52:01.122 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=269.8
+2026-05-25 20:52:01.630 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:52:01.859 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:52:01.894 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:52:02.323 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 101.3ms (Target < 33ms)
+2026-05-25 20:52:02.850 | INFO     | module_edge_firmware.pipeline:_health_monitor_loop:183 | HEALTH: CPU=818.8% | RAM=2766.5MB | Disk=57.0GB | Camera=True | FPS=21.7
+2026-05-25 20:52:03.516 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=245.1
+2026-05-25 20:52:03.856 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 100.5ms (Target < 33ms)
+2026-05-25 20:52:04.004 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 144.1ms (Target < 33ms)
+2026-05-25 20:52:04.088 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=91.8
+2026-05-25 20:52:04.221 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:52:04.257 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:52:04.339 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 100.6ms (Target < 33ms)
+2026-05-25 20:52:05.404 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=62.4
+2026-05-25 20:52:06.390 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=60.5
+2026-05-25 20:52:06.575 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:52:06.611 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:52:06.724 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 105.2ms (Target < 33ms)
+2026-05-25 20:52:07.752 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=96.8
+2026-05-25 20:52:08.306 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 2000 frames | avg_latency=70.2ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:52:08.708 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=63.9
+2026-05-25 20:52:08.923 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:52:08.967 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:52:10.525 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=245.1
+2026-05-25 20:52:11.099 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:52:11.366 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:52:11.404 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:52:12.560 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=96.8
+2026-05-25 20:52:13.530 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=63.9
+2026-05-25 20:52:13.772 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:52:13.811 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:52:15.048 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 2100 frames | avg_latency=63.6ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:52:15.295 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=245.1
+2026-05-25 20:52:16.015 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=60.5
+2026-05-25 20:52:16.163 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:52:16.208 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:52:17.351 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=96.8
+2026-05-25 20:52:17.480 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 124.2ms (Target < 33ms)
+2026-05-25 20:52:17.632 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 147.8ms (Target < 33ms)
+2026-05-25 20:52:17.744 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 108.8ms (Target < 33ms)
+2026-05-25 20:52:18.264 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=63.9
+2026-05-25 20:52:18.572 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:52:18.621 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:52:18.677 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 102.0ms (Target < 33ms)
+2026-05-25 20:52:19.083 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 153.1ms (Target < 33ms)
+2026-05-25 20:52:19.208 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 121.2ms (Target < 33ms)
+2026-05-25 20:52:20.117 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=280.2
+2026-05-25 20:52:20.771 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=60.5
+2026-05-25 20:52:20.954 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:52:20.991 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:52:22.155 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 2200 frames | avg_latency=66.5ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:52:22.457 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=245.1
+2026-05-25 20:52:23.038 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=66.2
+2026-05-25 20:52:23.293 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:52:23.332 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:52:24.928 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=245.1
+2026-05-25 20:52:25.463 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:52:25.747 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:52:25.780 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:52:26.970 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=62.4
+2026-05-25 20:52:27.808 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:52:28.075 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:52:28.113 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:52:28.399 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 2300 frames | avg_latency=61.8ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:52:29.681 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=245.1
+2026-05-25 20:52:30.210 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=63.9
+2026-05-25 20:52:30.495 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:52:30.527 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:52:32.193 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=245.1
+2026-05-25 20:52:32.713 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=66.2
+2026-05-25 20:52:32.863 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:52:32.896 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:52:33.859 | INFO     | module_edge_firmware.pipeline:_health_monitor_loop:183 | HEALTH: CPU=850.0% | RAM=2774.6MB | Disk=51.1GB | Camera=True | FPS=24.3
+2026-05-25 20:52:34.227 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 102.1ms (Target < 33ms)
+2026-05-25 20:52:34.387 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=245.1
+2026-05-25 20:52:35.053 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=66.2
+2026-05-25 20:52:35.053 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 2400 frames | avg_latency=71.3ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:52:35.222 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:52:35.263 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:52:35.330 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 114.9ms (Target < 33ms)
+2026-05-25 20:52:36.426 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=62.4
+2026-05-25 20:52:37.422 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:52:37.598 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:52:37.636 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:52:37.690 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 105.2ms (Target < 33ms)
+2026-05-25 20:52:38.788 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=96.8
+2026-05-25 20:52:39.734 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=63.9
+2026-05-25 20:52:39.993 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:52:40.029 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:52:41.557 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=234.0
+2026-05-25 20:52:42.128 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=60.5
+2026-05-25 20:52:42.325 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:52:42.364 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:52:42.428 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 116.9ms (Target < 33ms)
+2026-05-25 20:52:42.430 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 2500 frames | avg_latency=72.0ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:52:43.821 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=245.1
+2026-05-25 20:52:44.517 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=60.5
+2026-05-25 20:52:44.715 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:52:44.750 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:52:44.841 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 116.7ms (Target < 33ms)
+2026-05-25 20:52:46.285 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=245.1
+2026-05-25 20:52:46.868 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:52:47.136 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:52:47.169 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:52:48.566 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=245.1
+2026-05-25 20:52:48.796 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 2600 frames | avg_latency=56.4ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:52:49.322 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=60.5
+2026-05-25 20:52:49.507 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:52:49.536 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:52:50.741 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=62.4
+2026-05-25 20:52:51.720 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=63.9
+2026-05-25 20:52:51.950 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:52:51.988 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:52:52.083 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 115.0ms (Target < 33ms)
+2026-05-25 20:52:53.458 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=245.1
+2026-05-25 20:52:54.101 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=66.2
+2026-05-25 20:52:54.300 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:52:54.350 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:52:54.455 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 150.1ms (Target < 33ms)
+2026-05-25 20:52:55.494 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 2700 frames | avg_latency=65.9ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:52:55.781 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=245.1
+2026-05-25 20:52:56.405 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=63.9
+2026-05-25 20:52:56.703 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:52:56.738 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:52:57.890 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=62.4
+2026-05-25 20:52:58.802 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:52:59.091 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:52:59.121 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:53:00.696 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=234.0
+2026-05-25 20:53:01.219 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:53:01.220 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 2800 frames | avg_latency=53.8ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:53:01.445 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:53:01.474 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:53:02.602 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=62.4
+2026-05-25 20:53:03.592 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=66.2
+2026-05-25 20:53:03.840 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:53:03.864 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:53:04.870 | INFO     | module_edge_firmware.pipeline:_health_monitor_loop:183 | HEALTH: CPU=845.3% | RAM=2776.6MB | Disk=50.9GB | Camera=True | FPS=23.9
+2026-05-25 20:53:05.343 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=245.1
+2026-05-25 20:53:06.001 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:53:06.206 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:53:06.248 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:53:06.768 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 2900 frames | avg_latency=53.9ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:53:07.277 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=62.4
+2026-05-25 20:53:08.285 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:53:08.525 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:53:08.550 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:53:09.680 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=62.4
+2026-05-25 20:53:10.658 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=60.5
+2026-05-25 20:53:10.894 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:53:10.925 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:53:12.066 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=96.8
+2026-05-25 20:53:12.546 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 3000 frames | avg_latency=57.0ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:53:13.139 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=60.5
+2026-05-25 20:53:13.385 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:53:13.411 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:53:14.820 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=245.1
+2026-05-25 20:53:15.362 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=60.5
+2026-05-25 20:53:15.576 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:53:15.604 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:53:17.082 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=245.1
+2026-05-25 20:53:17.596 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=63.9
+2026-05-25 20:53:17.883 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:53:17.911 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:53:18.278 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 128.9ms (Target < 33ms)
+2026-05-25 20:53:18.420 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 3100 frames | avg_latency=61.1ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:53:18.992 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=62.4
+2026-05-25 20:53:19.848 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:53:20.148 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:53:20.178 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:53:21.250 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=96.8
+2026-05-25 20:53:22.243 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:53:22.517 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:53:22.544 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:53:23.693 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=96.8
+2026-05-25 20:53:24.112 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 3200 frames | avg_latency=57.3ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:53:24.657 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:53:24.832 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:53:24.870 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:53:25.997 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=96.8
+2026-05-25 20:53:26.963 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=63.9
+2026-05-25 20:53:27.068 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 101.2ms (Target < 33ms)
+2026-05-25 20:53:27.248 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:53:27.281 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:53:28.366 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=96.8
+2026-05-25 20:53:29.330 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:53:29.606 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:53:29.643 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:53:29.885 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 3300 frames | avg_latency=54.7ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:53:30.811 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=96.8
+2026-05-25 20:53:31.739 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:53:31.997 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:53:32.022 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:53:33.082 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=96.8
+2026-05-25 20:53:34.023 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=63.9
+2026-05-25 20:53:34.191 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:53:34.220 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:53:35.406 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=62.4
+2026-05-25 20:53:35.681 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 3400 frames | avg_latency=55.5ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:53:35.883 | INFO     | module_edge_firmware.pipeline:_health_monitor_loop:183 | HEALTH: CPU=839.1% | RAM=2776.9MB | Disk=50.9GB | Camera=True | FPS=24.5
+2026-05-25 20:53:36.312 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:53:36.564 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:53:36.590 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:53:37.652 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=96.8
+2026-05-25 20:53:38.601 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=60.5
+2026-05-25 20:53:38.834 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:53:38.858 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:53:40.453 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=245.1
+2026-05-25 20:53:41.070 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:53:41.174 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 3500 frames | avg_latency=51.5ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:53:41.370 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:53:41.393 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:53:42.572 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=62.4
+2026-05-25 20:53:43.360 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=63.9
+2026-05-25 20:53:43.638 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:53:43.670 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:53:44.861 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=96.8
+2026-05-25 20:53:45.780 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=66.2
+2026-05-25 20:53:45.908 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:53:45.932 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:53:46.813 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=62.4
+2026-05-25 20:53:46.870 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 3600 frames | avg_latency=55.3ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:53:47.708 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=63.9
+2026-05-25 20:53:47.878 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:53:47.904 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:53:49.070 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=96.8
+2026-05-25 20:53:49.950 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:53:50.258 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:53:50.282 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:53:51.491 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=62.4
+2026-05-25 20:53:52.506 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:53:52.670 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 3700 frames | avg_latency=54.8ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:53:52.792 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:53:52.818 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:53:54.003 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=96.8
+2026-05-25 20:53:55.050 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=63.9
+2026-05-25 20:53:55.311 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:53:55.351 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:53:56.773 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=245.1
+2026-05-25 20:53:57.431 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=63.9
+2026-05-25 20:53:57.627 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:53:57.651 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:53:58.583 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 3800 frames | avg_latency=58.0ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:53:58.645 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=96.8
+2026-05-25 20:53:59.793 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:54:00.068 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:54:00.093 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:54:01.086 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=96.8
+2026-05-25 20:54:02.217 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=58.9
+2026-05-25 20:54:02.496 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:54:02.523 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:54:03.979 | WARNING  | module_edge_firmware.pipeline:_process_frame:153 | ⚠️ Late frame detected: 102.9ms (Target < 33ms)
+2026-05-25 20:54:04.103 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=245.1
+2026-05-25 20:54:04.158 | INFO     | module_edge_firmware.pipeline:_process_frame:165 | Stats: 3900 frames | avg_latency=56.7ms | alerts=0 | buffer=2224.7 MB
+2026-05-25 20:54:04.682 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=60.5
+2026-05-25 20:54:04.902 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:125 | Failed to read frame. Reconnecting...
+2026-05-25 20:54:04.930 | INFO     | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:118 | RTSP stream connected successfully
+2026-05-25 20:54:06.028 | WARNING  | module_edge_firmware.analysis.fall_detector:update:99 | Fall detected! velocity=62.4
+2026-05-25 20:54:06.238 | INFO     | module_edge_firmware.pipeline:_signal_handler:205 | Signal 2 received. Shutting down...
+2026-05-25 20:54:06.238 | INFO     | module_edge_firmware.pipeline:stop:100 | Stopping pipeline...
+2026-05-25 20:54:06.262 | INFO     | module_edge_firmware.ingestion.rtsp_capture:stop:74 | RTSP capture stopped
+2026-05-25 20:54:06.263 | INFO     | module_edge_firmware.inference.multi_task_runner:shutdown:261 | MultiTaskRunner shut down
+2026-05-25 20:54:06.263 | INFO     | module_edge_firmware.pipeline:stop:104 | Pipeline stopped. Stats: {'frames_processed': 3940, 'alerts_sent': 0, 'avg_latency_ms': 50.71268486322791}
+2026-05-25 20:54:06.264 | ERROR    | module_edge_firmware.pipeline:_process_loop:120 | ❌ Critical error in pipeline loop: cannot schedule new futures after shutdown
+2026-05-25 20:54:06.896 | INFO     | module_edge_firmware.pipeline:_health_monitor_loop:183 | HEALTH: CPU=409.4% | RAM=2689.9MB | Disk=50.9GB | Camera=False | FPS=24.0

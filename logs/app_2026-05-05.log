@@ -1,0 +1,54 @@
+2026-05-05 01:41:16.169 | INFO     | configs.logging_config:setup_logging:60 | Logging configured | level=DEBUG | env=development
+2026-05-05 01:41:16.170 | INFO     | __main__:main:79 | AI Child Guardian starting | mode=prepare-data
+2026-05-05 01:41:16.178 | INFO     | __main__:prepare_data:59 | Created dataset structure: data\childsun
+2026-05-05 01:41:16.183 | INFO     | __main__:prepare_data:59 | Created dataset structure: data\violence
+2026-05-05 01:41:16.183 | INFO     | __main__:prepare_data:61 | Dataset directories ready. Place your data files accordingly.
+2026-05-05 01:42:27.096 | INFO     | configs.logging_config:setup_logging:60 | Logging configured | level=DEBUG | env=development
+2026-05-05 01:42:27.097 | INFO     | __main__:main:79 | AI Child Guardian starting | mode=compliance
+2026-05-05 01:42:27.102 | INFO     | module_security.compliance_checker:check_qcvn135:86 | QCVN 135 check: ✅ PASSED | Pass rate: 100% | Warnings: 0
+2026-05-05 01:42:27.102 | INFO     | module_security.compliance_checker:run_all_checks:116 | Compliance check: ⚠️ SOME FAILED
+2026-05-05 01:45:23.289 | INFO     | configs.logging_config:setup_logging:60 | Logging configured | level=DEBUG | env=development
+2026-05-05 01:45:23.290 | INFO     | __main__:main:79 | AI Child Guardian starting | mode=edge
+2026-05-05 01:45:30.251 | WARNING  | module_ai_core.model_registry:reload:60 | Registry not found: weights\registry.json
+2026-05-05 01:45:30.251 | INFO     | module_edge_firmware.analysis.roi_checker:_load_config:60 | No ROI config found. Running without zone protection.
+2026-05-05 01:45:30.256 | INFO     | configs.logging_config:setup_logging:60 | Logging configured | level=DEBUG | env=development
+2026-05-05 01:45:30.256 | INFO     | module_edge_firmware.pipeline:start:55 | ============================================================
+2026-05-05 01:45:30.256 | INFO     | module_edge_firmware.pipeline:start:56 | AI Child Guardian - Edge Pipeline Starting
+2026-05-05 01:45:30.256 | INFO     | module_edge_firmware.pipeline:start:57 | ============================================================
+2026-05-05 01:45:30.257 | INFO     | module_edge_firmware.pipeline:start:60 | Loading AI models...
+2026-05-05 01:45:30.257 | WARNING  | module_ai_core.model_registry:reload:60 | Registry not found: weights\registry.json
+2026-05-05 01:45:30.257 | INFO     | module_edge_firmware.inference.multi_task_runner:load_all:126 | Model Registry Status:
+2026-05-05 01:45:30.257 | WARNING  | module_edge_firmware.inference.multi_task_runner:load_all:143 | ⏭️ ROI Detection: SKIPPED (model not ready)
+2026-05-05 01:45:30.257 | WARNING  | module_edge_firmware.inference.multi_task_runner:load_all:158 | ⏭️ Fall Detection: SKIPPED (model not ready)
+2026-05-05 01:45:30.257 | WARNING  | module_edge_firmware.inference.multi_task_runner:load_all:173 | ⏭️ Violence Detection: SKIPPED (model not ready)
+2026-05-05 01:45:30.258 | INFO     | module_edge_firmware.inference.multi_task_runner:load_all:177 | ==================================================
+2026-05-05 01:45:30.258 | INFO     | module_edge_firmware.inference.multi_task_runner:load_all:178 | MultiTaskRunner: 0/3 models loaded → []
+2026-05-05 01:45:30.258 | WARNING  | module_edge_firmware.inference.multi_task_runner:load_all:180 | ⚠️ Không có model nào! Sử dụng MockAIService để test.
+2026-05-05 01:45:30.258 | INFO     | module_edge_firmware.inference.multi_task_runner:load_all:181 | ==================================================
+2026-05-05 01:45:30.259 | INFO     | module_edge_firmware.ingestion.rtsp_capture:start:61 | RTSP capture started: rtsp://admin:password@192.168.1.100:554/stream1
+2026-05-05 01:45:30.259 | INFO     | module_edge_firmware.pipeline:start:71 | Pipeline started. Monitoring...
+2026-05-05 01:46:00.350 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_connect:149 | Cannot open RTSP stream: rtsp://admin:password@192.168.1.100:554/stream1
+2026-05-05 01:46:00.350 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:102 | Reconnecting in 5.0s (1/10)
+2026-05-05 01:46:35.358 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_connect:149 | Cannot open RTSP stream: rtsp://admin:password@192.168.1.100:554/stream1
+2026-05-05 01:46:35.358 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:102 | Reconnecting in 5.0s (2/10)
+2026-05-05 01:47:10.428 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_connect:149 | Cannot open RTSP stream: rtsp://admin:password@192.168.1.100:554/stream1
+2026-05-05 01:47:10.428 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:102 | Reconnecting in 5.0s (3/10)
+2026-05-05 01:47:45.432 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_connect:149 | Cannot open RTSP stream: rtsp://admin:password@192.168.1.100:554/stream1
+2026-05-05 01:47:45.432 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:102 | Reconnecting in 5.0s (4/10)
+2026-05-05 01:48:20.510 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_connect:149 | Cannot open RTSP stream: rtsp://admin:password@192.168.1.100:554/stream1
+2026-05-05 01:48:20.511 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:102 | Reconnecting in 5.0s (5/10)
+2026-05-05 01:48:55.582 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_connect:149 | Cannot open RTSP stream: rtsp://admin:password@192.168.1.100:554/stream1
+2026-05-05 01:48:55.583 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:102 | Reconnecting in 5.0s (6/10)
+2026-05-05 01:49:30.638 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_connect:149 | Cannot open RTSP stream: rtsp://admin:password@192.168.1.100:554/stream1
+2026-05-05 01:49:30.638 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:102 | Reconnecting in 5.0s (7/10)
+2026-05-05 01:50:05.746 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_connect:149 | Cannot open RTSP stream: rtsp://admin:password@192.168.1.100:554/stream1
+2026-05-05 01:50:05.747 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:102 | Reconnecting in 5.0s (8/10)
+2026-05-05 01:50:40.778 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_connect:149 | Cannot open RTSP stream: rtsp://admin:password@192.168.1.100:554/stream1
+2026-05-05 01:50:40.779 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:102 | Reconnecting in 5.0s (9/10)
+2026-05-05 01:51:15.842 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_connect:149 | Cannot open RTSP stream: rtsp://admin:password@192.168.1.100:554/stream1
+2026-05-05 01:51:15.842 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:99 | Max reconnect attempts reached. Stopping.
+2026-05-05 02:06:20.795 | INFO     | module_edge_firmware.pipeline:_signal_handler:133 | Signal 2 received. Shutting down...
+2026-05-05 02:06:20.796 | INFO     | module_edge_firmware.pipeline:stop:78 | Stopping pipeline...
+2026-05-05 02:06:20.797 | INFO     | module_edge_firmware.ingestion.rtsp_capture:stop:71 | RTSP capture stopped
+2026-05-05 02:06:20.797 | INFO     | module_edge_firmware.inference.multi_task_runner:shutdown:254 | MultiTaskRunner shut down
+2026-05-05 02:06:20.797 | INFO     | module_edge_firmware.pipeline:stop:82 | Pipeline stopped. Stats: {'frames_processed': 0, 'alerts_sent': 0, 'avg_latency_ms': 0.0}

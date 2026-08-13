@@ -1,0 +1,55 @@
+2026-08-12 11:37:38.018 | INFO     | configs.logging_config:setup_logging:60 | Logging configured | level=DEBUG | env=development
+2026-08-12 11:37:38.018 | INFO     | module_edge_firmware.pipeline:start:65 | ============================================================
+2026-08-12 11:37:38.019 | INFO     | module_edge_firmware.pipeline:start:66 | AI Child Guardian - Edge Pipeline Starting
+2026-08-12 11:37:38.019 | INFO     | module_edge_firmware.pipeline:start:67 | ============================================================
+2026-08-12 11:37:38.019 | INFO     | module_edge_firmware.pipeline:start:70 | Loading AI models...
+2026-08-12 11:37:38.020 | INFO     | module_edge_firmware.inference.multi_task_runner:load_all:127 | Model Registry Status:
+  ❌ roi_detection: not_started | path=None
+  ❌ violence_detection: not_started | path=None
+  ✅ fall_detection: ready | path=weights\fall_detection\yolo11n-pose-pretrained-20260723-142618.pt
+2026-08-12 11:37:38.020 | WARNING  | module_edge_firmware.inference.multi_task_runner:load_all:149 | ⏭️ ROI Detection: SKIPPED (model not ready)
+2026-08-12 11:37:47.019 | INFO     | module_ai_core.models.pose_estimator:load:101 | PoseEstimator ready | device=cpu
+2026-08-12 11:37:47.019 | INFO     | module_edge_firmware.inference.multi_task_runner:load_all:160 | ✅ Fall Detection (Pose): LOADED
+2026-08-12 11:37:47.020 | WARNING  | module_edge_firmware.inference.multi_task_runner:load_all:179 | ⏭️ Violence Detection: SKIPPED (model not ready)
+2026-08-12 11:37:47.020 | INFO     | module_edge_firmware.inference.multi_task_runner:load_all:183 | ==================================================
+2026-08-12 11:37:47.020 | INFO     | module_edge_firmware.inference.multi_task_runner:load_all:184 | MultiTaskRunner: 1/3 models loaded → ['fall_detection']
+2026-08-12 11:37:47.021 | INFO     | module_edge_firmware.inference.multi_task_runner:load_all:187 | ==================================================
+2026-08-12 11:37:47.021 | INFO     | module_edge_firmware.pipeline:start:74 | Warming up models...
+2026-08-12 11:37:47.521 | INFO     | module_edge_firmware.pipeline:start:78 | Warmup completed.
+2026-08-12 11:37:47.523 | INFO     | module_edge_firmware.ingestion.rtsp_capture:start:64 | RTSP capture started: C:/children-observer/data/test_videos/fall.mp4
+2026-08-12 11:37:47.524 | INFO     | module_edge_firmware.pipeline:start:93 | Pipeline started. Monitoring...
+2026-08-12 11:37:47.623 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_connect:165 | Cannot open RTSP stream: C:/children-observer/data/test_videos/fall.mp4
+2026-08-12 11:37:47.624 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:110 | Reconnecting in 5.0s (1/10)
+2026-08-12 11:37:48.525 | INFO     | module_edge_firmware.pipeline:_health_monitor_loop:183 | HEALTH: CPU=145.3% | RAM=437.4MB | Disk=93.6GB | Camera=True | FPS=0.0
+2026-08-12 11:37:52.626 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_connect:165 | Cannot open RTSP stream: C:/children-observer/data/test_videos/fall.mp4
+2026-08-12 11:37:52.626 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:110 | Reconnecting in 5.0s (2/10)
+2026-08-12 11:37:57.627 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_connect:165 | Cannot open RTSP stream: C:/children-observer/data/test_videos/fall.mp4
+2026-08-12 11:37:57.628 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:110 | Reconnecting in 5.0s (3/10)
+2026-08-12 11:38:02.629 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_connect:165 | Cannot open RTSP stream: C:/children-observer/data/test_videos/fall.mp4
+2026-08-12 11:38:02.629 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:110 | Reconnecting in 5.0s (4/10)
+2026-08-12 11:38:07.630 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_connect:165 | Cannot open RTSP stream: C:/children-observer/data/test_videos/fall.mp4
+2026-08-12 11:38:07.630 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:110 | Reconnecting in 5.0s (5/10)
+2026-08-12 11:38:12.632 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_connect:165 | Cannot open RTSP stream: C:/children-observer/data/test_videos/fall.mp4
+2026-08-12 11:38:12.632 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:110 | Reconnecting in 5.0s (6/10)
+2026-08-12 11:38:17.633 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_connect:165 | Cannot open RTSP stream: C:/children-observer/data/test_videos/fall.mp4
+2026-08-12 11:38:17.633 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:110 | Reconnecting in 5.0s (7/10)
+2026-08-12 11:38:19.538 | INFO     | module_edge_firmware.pipeline:_health_monitor_loop:183 | HEALTH: CPU=0.0% | RAM=437.4MB | Disk=93.6GB | Camera=True | FPS=0.0
+2026-08-12 11:38:22.635 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_connect:165 | Cannot open RTSP stream: C:/children-observer/data/test_videos/fall.mp4
+2026-08-12 11:38:22.635 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:110 | Reconnecting in 5.0s (8/10)
+2026-08-12 11:38:27.636 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_connect:165 | Cannot open RTSP stream: C:/children-observer/data/test_videos/fall.mp4
+2026-08-12 11:38:27.637 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:110 | Reconnecting in 5.0s (9/10)
+2026-08-12 11:38:32.638 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_connect:165 | Cannot open RTSP stream: C:/children-observer/data/test_videos/fall.mp4
+2026-08-12 11:38:32.638 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:107 | Max reconnect attempts reached. Stopping.
+2026-08-12 11:38:50.551 | INFO     | module_edge_firmware.pipeline:_health_monitor_loop:183 | HEALTH: CPU=0.0% | RAM=437.3MB | Disk=93.6GB | Camera=False | FPS=0.0
+2026-08-12 11:38:50.551 | ERROR    | module_edge_firmware.pipeline:_health_monitor_loop:194 | 🚨 CAMERA DISCONNECTED! Pipeline is waiting for reconnect...
+2026-08-12 11:39:21.564 | INFO     | module_edge_firmware.pipeline:_health_monitor_loop:183 | HEALTH: CPU=1.6% | RAM=437.3MB | Disk=93.6GB | Camera=False | FPS=0.0
+2026-08-12 11:39:21.565 | ERROR    | module_edge_firmware.pipeline:_health_monitor_loop:194 | 🚨 CAMERA DISCONNECTED! Pipeline is waiting for reconnect...
+2026-08-12 11:39:52.576 | INFO     | module_edge_firmware.pipeline:_health_monitor_loop:183 | HEALTH: CPU=0.0% | RAM=437.3MB | Disk=93.6GB | Camera=False | FPS=0.0
+2026-08-12 11:39:52.576 | ERROR    | module_edge_firmware.pipeline:_health_monitor_loop:194 | 🚨 CAMERA DISCONNECTED! Pipeline is waiting for reconnect...
+2026-08-12 11:40:23.590 | INFO     | module_edge_firmware.pipeline:_health_monitor_loop:183 | HEALTH: CPU=0.0% | RAM=437.3MB | Disk=93.4GB | Camera=False | FPS=0.0
+2026-08-12 11:40:23.590 | ERROR    | module_edge_firmware.pipeline:_health_monitor_loop:194 | 🚨 CAMERA DISCONNECTED! Pipeline is waiting for reconnect...
+2026-08-12 11:40:52.998 | INFO     | module_edge_firmware.pipeline:_signal_handler:205 | Signal 2 received. Shutting down...
+2026-08-12 11:40:52.999 | INFO     | module_edge_firmware.pipeline:stop:100 | Stopping pipeline...
+2026-08-12 11:40:53.003 | INFO     | module_edge_firmware.ingestion.rtsp_capture:stop:74 | RTSP capture stopped
+2026-08-12 11:40:53.003 | INFO     | module_edge_firmware.inference.multi_task_runner:shutdown:261 | MultiTaskRunner shut down
+2026-08-12 11:40:53.004 | INFO     | module_edge_firmware.pipeline:stop:104 | Pipeline stopped. Stats: {'frames_processed': 0, 'alerts_sent': 0, 'avg_latency_ms': 0.0}

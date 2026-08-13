@@ -1,0 +1,15 @@
+2026-08-12 11:37:47.623 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_connect:165 | Cannot open RTSP stream: C:/children-observer/data/test_videos/fall.mp4
+2026-08-12 11:37:52.626 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_connect:165 | Cannot open RTSP stream: C:/children-observer/data/test_videos/fall.mp4
+2026-08-12 11:37:57.627 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_connect:165 | Cannot open RTSP stream: C:/children-observer/data/test_videos/fall.mp4
+2026-08-12 11:38:02.629 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_connect:165 | Cannot open RTSP stream: C:/children-observer/data/test_videos/fall.mp4
+2026-08-12 11:38:07.630 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_connect:165 | Cannot open RTSP stream: C:/children-observer/data/test_videos/fall.mp4
+2026-08-12 11:38:12.632 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_connect:165 | Cannot open RTSP stream: C:/children-observer/data/test_videos/fall.mp4
+2026-08-12 11:38:17.633 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_connect:165 | Cannot open RTSP stream: C:/children-observer/data/test_videos/fall.mp4
+2026-08-12 11:38:22.635 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_connect:165 | Cannot open RTSP stream: C:/children-observer/data/test_videos/fall.mp4
+2026-08-12 11:38:27.636 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_connect:165 | Cannot open RTSP stream: C:/children-observer/data/test_videos/fall.mp4
+2026-08-12 11:38:32.638 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_connect:165 | Cannot open RTSP stream: C:/children-observer/data/test_videos/fall.mp4
+2026-08-12 11:38:32.638 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:107 | Max reconnect attempts reached. Stopping.
+2026-08-12 11:38:50.551 | ERROR    | module_edge_firmware.pipeline:_health_monitor_loop:194 | 🚨 CAMERA DISCONNECTED! Pipeline is waiting for reconnect...
+2026-08-12 11:39:21.565 | ERROR    | module_edge_firmware.pipeline:_health_monitor_loop:194 | 🚨 CAMERA DISCONNECTED! Pipeline is waiting for reconnect...
+2026-08-12 11:39:52.576 | ERROR    | module_edge_firmware.pipeline:_health_monitor_loop:194 | 🚨 CAMERA DISCONNECTED! Pipeline is waiting for reconnect...
+2026-08-12 11:40:23.590 | ERROR    | module_edge_firmware.pipeline:_health_monitor_loop:194 | 🚨 CAMERA DISCONNECTED! Pipeline is waiting for reconnect...

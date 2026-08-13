@@ -1,0 +1,1 @@
+2026-05-25 20:54:06.264 | ERROR    | module_edge_firmware.pipeline:_process_loop:120 | ❌ Critical error in pipeline loop: cannot schedule new futures after shutdown
