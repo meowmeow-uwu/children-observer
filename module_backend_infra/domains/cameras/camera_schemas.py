@@ -2,6 +2,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
 
+
 # --- Point Schema ---
 class PointSchema(BaseModel):
     x: float
@@ -33,33 +34,12 @@ class CameraBase(BaseModel):
     is_active: Optional[bool] = True
 
 class CameraCreate(CameraBase):
-    pass
-
+    device_id: int
+    rtsp_url: str = ""
+    
 class CameraResponse(CameraBase):
     id: int
     roi_zones: List[ROIZoneResponse] = []
-
-    class Config:
-        from_attributes = True
-
-# --- Alert Log Schemas ---
-class AlertCreate(BaseModel):
-    camera_id: str
-    camera_name: Optional[str] = ""
-    title: str
-    severity: Optional[str] = "warning" # danger, warning, info
-    status: Optional[str] = "unread"
-    snapshot_url: Optional[str] = ""
-    roi_name: Optional[str] = ""
-    notes: Optional[str] = ""
-
-class AlertUpdate(BaseModel):
-    status: Optional[str] = None
-    notes: Optional[str] = None
-
-class AlertResponse(AlertCreate):
-    id: int
-    created_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True

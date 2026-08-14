@@ -1,12 +1,16 @@
 import json
 import logging
 from typing import Dict
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+import jwt
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, status
+from infrastructure.mqtt.client import mqtt_manager
+from core.config import settings
+from core.database import SessionLocal
+from domains.auth.auth_repository import user_repo
+from domains.auth.auth_schemas import TokenPayload
 
-# Cấu hình logging cơ bản để dễ debug
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("SignalingServer")
-
 router = APIRouter()
 
 class ConnectionManager:
@@ -53,37 +57,59 @@ class ConnectionManager:
 # Khởi tạo một đối tượng quản lý kết nối duy nhất (Singleton)
 manager = ConnectionManager()
 
+def verify_ws_token(token: str):
+    """Hàm xác thực JWT Token dành riêng cho WebSocket"""
+    try:
+        payload = jwt.decode(token, settings.AUTH_JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
+        token_data = TokenPayload(**payload)
+        if not token_data.sub:
+            return None
+        db = SessionLocal()
+        user = user_repo.get(db, id=int(token_data.sub))
+        db.close()
+        return user
+    except Exception:
+        return None
+
 @router.websocket("/ws/signaling/{client_id}")
-async def websocket_signaling_endpoint(websocket: WebSocket, client_id: str):
+async def websocket_signaling_endpoint(websocket: WebSocket, client_id: str, token: str = Query(None)):
     """
     Endpoint WebSocket xử lý việc trao đổi tín hiệu WebRTC.
     - Edge (Camera) có thể kết nối với ID dạng: "camera_01"
     - Web (Phụ huynh) có thể kết nối với ID dạng: "web_parent_01"
     """
+
+    if not token or not verify_ws_token(token):
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+
     await manager.connect(websocket, client_id)
     try:
         while True:
-            # Lắng nghe tin nhắn từ client gửi lên dưới dạng văn bản (JSON string)
             data = await websocket.receive_text()
             message = json.loads(data)
-            
-            # Tin nhắn chuẩn WebRTC Signaling cần có trường 'target_id' để biết gửi đi đâu
             target_id = message.get("target")
             
             if target_id:
-                # Thêm thông tin người gửi vào bản tin để target biết đường phản hồi
                 message["sender"] = client_id
-                logger.info(f"Đang chuyển tiếp tín hiệu type='{message.get('type')}' từ {client_id} -> {target_id}")
                 
-                # Chuyển tiếp bản tin sang đích đến
-                await manager.send_personal_message(message, target_id)
+                # NẾU ĐÍCH LÀ CAMERA -> ĐẨY QUA MQTT
+                if target_id.startswith("camera_"):
+                    logger.info(f"Đẩy SDP Offer qua MQTT tới: {target_id}")
+                    await mqtt_manager.publish(
+                        topic=f"devices/{target_id}/webrtc/offer",
+                        payload=message
+                    )
+                # NẾU ĐÍCH LÀ WEB APP KHÁC -> ĐẨY QUA WEBSOCKET
+                else:
+                    await manager.send_personal_message(message, target_id)
             else:
-                logger.warning(f"Tin nhắn từ {client_id} không có trường 'target'. Bỏ qua.")
-
+                logger.warning(f"Tin nhắn từ {client_id} không có 'target'.")
     except WebSocketDisconnect:
         manager.disconnect(client_id)
     except json.JSONDecodeError:
         logger.error(f"Nhận được dữ liệu không phải JSON từ {client_id}")
+        manager.disconnect(client_id)
     except Exception as e:
-        logger.error(f"Lỗi không xác định với client {client_id}: {str(e)}")
+        logger.error(f"Lỗi WebSocket: {str(e)}")
         manager.disconnect(client_id)
