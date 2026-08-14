@@ -61,11 +61,11 @@ sequenceDiagram
 ## 🚀 Danh Sách Nhiệm Vụ Chi Tiết (Checklist)
 
 ### Task 1: Tích Hợp MQTT Client & Đồng Bộ Vùng Cấm (ROI)
-- [ ] **1.1. Khởi Tạo MQTT Client (`aiomqtt` hoặc `paho-mqtt`)**:
+- [x] **1.1. Khởi Tạo MQTT Client (`aiomqtt` hoặc `paho-mqtt`)**:
   - Kết nối tới MQTT Broker tại Host/Port cấu hình trong `.env` (`MQTT_BROKER_HOST`, `MQTT_BROKER_PORT`).
-- [ ] **1.2. Subscribe Topic Cấu Hình ROI**:
+- [x] **1.2. Subscribe Topic Cấu Hình ROI**:
   - Đăng ký nhận tin nhắn từ Topic: `devices/{device_id}/roi/update` hoặc `camera/{camera_id}/roi`.
-- [ ] **1.3. Xử Lý Tọa Độ & Cập Nhật Mask RAM (`module_edge_firmware/roi.py`)**:
+- [x] **1.3. Xử Lý Tọa Độ & Cập Nhật Mask RAM (`module_edge_firmware/roi.py`)**:
   - Nhận mảng tọa độ điểm chuẩn hóa $[0.0 \rightarrow 1.0]$:
     ```json
     [
@@ -77,9 +77,9 @@ sequenceDiagram
   - Lưu mảng Polygon NumPy `np.array(pts, np.int32)` trên RAM để phục vụ việc so sánh đè vạch nhanh.
 
 ### Task 2: Triển Khai Server WebRTC Video Stream (`aiortc`)
-- [ ] **2.1. Subscribe Topic WebRTC Offer**:
+- [x] **2.1. Subscribe Topic WebRTC Offer**:
   - Đăng ký lắng nghe Topic: `devices/{camera_id}/webrtc/offer`.
-- [ ] **2.2. Khởi Tạo WebRTC Peer Connection (`module_edge_firmware/webrtc/`)**:
+- [x] **2.2. Khởi Tạo WebRTC Peer Connection (`module_edge_firmware/webrtc/`)**:
   - Khi nhận gói tin SDP Offer từ Web Client:
     ```json
     { "sender": "web_parent_01", "target": "camera_01", "type": "offer", "sdp": "v=0..." }
@@ -88,7 +88,7 @@ sequenceDiagram
   - Thêm Custom Video Track (`VideoStreamTrack`) để lấy khung hình trực tiếp từ OpenCV Capture / AI Pipeline.
   - Gọi `await pc.setRemoteDescription(RTCSessionDescription(sdp=offer_sdp, type='offer'))`.
   - Tạo Answer: `answer = await pc.createAnswer()`, gọi `await pc.setLocalDescription(answer)`.
-- [ ] **2.3. Trả Lời SDP Answer về MQTT**:
+- [x] **2.3. Trả Lời SDP Answer về MQTT**:
   - Publish gói tin SDP Answer về Topic `devices/{device_id}/webrtc/answer`:
     ```json
     {
@@ -99,22 +99,22 @@ sequenceDiagram
     ```
 
 ### Task 3: Pipeline AI Detection & Kiểm Tra Vi Phạm Vùng Cấm
-- [ ] **3.1. Đọc Luồng RTSP Frame**:
+- [x] **3.1. Đọc Luồng RTSP Frame**:
   - Đọc luồng camera bằng OpenCV `cv2.VideoCapture(rtsp_url)`.
-- [ ] **3.2. Chạy Mô Hình YOLO-Pose / Object Detection**:
+- [x] **3.2. Chạy Mô Hình YOLO-Pose / Object Detection**:
   - Đưa Frame vào mô hình AI thu được bounding box hoặc các điểm keypoints của trẻ em (Bàn chân, Bàn tay, Đầu).
-- [ ] **3.3. Kiểm Tra Xâm Nhập ROI (Overlap Test)**:
+- [x] **3.3. Kiểm Tra Xâm Nhập ROI (Overlap Test)**:
   - Sử dụng hàm `cv2.pointPolygonTest(roi_polygon, (keypoint_x, keypoint_y), False)`:
     - Nếu giá trị $\ge 0$: Điểm keypoint nằm **BÊN TRONG** hoặc **NẰM TRÊN BỜ RÀO** vùng cấm $\rightarrow$ **KÍCH HOẠT CẢNH BÁO**.
 
 ### Task 4: Bắn Cảnh Báo (Alert) & Ảnh Bằng Chứng (Snapshot Binary)
-- [ ] **4.1. Mã Hóa Ảnh Frame Bằng Chứng**:
+- [x] **4.1. Mã Hóa Ảnh Frame Bằng Chứng**:
   - Khi phát hiện vi phạm, mã hóa frame hiện tại sang định dạng mảng byte JPEG:
     ```python
     _, buffer = cv2.imencode('.jpg', frame)
     image_bytes = buffer.tobytes()
     ```
-- [ ] **4.2. Gửi Cảnh Báo JSON (Topic: `devices/{device_id}/alerts`)**:
+- [x] **4.2. Gửi Cảnh Báo JSON (Topic: `devices/{device_id}/alerts`)**:
   - Publish tin nhắn JSON:
     ```json
     {
@@ -125,14 +125,14 @@ sequenceDiagram
       "roi_name": "Lan can ban công"
     }
     ```
-- [ ] **4.3. Gửi Ảnh Snapshot Binary (Topic: `devices/{device_id}/snapshots`)**:
+- [x] **4.3. Gửi Ảnh Snapshot Binary (Topic: `devices/{device_id}/snapshots`)**:
   - Publish trực tiếp mảng byte `image_bytes` (Binary payload). Backend Server sẽ nhận và tự động lưu đĩa file JPEG.
 
 ---
 
 ## 🧪 Tiêu Chí Nghiệm Thu (Acceptance Criteria)
 
-1. [ ] Firmware nhận được tin nhắn MQTT ROI update và chuyển đổi chính xác tọa độ sang NumPy Polygon mask.
-2. [ ] Phản hồi gói tin SDP Answer qua MQTT ngay khi nhận được SDP Offer và phát luồng video WebRTC ổn định.
-3. [ ] Phát hiện chính xác trường hợp đối tượng đi vào vùng cấm ROI.
-4. [ ] Đẩy thành công cả 2 gói tin (JSON Alert & Binary Snapshot) lên MQTT Broker khi có vi phạm.
+1. [x] Firmware nhận được tin nhắn MQTT ROI update và chuyển đổi chính xác tọa độ sang NumPy Polygon mask.
+2. [x] Phản hồi gói tin SDP Answer qua MQTT ngay khi nhận được SDP Offer và phát luồng video WebRTC ổn định.
+3. [x] Phát hiện chính xác trường hợp đối tượng đi vào vùng cấm ROI.
+4. [x] Đẩy thành công cả 2 gói tin (JSON Alert & Binary Snapshot) lên MQTT Broker khi có vi phạm.

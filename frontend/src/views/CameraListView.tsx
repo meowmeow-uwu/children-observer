@@ -2,35 +2,32 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCameraStore } from "../store/cameraStore";
 import { StatusBadge } from "../components/StatusBadge";
-import { getDemoCameraState } from "../utils/demoCameraState";
 
 export const CameraListView: React.FC = () => {
   const navigate = useNavigate();
   const { cameras } = useCameraStore();
   const [filter, setFilter] = useState<"all" | "online" | "offline" | "failed">("all");
 
-  // Filter cameras
+  // Filter bằng status thật từ backend (không dùng demoCameraState)
   const filteredCameras = cameras.filter((cam) => {
-    const demoState = getDemoCameraState(cam.id);
     if (filter === "all") return true;
-    if (filter === "online") return demoState === "preview";
-    if (filter === "offline") return demoState === "offline";
-    if (filter === "failed") return demoState === "failed";
+    if (filter === "online") return cam.status === "online";
+    if (filter === "offline") return cam.status === "offline";
+    if (filter === "failed") return cam.streamStatus === "failed";
     return true;
   });
 
-  const countDemoState = (state: ReturnType<typeof getDemoCameraState>) =>
-    cameras.filter((camera) => getDemoCameraState(camera.id) === state).length;
+  const countByStatus = (s: typeof filter) =>
+    s === "all"
+      ? cameras.length
+      : cameras.filter((c) => c.status === s).length;
 
   const getSignalIcon = (quality: "good" | "fair" | "poor") => {
     switch (quality) {
-      case "good":
-        return "signal_cellular_4_bar";
-      case "fair":
-        return "signal_cellular_3_bar";
+      case "good": return "signal_cellular_4_bar";
+      case "fair": return "signal_cellular_3_bar";
       case "poor":
-      default:
-        return "signal_cellular_1_bar";
+      default: return "signal_cellular_1_bar";
     }
   };
 
@@ -39,8 +36,7 @@ export const CameraListView: React.FC = () => {
       case "good": return "text-emerald-500";
       case "fair": return "text-amber-500";
       case "poor":
-      default:
-        return "text-error";
+      default: return "text-error";
     }
   };
 
@@ -48,7 +44,7 @@ export const CameraListView: React.FC = () => {
     <div className="p-4 md:p-6 space-y-6">
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
-          <h2 className="text-xl md:text-2xl font-bold text-on-surface">Camera giám sát trực tiếp</h2>
+          <h1 className="text-xl md:text-2xl font-bold text-on-surface">Camera giám sát trực tiếp</h1>
           <p className="text-sm text-on-surface-variant mt-1">Theo dõi các luồng video và trạng thái kết nối thời gian thực.</p>
         </div>
       </div>
@@ -65,10 +61,10 @@ export const CameraListView: React.FC = () => {
                 : "border-transparent text-on-surface-variant hover:text-on-surface"
             }`}
           >
-            {tab === "all" && `Tất cả (${cameras.length})`}
-            {tab === "online" && `Đang hoạt động (${countDemoState("preview")})`}
-            {tab === "offline" && `Mất kết nối (${countDemoState("offline")})`}
-            {tab === "failed" && `Lỗi kết nối (${countDemoState("failed")})`}
+            {tab === "all" && `Tất cả (${countByStatus("all")})`}
+            {tab === "online" && `Đang hoạt động (${countByStatus("online")})`}
+            {tab === "offline" && `Mất kết nối (${countByStatus("offline")})`}
+            {tab === "failed" && `Lỗi kết nối (${countByStatus("failed")})`}
           </button>
         ))}
       </div>
@@ -77,13 +73,7 @@ export const CameraListView: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {filteredCameras.map((cam) => {
           const activeRois = cam.roiZones.filter((z) => z.enabled).length;
-          const demoState = getDemoCameraState(cam.id);
-          const isLivingRoom = demoState === "preview";
-          const displaySignal = isLivingRoom
-            ? cam.signalQuality
-            : demoState === "connecting"
-              ? "fair"
-              : "poor";
+          const isOnline = cam.status === "online";
 
           return (
             <div
@@ -92,19 +82,17 @@ export const CameraListView: React.FC = () => {
             >
               {/* Camera Preview Area */}
               <div className="aspect-video bg-black relative flex items-center justify-center overflow-hidden">
-                {demoState === "offline" ? (
-                  <div className="text-center p-6 w-full h-full bg-stone-900/50 flex flex-col items-center justify-center">
-                    <span className="material-symbols-outlined text-error text-[48px] mb-2">videocam_off</span>
-                    <h4 className="text-sm font-bold text-outline">Camera Ngoại Tuyến</h4>
-                    <p className="text-xs text-outline-variant mt-1">Vui lòng kiểm tra cáp nguồn thiết bị</p>
-                  </div>
-                ) : demoState === "failed" ? (
+                {cam.status === "offline" || cam.streamStatus === "failed" ? (
                   <div className="text-center p-6 w-full h-full bg-error-container/10 flex flex-col items-center justify-center">
-                    <span className="material-symbols-outlined text-error text-[48px] mb-2">signal_disconnected</span>
-                    <h4 className="text-sm font-bold text-error">Lỗi kết nối camera</h4>
+                    <span className="material-symbols-outlined text-error text-[48px] mb-2">
+                      {cam.status === "offline" ? "videocam_off" : "signal_disconnected"}
+                    </span>
+                    <h4 className="text-sm font-bold text-error">
+                      {cam.status === "offline" ? "Camera Ngoại Tuyến" : "Lỗi kết nối camera"}
+                    </h4>
                     <p className="text-xs text-outline-variant mt-1">Vui lòng kiểm tra mạng hoặc thiết bị</p>
                   </div>
-                ) : demoState === "preview" ? (
+                ) : cam.streamStatus === "connected" ? (
                   <div className="w-full h-full relative">
                     <img
                       src="/test_video_thumb.jpg"
@@ -112,30 +100,27 @@ export const CameraListView: React.FC = () => {
                       className="w-full h-full object-cover opacity-80"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent"></div>
-
                   </div>
-                ) : (
+                ) : cam.streamStatus === "connecting" ? (
                   <div className="text-center p-6">
                     <div className="w-10 h-10 border-3 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
                     <h4 className="text-sm font-bold text-outline">Đang kết nối WebRTC...</h4>
                     <p className="text-xs text-outline-variant mt-1">Đang đàm phán tín hiệu bảo mật</p>
                   </div>
+                ) : (
+                  <div className="text-center p-6 w-full h-full flex flex-col items-center justify-center">
+                    <span className="material-symbols-outlined text-outline text-[48px] mb-2">videocam</span>
+                    <h4 className="text-sm font-bold text-outline">Sẵn sàng</h4>
+                    <p className="text-xs text-outline-variant mt-1">Nhấn "Xem chi tiết" để bắt đầu xem</p>
+                  </div>
                 )}
 
                 {/* Overlays */}
                 <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end z-10">
-                  {isLivingRoom ? (
-                    <StatusBadge
-                      type={cam.streamStatus === "connected" ? "connected" : "online"}
-                      label={cam.streamStatus === "connected" ? "Đang xem Live" : "Sẵn sàng"}
-                    />
-                  ) : demoState === "connecting" ? (
-                    <StatusBadge type="connecting" />
-                  ) : demoState === "failed" ? (
-                    <StatusBadge type="failed" />
-                  ) : (
-                    <StatusBadge type="offline" />
-                  )}
+                  <StatusBadge
+                    type={cam.streamStatus === "connected" ? "connected" : cam.status === "online" && cam.streamStatus !== "failed" ? "online" : cam.streamStatus === "failed" ? "failed" : "offline"}
+                    label={cam.streamStatus === "connected" ? "Đang xem Live" : cam.status === "online" && cam.streamStatus !== "failed" ? "Sẵn sàng" : undefined}
+                  />
                 </div>
               </div>
 
@@ -151,10 +136,10 @@ export const CameraListView: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-1 text-on-surface-variant font-semibold text-xs shrink-0 bg-surface-container-low px-2 py-1 rounded-lg">
-                      <span className={`material-symbols-outlined text-[16px] ${getSignalColor(displaySignal)}`}>
-                        {getSignalIcon(displaySignal)}
+                      <span className={`material-symbols-outlined text-[16px] ${getSignalColor(cam.signalQuality)}`}>
+                        {getSignalIcon(cam.signalQuality)}
                       </span>
-                      {displaySignal === "good" ? "Tốt" : displaySignal === "fair" ? "Ổn định" : "Yếu"}
+                      {cam.signalQuality === "good" ? "Tốt" : cam.signalQuality === "fair" ? "Ổn định" : "Yếu"}
                     </div>
                   </div>
 
@@ -179,9 +164,9 @@ export const CameraListView: React.FC = () => {
                   </button>
                   <button
                     onClick={() => navigate(`/roi/${cam.id}`)}
-                    disabled={!isLivingRoom}
+                    disabled={!isOnline}
                     className={`py-2.5 px-4 text-xs font-bold rounded-xl transition-all text-center focus:outline-none ${
-                      isLivingRoom
+                      isOnline
                         ? "bg-primary hover:bg-primary/95 text-white shadow-sm"
                         : "bg-outline-variant/30 text-on-surface-variant cursor-not-allowed opacity-70"
                     }`}

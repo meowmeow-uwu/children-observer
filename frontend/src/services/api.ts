@@ -244,3 +244,45 @@ export const updateAlertStatusApi = async (alertId: string | number, status: str
     return false;
   }
 };
+
+// ---- Devices ----
+
+import type { Device } from "../types";
+
+interface DeviceApiDto {
+  id: number;
+  device_id_string?: string;
+  name: string;
+  type?: string;
+  status?: string;
+  ip_address?: string;
+  mac_address?: string;
+  firmware_version?: string;
+  cpu_usage?: number;
+  memory_usage?: number;
+  disk_free_gb?: number;
+}
+
+const mapDeviceFromApi = (d: DeviceApiDto): Device => ({
+  id: d.device_id_string ?? String(d.id),
+  name: d.name,
+  type: (["camera", "gateway", "hub"].includes(d.type ?? "") ? d.type : "gateway") as Device["type"],
+  status: d.status === "online" ? "online" : "offline",
+  ipAddress: d.ip_address ?? "",
+  macAddress: d.mac_address ?? "",
+  firmwareVersion: d.firmware_version ?? "",
+  cpuUsage: d.cpu_usage ?? 0,
+  memoryUsage: d.memory_usage ?? 0,
+  diskFreeGb: d.disk_free_gb ?? 0,
+});
+
+export const fetchDevicesApi = async (): Promise<Device[] | null> => {
+  try {
+    const data = await request<DeviceApiDto[]>("/devices");
+    return data.map(mapDeviceFromApi);
+  } catch (err) {
+    console.warn("Không tải được devices:", err);
+    return null;
+  }
+};
+

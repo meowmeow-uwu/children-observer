@@ -53,21 +53,21 @@ sequenceDiagram
 ## 🚀 Danh Sách Nhiệm Vụ Chi Tiết (Checklist)
 
 ### Task 1: Tích Hợp Authentication & Authorization
-- [ ] **1.1. Service Auth (`src/services/authApi.ts`)**:
+- [x] **1.1. Service Auth (`src/services/authApi.ts`)**:
   - Gọi `POST /api/auth/login` lấy `access_token`. Lưu token vào `localStorage` hoặc Cookie.
   - Cấu hình Axios / Fetch Interceptor tự động gắn Header `Authorization: Bearer <JWT_TOKEN>` cho mọi request HTTP.
-- [ ] **1.2. Profile & Telegram Linking (`src/components/Profile/`)**:
+- [x] **1.2. Profile & Telegram Linking (`src/components/Profile/`)**:
   - Lấy thông tin phụ huynh: `GET /api/auth/me`.
   - Cho phép người dùng nhập `telegram_chat_id` và gọi `PATCH /api/auth/me` để liên kết bot nhận cảnh báo qua Telegram.
 
 ### Task 2: Quản Lý Camera & Cấu Hình ROI (Region of Interest)
-- [ ] **2.1. Lấy danh sách Camera**:
+- [x] **2.1. Lấy danh sách Camera**:
   - Gọi `GET /api/cameras/` hiển thị danh sách Camera hiện có cùng danh sách vùng cấm `roi_zones`.
-- [ ] **2.2. Vẽ Vùng Nguy Hiểm Động (`src/components/ROI/ROISVGOverlay.tsx`)**:
+- [x] **2.2. Vẽ Vùng Nguy Hiểm Động (`src/components/ROI/ROISVGOverlay.tsx`)**:
   - Sử dụng thẻ `<svg>` hoặc `<canvas>` đè lên luồng `<video>`.
   - Cho phép phụ huynh click chuột chọn các điểm tọa độ chuẩn hóa $[0.0 \rightarrow 1.0]$ tương đối theo độ phân giải video:
     $$\text{point\_x} = \frac{X_{\text{click}}}{W_{\text{video}}}, \quad \text{point\_y} = \frac{Y_{\text{click}}}{H_{\text{video}}}$$
-- [ ] **2.3. Lưu ROI xuống Backend**:
+- [x] **2.3. Lưu ROI xuống Backend**:
   - Gửi request `POST /api/cameras/{camera_id_string}/roi` với cấu trúc payload:
     ```json
     [
@@ -86,13 +86,13 @@ sequenceDiagram
     ```
 
 ### Task 3: Kết Nối Video Stream WebRTC P2P (Độ trễ < 100ms)
-- [ ] **3.1. Khởi Tạo Kết Nối WebSocket Signaling (`src/services/webrtcService.ts`)**:
+- [x] **3.1. Khởi Tạo Kết Nối WebSocket Signaling (`src/services/webrtcService.ts`)**:
   - Kết nối tới `ws://localhost:8000/ws/signaling/web_parent_01?token=<JWT_TOKEN>`.
   - Lắng nghe sự kiện `onmessage` nhận SDP Answer & ICE Candidate từ server.
-- [ ] **3.2. Tạo WebRTC Peer Connection (`RTCPeerConnection`)**:
+- [x] **3.2. Tạo WebRTC Peer Connection (`RTCPeerConnection`)**:
   - Khởi tạo `pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] })`.
   - Lắng nghe `pc.ontrack = (event) => { videoRef.current.srcObject = event.streams[0]; }`.
-- [ ] **3.3. Quy Trình Bắt Tay (Handshake)**:
+- [x] **3.3. Quy Trình Bắt Tay (Handshake)**:
   1. Tạo Offer: `const offer = await pc.createOffer(); await pc.setLocalDescription(offer);`
   2. Gửi Offer qua WebSocket:
      ```json
@@ -108,19 +108,19 @@ sequenceDiagram
      ```
 
 ### Task 4: Xử Lý Cảnh Báo Real-time & Snapshot Viewer
-- [ ] **4.1. Real-time Toast & Sound (`src/components/Alerts/`)**:
+- [x] **4.1. Real-time Toast & Sound (`src/components/Alerts/`)**:
   - Lắng nghe sự kiện WebSocket khi có `message.type === "ALERT_NEW"`.
   - Kích hoạt âm thanh còi báo động (audio alert) và hiển thị thông báo popup Toast đỏ (`severity === "danger"`).
-- [ ] **4.2. Hiển thị Ảnh Chụp Bằng Chứng (Snapshot)**:
+- [x] **4.2. Hiển thị Ảnh Chụp Bằng Chứng (Snapshot)**:
   - Render URL ảnh bằng chứng: `http://localhost:8000/snapshots/{data.snapshot_url}`.
-- [ ] **4.3. Tra Cứu Lịch Sử Cảnh Báo**:
+- [x] **4.3. Tra Cứu Lịch Sử Cảnh Báo**:
   - Trích xuất dữ liệu lịch sử bằng `GET /api/alerts/?camera_id=cam_01&limit=20`.
 
 ---
 
 ## 🧪 Tiêu Chí Nghiệm Thu (Acceptance Criteria)
 
-1. [ ] Đăng nhập thành công và lưu JWT token chuẩn xác.
-2. [ ] Vẽ được polygon ROI trên màn hình Web và lưu thành công xuống API.
-3. [ ] Hiển thị video stream WebRTC trơn tru với độ trễ thấp (< 200ms).
-4. [ ] Khi Backend phát sự kiện `ALERT_NEW`, màn hình Frontend nổ thông báo tức thì và hiển thị được file ảnh snapshot.
+1. [x] Đăng nhập thành công và lưu JWT token chuẩn xác.
+2. [x] Vẽ được polygon ROI trên màn hình Web và lưu thành công xuống API.
+3. [x] Hiển thị video stream WebRTC trơn tru với độ trễ thấp (< 200ms).
+4. [x] Khi Backend phát sự kiện `ALERT_NEW`, màn hình Frontend nổ thông báo tức thì và hiển thị được file ảnh snapshot.

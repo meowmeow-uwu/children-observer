@@ -6,7 +6,7 @@ import { useSystemStatusStore } from "../store/systemStatusStore";
 import { StatusBadge } from "../components/StatusBadge";
 import { SecureImage } from "../components/SecureImage";
 import { useToast } from "../components/Toast";
-import { getDemoCameraState } from "../utils/demoCameraState";
+
 
 export const DashboardView: React.FC = () => {
   const navigate = useNavigate();
@@ -173,8 +173,7 @@ export const DashboardView: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {cameras.map((cam) => {
               const activeRois = cam.roiZones.filter((z) => z.enabled).length;
-              const demoState = getDemoCameraState(cam.id);
-              const isLivingRoom = demoState === "preview";
+              const isLivingRoom = cam.id === "cam_living_room_01" || cam.streamStatus === "connected";
               return (
                 <div key={cam.id} className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 overflow-hidden shadow-sm flex flex-col group hover:shadow-md transition-all">
 
@@ -189,12 +188,12 @@ export const DashboardView: React.FC = () => {
                           className="w-full h-full object-cover opacity-80"
                         />
                       </div>
-                    ) : demoState === "connecting" ? (
+                    ) : cam.streamStatus === "connecting" ? (
                       <div className="text-center p-4">
                         <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
                         <p className="text-xs font-medium text-outline">Đang kết nối tín hiệu...</p>
                       </div>
-                    ) : demoState === "failed" ? (
+                    ) : cam.streamStatus === "failed" ? (
                       <div className="text-center p-4">
                         <span className="material-symbols-outlined text-error text-[40px] mb-2">signal_disconnected</span>
                         <p className="text-xs font-medium text-outline">Lỗi kết nối camera</p>
@@ -213,9 +212,9 @@ export const DashboardView: React.FC = () => {
                           type={cam.streamStatus === "connected" ? "connected" : "online"}
                           label={cam.streamStatus === "connected" ? "Đang xem Live" : "Sẵn sàng"}
                         />
-                      ) : demoState === "connecting" ? (
+                      ) : cam.streamStatus === "connecting" ? (
                         <StatusBadge type="connecting" />
-                      ) : demoState === "failed" ? (
+                      ) : cam.streamStatus === "failed" ? (
                         <StatusBadge type="failed" />
                       ) : (
                         <StatusBadge type="offline" />
