@@ -4,9 +4,8 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from domains.auth.auth_models import User
 from .device_schemas import DeviceCreate
-from .device_repository import device_repo
+from .device_repository import device_repo, device_member_repo
 from domains.auth.auth_repository import user_repo
-from .device_models import DeviceMember
 
 class DeviceService:
     @staticmethod
@@ -60,22 +59,13 @@ class DeviceService:
         if target_user.id == current_user.id:
             raise HTTPException(status_code=400, detail="Bạn không thể tự chia sẻ thiết bị cho chính mình.")
             
-        # 4. Kiểm tra xem đã chia sẻ trước đó chưa
-        existing_share = db.query(DeviceMember).filter(
-            DeviceMember.device_id == device_id,
-            DeviceMember.user_id == target_user.id
-        ).first()
+        # 4. Kiểm tra xem đã chia sẻ trước đó chưa qua Repository
+        existing_share = device_member_repo.get_share_record(db, device_id=device_id, user_id=target_user.id)
         if existing_share:
             raise HTTPException(status_code=400, detail="Thiết bị này đã được chia sẻ với người dùng này từ trước.")
             
-        # 5. Lưu vào bảng DeviceMember
-        new_member = DeviceMember(
-            device_id=device_id,
-            user_id=target_user.id,
-            role=share_in.role
-        )
-        db.add(new_member)
-        db.commit()
+        # 5. Lưu vào bảng DeviceMember thông qua Repository
+        device_member_repo.add_member(db, device_id=device_id, user_id=target_user.id, role=share_in.role)
         
         return {"detail": f"Đã chia sẻ thiết bị thành công cho {target_user.email}"}
 
@@ -89,14 +79,9 @@ class DeviceService:
         if not target_user:
             raise HTTPException(status_code=404, detail="Email không tồn tại.")
             
-        share_record = db.query(DeviceMember).filter(
-            DeviceMember.device_id == device_id,
-            DeviceMember.user_id == target_user.id
-        ).first()
-        
+        share_record = device_member_repo.get_share_record(db, device_id=device_id, user_id=target_user.id)
         if not share_record:
             raise HTTPException(status_code=404, detail="Người dùng này chưa được chia sẻ thiết bị.")
             
-        db.delete(share_record)
-        db.commit()
+        device_member_repo.remove_member(db, share_record=share_record)
         return {"detail": f"Đã thu hồi quyền truy cập của {email}."}

@@ -26,12 +26,8 @@ class AlertService:
         if alert_data.get("snapshot_url") and not alert_data["snapshot_url"].startswith("http"):
             alert_data["snapshot_url"] = f"{settings.BACKEND_URL}/snapshots/{alert_data['snapshot_url']}"
             
-        # 3. Lưu vào Database
-        from .alert_models import Alert
-        new_alert = Alert(**alert_data)
-        db.add(new_alert)
-        db.commit()
-        db.refresh(new_alert)
+        # 3. Lưu vào Database qua Repository
+        new_alert = alert_repo.create_alert_record(db, alert_data)
         
         # 4. Đóng gói dữ liệu gửi qua WebSocket cho Frontend
         alert_dict = {

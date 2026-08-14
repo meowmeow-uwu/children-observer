@@ -22,15 +22,8 @@ class AuthService:
         # 2. Băm mật khẩu
         hashed_pw = hash_password(user_in.password)
         
-        # 3. Tạo User mới trong DB
-        db_user = User(
-            email=user_in.email,
-            password_hash=hashed_pw
-        )
-        db.add(db_user)
-        db.commit()
-        db.refresh(db_user)
-        return db_user
+        # 3. Tạo User mới trong DB thông qua Repository
+        return user_repo.create_user(db, email=user_in.email, password_hash=hashed_pw)
 
     @staticmethod
     def authenticate(db: Session, user_in: UserLogin) -> dict:
@@ -53,20 +46,11 @@ class AuthService:
     def update_profile(db: Session, current_user: User, update_in: auth_schemas.UserUpdate) -> User:
         """Cập nhật thông tin cá nhân của User"""
         if update_in.telegram_chat_id is not None:
-            # Kiểm tra xem ID này có bị tài khoản khác chiếm dụng chưa
-            existing_user = db.query(User).filter(
-                User.telegram_chat_id == update_in.telegram_chat_id,
-                User.id != current_user.id
-            ).first()
-            
-            if existing_user:
+            # Kiểm tra xem ID này có bị tài khoản khác chiếm dụng chưa qua Repository
+            if user_repo.is_telegram_id_taken(db, update_in.telegram_chat_id, current_user.id):
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Telegram Chat ID này đã được liên kết với một tài khoản khác."
                 )
             
-            current_user.telegram_chat_id = update_in.telegram_chat_id
-            
-        db.commit()
-        db.refresh(current_user)
-        return current_user
+        return user_repo.update(db, db_obj=current_user, obj_in=update_in)

@@ -1,7 +1,7 @@
 # domains/devices/device_repository.py
 from sqlalchemy.orm import Session
 from core.repository import CRUDBase
-from .device_models import Device
+from .device_models import Device, DeviceMember
 from .device_schemas import DeviceCreate
 
 class DeviceRepository(CRUDBase[Device, DeviceCreate, DeviceCreate]):
@@ -35,5 +35,28 @@ class DeviceRepository(CRUDBase[Device, DeviceCreate, DeviceCreate]):
         ).first()
         return device is not None
 
+class DeviceMemberRepository:
+    def get_share_record(self, db: Session, device_id: int, user_id: int) -> DeviceMember | None:
+        return db.query(DeviceMember).filter(
+            DeviceMember.device_id == device_id,
+            DeviceMember.user_id == user_id
+        ).first()
+
+    def add_member(self, db: Session, device_id: int, user_id: int, role: str) -> DeviceMember:
+        new_member = DeviceMember(
+            device_id=device_id,
+            user_id=user_id,
+            role=role
+        )
+        db.add(new_member)
+        db.commit()
+        db.refresh(new_member)
+        return new_member
+
+    def remove_member(self, db: Session, share_record: DeviceMember) -> None:
+        db.delete(share_record)
+        db.commit()
+
 # Khởi tạo instance dùng chung
 device_repo = DeviceRepository(Device)
+device_member_repo = DeviceMemberRepository()

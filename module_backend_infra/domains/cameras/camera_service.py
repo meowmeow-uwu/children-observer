@@ -4,10 +4,8 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from .camera_repository import camera_repo, roi_repo
 from .camera_schemas import CameraCreate, ROIZoneBase
-from .camera_models import ROIZone, Camera
 from infrastructure.mqtt.client import mqtt_manager 
 from domains.auth.auth_models import User
-from domains.devices.device_models import Device
 from domains.devices.device_repository import device_repo
 
 class CameraService:
@@ -26,12 +24,12 @@ class CameraService:
 
     @staticmethod
     def get_cameras_with_roi(db: Session, current_user: User):
-        # 1. BẢO MẬT: Chỉ lấy Camera thuộc về Device của current_user (INNER JOIN)
-        cameras = db.query(Camera).join(Device).filter(Device.user_id == current_user.id).all()
+        # 1. BẢO MẬT: Chỉ lấy Camera thuộc về Device của current_user qua Repository
+        cameras = camera_repo.get_user_cameras(db, current_user.id)
         
         result = []
         for cam in cameras:
-            roi_db = db.query(ROIZone).filter(ROIZone.camera_id == cam.id).all()
+            roi_db = roi_repo.get_by_camera_pk(db, cam.id)
             roi_zones = []
             for r in roi_db:
                 try:
@@ -63,22 +61,17 @@ class CameraService:
         if camera_obj.device.user_id != current_user.id:
             raise HTTPException(status_code=403, detail="Bạn không có quyền tinh chỉnh vùng cấm của camera này.")
 
-        db.query(ROIZone).filter(ROIZone.camera_id == camera_obj.id).delete()
-        db.commit()
+        # Thao tác CSDL thay thế các ROI Zones cũ bằng mới qua Repository
+        zones_payload = [
+            {
+                "name": z.name,
+                "polygon_points": json.dumps([p.model_dump() for p in z.points])
+            } for z in zones
+        ]
+        new_roi_models = roi_repo.replace_rois_for_camera(db, camera_obj.id, zones_payload)
         
         saved_zones = []
-        for z in zones:
-            pts_json = json.dumps([p.model_dump() for p in z.points])
-            new_zone_data = {
-                "camera_id": camera_obj.id,
-                "name": z.name,
-                "polygon_points": pts_json,
-            }
-            new_zone = ROIZone(**new_zone_data)
-            db.add(new_zone)
-            db.commit()
-            db.refresh(new_zone)
-            
+        for new_zone, z in zip(new_roi_models, zones):
             zone_response = {
                 "id": new_zone.id,
                 "camera_id": camera_id_string,

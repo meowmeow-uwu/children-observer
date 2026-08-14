@@ -29,4 +29,11 @@ class AlertRepository(CRUDBase[Alert, AlertCreate, AlertUpdate]):
             
         return query.order_by(self.model.created_at.desc()).limit(limit).all()
 
+    def create_alert_record(self, db: Session, alert_data: dict) -> Alert:
+        new_alert = Alert(**alert_data)
+        db.add(new_alert)
+        db.commit()
+        db.refresh(new_alert)
+        return new_alert
+
 alert_repo = AlertRepository(Alert)

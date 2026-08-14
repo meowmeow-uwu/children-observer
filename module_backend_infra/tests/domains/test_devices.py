@@ -91,3 +91,40 @@ def test_delete_device_success(client, auth_headers, db_session):
     # Kiểm tra lại DB xem đã mất chưa
     deleted_dev = db_session.query(Device).filter(Device.id == dev.id).first()
     assert deleted_dev is None
+
+def test_revoke_device_share_success(client, auth_headers, db_session):
+    """Test hủy chia sẻ thiết bị cho phụ huynh được chỉ định."""
+    from domains.auth.auth_models import User
+    from domains.devices.device_models import Device, DeviceMember
+    from core.security import hash_password
+
+    # 1. Tạo guest user và thiết bị
+    guest = User(email="shared_guest@gmail.com", password_hash=hash_password("pw"))
+    db_session.add(guest)
+    db_session.commit()
+
+    dev = Device(user_id=1, mac_address="MAC_REVOKE_TEST", device_secret_key="key")
+    db_session.add(dev)
+    db_session.commit()
+
+    # 2. Thêm member vào DeviceMember
+    member = DeviceMember(device_id=dev.id, user_id=guest.id, role="VIEWER")
+    db_session.add(member)
+    db_session.commit()
+
+    # 3. Gọi API hủy chia sẻ
+    response = client.delete(f"/api/devices/{dev.id}/share/shared_guest@gmail.com", headers=auth_headers)
+    assert response.status_code == 200
+    assert "thu hồi" in response.json()["detail"].lower()
+
+def test_share_device_not_owner(client, auth_headers, db_session):
+    """Test lỗi khi user không sở hữu thiết bị cố chia sẻ."""
+    from domains.devices.device_models import Device
+    # Thiết bị sở hữu bởi user_id=999
+    other_dev = Device(user_id=999, mac_address="MAC_OTHER_OWNER", device_secret_key="key")
+    db_session.add(other_dev)
+    db_session.commit()
+
+    payload = {"email": "someone@gmail.com", "role": "VIEWER"}
+    response = client.post(f"/api/devices/{other_dev.id}/share", headers=auth_headers, json=payload)
+    assert response.status_code == 403

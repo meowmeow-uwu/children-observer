@@ -94,3 +94,50 @@ def test_unauthorized_camera_access(client):
     """Test bảo mật: Không có token thì không được gọi API."""
     response = client.get("/api/cameras/")
     assert response.status_code == 401
+
+def test_delete_camera_success(client, auth_headers, db_session):
+    """Test xóa camera thành công khi là chính chủ."""
+    from domains.devices.device_models import Device
+    test_device = Device(user_id=1, mac_address="MAC_CAM_DEL", device_secret_key="secret")
+    db_session.add(test_device)
+    db_session.commit()
+
+    payload_cam = {"camera_id_string": "cam_to_delete", "device_id": test_device.id, "name": "Cam Delete"}
+    client.post("/api/cameras/", headers=auth_headers, json=payload_cam)
+
+    response = client.delete("/api/cameras/cam_to_delete", headers=auth_headers)
+    assert response.status_code == 200
+    assert "xóa camera thành công" in response.json()["detail"].lower()
+
+def test_delete_camera_not_owner(client, auth_headers, db_session):
+    """Test lỗi 403 khi cố xóa camera của thiết bị thuộc về user khác."""
+    from domains.devices.device_models import Device
+    from domains.cameras.camera_models import Camera
+
+    other_device = Device(user_id=999, mac_address="MAC_OTHER_CAM_DEL", device_secret_key="secret")
+    db_session.add(other_device)
+    db_session.commit()
+
+    other_cam = Camera(device_id=other_device.id, camera_id_string="cam_other_del", name="Cam Other", rtsp_url="rtsp://dummy")
+    db_session.add(other_cam)
+    db_session.commit()
+
+    response = client.delete("/api/cameras/cam_other_del", headers=auth_headers)
+    assert response.status_code == 403
+
+def test_update_camera_roi_not_owner(client, auth_headers, db_session):
+    """Test lỗi 403 khi cập nhật ROI camera không thuộc quyền sở hữu."""
+    from domains.devices.device_models import Device
+    from domains.cameras.camera_models import Camera
+
+    other_device = Device(user_id=999, mac_address="MAC_OTHER_ROI", device_secret_key="secret")
+    db_session.add(other_device)
+    db_session.commit()
+
+    other_cam = Camera(device_id=other_device.id, camera_id_string="cam_other_roi", name="Cam Other ROI", rtsp_url="rtsp://dummy")
+    db_session.add(other_cam)
+    db_session.commit()
+
+    roi_payload = [{"name": "Zone 1", "points": [{"x": 0.1, "y": 0.1}]}]
+    response = client.post("/api/cameras/cam_other_roi/roi", headers=auth_headers, json=roi_payload)
+    assert response.status_code == 403

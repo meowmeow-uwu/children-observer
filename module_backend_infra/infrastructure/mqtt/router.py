@@ -1,15 +1,10 @@
 import json
-import os
-import time
 from loguru import logger
 from core.database import SessionLocal
 from domains.alerts.alert_service import AlertService
 from domains.alerts.alert_schemas import AlertCreate
 from infrastructure.signaling.server import manager
-
-# Thư mục lưu ảnh Snapshot
-SNAPSHOT_DIR = "data/snapshots"
-os.makedirs(SNAPSHOT_DIR, exist_ok=True)
+from utils.image_helpers import save_snapshot_bytes
 
 async def handle_mqtt_message(message):
     """Bộ định tuyến trung tâm cho mọi tin nhắn MQTT"""
@@ -39,7 +34,7 @@ async def _process_alert(payload: bytes):
         data = json.loads(payload.decode())
         alert_in = AlertCreate(**data)
         
-        # Tái sử dụng Service đã viết ở Giai đoạn 2 để lưu DB & Broadcast WebSocket
+        # Tái sử dụng Service để lưu DB & Broadcast WebSocket
         await AlertService.create_and_broadcast_alert(db, alert_in)
         
     except json.JSONDecodeError:
@@ -50,15 +45,5 @@ async def _process_alert(payload: bytes):
         db.close()
 
 async def _process_snapshot(device_id: str, payload: bytes):
-    """Lưu mảng byte ảnh chụp thành file tĩnh"""
-    try:
-        timestamp = int(time.time() * 1000)
-        filename = f"{device_id}_{timestamp}.jpg"
-        filepath = os.path.join(SNAPSHOT_DIR, filename)
-        
-        with open(filepath, "wb") as f:
-            f.write(payload)
-            
-        logger.info(f"📸 Đã lưu snapshot: {filepath}")
-    except Exception as e:
-        logger.error(f"Lỗi lưu ảnh Snapshot: {e}")
+    """Ủy quyền lưu byte ảnh chụp xuống đĩa cho image_helpers"""
+    save_snapshot_bytes(device_id, payload)
