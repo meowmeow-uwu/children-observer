@@ -12,48 +12,65 @@ Sơ đồ dưới đây mô tả sự tương tác giữa 3 thành phần cốt 
 
 ```mermaid
 sequenceDiagram
-    participant Edge as Edge Firmware (AI Pipeline)
-    participant Backend as Backend (FastAPI + Signaling)
-    participant DB as SQLite / PostgreSQL
-    participant Web as Web Frontend (React)
+    autonumber
+    actor Parent as Web App (Phụ huynh)
+    participant Zalo as Zalo OA Bot
+    participant VPS as Cloud VPS (Coturn TURN)
+    participant Broker as School Server (MQTT Broker + FastAPI)
+    participant Pi as Raspberry Pi (Edge AI)
+    participant Cam as IP Camera
 
-    %% 1. Khởi tạo và Đồng bộ
-    Note over Edge, Backend: 1. Khởi tạo & Cấu hình
-    Edge->>Backend: GET /api/cameras/{id}/roi
-    Backend->>DB: Truy xuất ROI
-    DB-->>Backend: Data
-    Backend-->>Edge: Danh sách Vùng nguy hiểm (ROI)
-    
-    %% 2. Thiết lập WebRTC
-    Note over Edge, Web: 2. Thiết lập Luồng WebRTC Thời gian thực
-    Web->>Backend: Kết nối WebSocket Signaling
-    Edge->>Backend: Kết nối WebSocket Signaling
-    Web->>Backend: Gửi SDP Offer (Yêu cầu xem Camera)
-    Backend->>Edge: Forward SDP Offer
-    Edge->>Edge: Khởi tạo RTCPeerConnection & AIVideoTrack
-    Edge->>Backend: Trả lời SDP Answer
-    Backend->>Web: Forward SDP Answer
-    Edge->>Web: Truyền phát Video P2P (WebRTC) liên tục
-
-    %% 3. Tương tác Vẽ ROI
-    Note over Web, DB: 3. Phụ huynh vẽ ROI trên Stream
-    Web->>Web: Vẽ vùng nguy hiểm (SVG Overlay) trên luồng Live
-    Web->>Backend: POST /api/cameras/{id}/roi (Lưu thiết lập)
-    Backend->>DB: Cập nhật CSDL
-    Backend-->>Web: 200 OK
-
-    %% 4. AI Cảnh báo Rủi ro
-    Note over Edge, Web: 4. Phát hiện Rủi ro & Cảnh báo (Real-time)
-    loop AI Inference (Background)
-        Edge->>Edge: Chạy YOLO / Pose Detection
-        Edge->>Edge: Đối chiếu tọa độ với ROI
+    %% ================= THIẾT LẬP ROI BẰNG MQTT =================
+    rect rgb(255, 245, 238)
+    Note over Parent, Pi: 1. ĐỒNG BỘ ROI (Retained Message)
+    Pi->>Broker: Subscribe topic: "camera/01/roi"
+    Parent->>Broker: Publish (WSS) JSON Tọa độ -> Topic: "camera/01/roi" (Retained=True)
+    Broker->>Broker: FastAPI lưu CSDL PostgreSQL
+    Broker-->>Pi: Đẩy message chứa tọa độ ROI mới cho Pi
+    Pi->>Pi: Cập nhật Mask ROI trên RAM
     end
+
+    %% ================= BẮT TAY WEBRTC QUA MQTT =================
+    rect rgb(240, 255, 240)
+    Note over Parent, Pi: 2. KẾT NỐI STREAM VIDEO P2P
+    Parent->>Broker: Publish (WSS) SDP Offer -> Topic: "camera/01/webrtc/offer"
+    Broker-->>Pi: Đẩy SDP Offer tới Pi
+    Pi->>Broker: Publish (TCP) SDP Answer -> Topic: "camera/01/webrtc/answer"
+    Broker-->>Parent: Đẩy SDP Answer tới Web App
     
-    alt Trẻ xâm nhập vùng nguy hiểm!
-        Edge->>Backend: POST /api/alerts (Gửi log cảnh báo)
-        Backend->>DB: Lưu cảnh báo
-        Backend->>Web: Broadcast WebSocket Message (Cảnh báo Real-time)
-        Web->>Web: Hiển thị Toast + Cập nhật UI ngay lập tức
+    alt Tường lửa mạng 4G chặn P2P
+        Pi->>VPS: Truyền UDP Media Stream lên TURN Server
+        VPS->>Parent: Relay UDP Media Stream về Web App
+    else Mạng mở
+        Pi->>Parent: Truyền trực tiếp WebRTC P2P
+    end
+    end
+
+    %% ================= AI BIÊN & CẢNH BÁO MQTT =================
+    rect rgb(255, 230, 230)
+    Note over Cam, Zalo: 3. PHÂN TÍCH AI & BÁO ĐỘNG
+    loop Xử lý liên tục trên Pi
+        Cam->>Pi: Luồng RTSP thô
+        Pi->>Pi: Chạy YOLO-Pose + Logic (Overlap) + LSTM (Té ngã/Bạo lực)
+        
+        alt Phát hiện vi phạm
+            Pi->>Pi: Cắt khung hình (Snapshot) thành Mảng Byte (Binary)
+            par Publish Cảnh báo
+                Pi->>Broker: Publish (TCP) JSON Cảnh báo -> Topic: "camera/01/alerts"
+            and Publish Ảnh
+                Pi->>Broker: Publish (TCP) Binary Payload -> Topic: "camera/01/snapshots"
+            end
+            
+            Broker->>Broker: FastAPI nhận Alert & Ảnh -> Lưu vào CSDL
+            
+            par Cảnh báo App (MQTT)
+                Broker-->>Parent: Web App nhận Alert từ MQTT -> Kêu còi
+            and Cảnh báo Zalo
+                Broker->>Zalo: FastAPI gọi POST Webhook Zalo (gửi tin + ảnh)
+                Zalo-->>Parent: Nhận tin nhắn Zalo
+            end
+        end
+    end
     end
 ```
 
