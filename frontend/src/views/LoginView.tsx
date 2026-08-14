@@ -1,70 +1,77 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import type { Role } from "../types";
 
 export const LoginView: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [showDemo, setShowDemo] = useState(false);
 
-  const handleRoleSelect = async (role: Role) => {
-    const success = await login(role);
-    if (success) {
-      navigate("/dashboard");
-    }
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    login("parent");
+    navigate("/dashboard");
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col justify-center items-center p-4">
-      <div className="bg-surface-container-lowest w-full max-w-[400px] p-8 rounded-2xl shadow-[0_8px_30px_rgba(30,58,138,0.06)] border border-outline-variant/30 text-center">
-        {/* Logo */}
-        <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center mx-auto mb-4 text-white shadow-sm">
-          <span className="material-symbols-outlined text-[36px] fill">child_care</span>
-        </div>
-        <h1 className="text-2xl font-bold text-on-surface tracking-tight mb-2">SafeKid Monitor</h1>
-        <p className="text-on-surface-variant text-sm mb-8">Hệ thống Giám sát &amp; Bảo vệ Trẻ em AI</p>
-        
-        <p className="text-on-surface font-medium text-left mb-4">Đăng nhập Demo dưới vai trò:</p>
-        <div className="flex flex-col gap-3">
-          <button
-            onClick={() => handleRoleSelect("parent")}
-            className="w-full py-4 px-6 rounded-xl border border-outline-variant hover:border-secondary hover:bg-secondary/5 font-semibold text-on-surface hover:text-secondary flex items-center gap-4 transition-all text-left group"
-          >
-            <div className="w-10 h-10 rounded-full bg-primary-container text-primary flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-              <span className="material-symbols-outlined">admin_panel_settings</span>
-            </div>
-            <div>
-              <span className="block text-sm">Phụ huynh (Admin)</span>
-              <span className="block text-[11px] text-on-surface-variant font-normal mt-0.5">Toàn quyền cấu hình ROI và cài đặt hệ thống.</span>
-            </div>
-          </button>
+    <div className="w-full">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-on-surface mb-2 tracking-tight">Chào mừng trở lại!</h1>
+        <p className="text-on-surface-variant text-sm">Đăng nhập để theo dõi và bảo vệ sự an toàn của con bạn.</p>
+      </div>
 
-          <button
-            onClick={() => handleRoleSelect("guardian")}
-            className="w-full py-4 px-6 rounded-xl border border-outline-variant hover:border-secondary hover:bg-secondary/5 font-semibold text-on-surface hover:text-secondary flex items-center gap-4 transition-all text-left group"
-          >
-            <div className="w-10 h-10 rounded-full bg-secondary-container/20 text-secondary flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-              <span className="material-symbols-outlined">family_home</span>
-            </div>
-            <div>
-              <span className="block text-sm">Người giám hộ</span>
-              <span className="block text-[11px] text-on-surface-variant font-normal mt-0.5">Xem trực tiếp, nhận cảnh báo. Không có quyền cài đặt.</span>
-            </div>
-          </button>
-
-          <button
-            onClick={() => handleRoleSelect("viewer")}
-            className="w-full py-4 px-6 rounded-xl border border-outline-variant hover:border-secondary hover:bg-secondary/5 font-semibold text-on-surface hover:text-secondary flex items-center gap-4 transition-all text-left group"
-          >
-            <div className="w-10 h-10 rounded-full bg-surface-variant text-on-surface-variant flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-              <span className="material-symbols-outlined">visibility</span>
-            </div>
-            <div>
-              <span className="block text-sm">Người xem tạm thời</span>
-              <span className="block text-[11px] text-on-surface-variant font-normal mt-0.5">Chỉ xem luồng trực tiếp, không xem được cảnh báo/cài đặt.</span>
-            </div>
-          </button>
+      <form onSubmit={handleLogin} className="space-y-5">
+        <div>
+          <label className="block text-sm font-semibold text-on-surface mb-1.5">Email</label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline-variant text-[20px]">mail</span>
+            <input type="email" placeholder="Nhập địa chỉ email" className="w-full h-12 pl-10 pr-4 bg-surface rounded-xl border border-outline-variant/40 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none text-sm text-on-surface placeholder:text-outline" />
+          </div>
         </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-on-surface mb-1.5">Mật khẩu</label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline-variant text-[20px]">lock</span>
+            <input type="password" placeholder="Nhập mật khẩu" className="w-full h-12 pl-10 pr-4 bg-surface rounded-xl border border-outline-variant/40 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none text-sm text-on-surface placeholder:text-outline" />
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <label className="flex items-center gap-2 cursor-pointer group">
+            <input type="checkbox" className="w-4 h-4 rounded border-outline-variant/40 text-primary focus:ring-primary/20 cursor-pointer" />
+            <span className="text-sm font-medium text-on-surface-variant group-hover:text-on-surface transition-colors">Ghi nhớ đăng nhập</span>
+          </label>
+          <Link to="/forgot-password" className="text-sm font-bold text-primary hover:text-primary/80 transition-colors">Quên mật khẩu?</Link>
+        </div>
+
+        <button type="submit" className="w-full h-12 bg-primary text-white font-bold rounded-xl shadow-md hover:bg-primary/90 transition-transform active:scale-[0.98] flex items-center justify-center gap-2 focus:outline-none">
+          Đăng nhập hệ thống
+          <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+        </button>
+      </form>
+
+      <div className="mt-8 pt-6 border-t border-outline-variant/20">
+        <p className="text-center text-sm text-on-surface-variant mb-4">
+          Chưa có tài khoản? <Link to="/register" className="font-bold text-primary hover:underline">Đăng ký ngay</Link>
+        </p>
+
+        {/* Quick Demo Access (kept for testing) */}
+        {!showDemo ? (
+          <button onClick={() => setShowDemo(true)} className="w-full py-2 text-xs font-semibold text-outline hover:text-on-surface-variant transition-colors underline focus:outline-none">
+            Mở bảng Đăng nhập Demo (Phân quyền)
+          </button>
+        ) : (
+          <div className="flex flex-col gap-2 mt-4 animate-fade-in bg-surface-container-low p-4 rounded-xl border border-outline-variant/20">
+            <p className="text-xs font-bold text-on-surface mb-1">Quick Demo Access</p>
+            <button onClick={() => { login("parent"); navigate("/dashboard"); }} className="py-2.5 px-4 bg-primary/10 text-primary text-xs font-bold rounded-lg hover:bg-primary/20 text-left flex justify-between">
+              Phụ huynh (Admin) <span className="material-symbols-outlined text-[16px]">admin_panel_settings</span>
+            </button>
+            <button onClick={() => { login("guardian"); navigate("/dashboard"); }} className="py-2.5 px-4 bg-secondary/10 text-secondary text-xs font-bold rounded-lg hover:bg-secondary/20 text-left flex justify-between">
+              Người giám hộ <span className="material-symbols-outlined text-[16px]">family_home</span>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

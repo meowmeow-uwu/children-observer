@@ -61,11 +61,22 @@ body {
 }
 
 .material-symbols-outlined {
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-family: 'Material Symbols Outlined' !important;
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
 }
-.material-symbols-outlined.fill {
-  font-variation-settings: 'FILL' 1;
-}
+
+
 
 /* Custom scrollbars */
 ::-webkit-scrollbar {
@@ -81,4 +92,122 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(117, 118, 130, 0.4);
+}
+
+/* ============================================
+   ROI Drawing — Premium Visual Effects
+   ============================================ */
+
+/* Pulsing animation for first-point hint */
+@keyframes roi-pulse {
+  0%, 100% { r: 20; opacity: 0.6; }
+  50% { r: 30; opacity: 0.25; }
+}
+@keyframes roi-pulse-ring {
+  0% { r: 22; opacity: 0.5; stroke-width: 3; }
+  100% { r: 40; opacity: 0; stroke-width: 1; }
+}
+
+/* Scale-up for modals and panels */
+@keyframes scale-up {
+  0% { transform: scale(0.92); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.animate-scale-up {
+  animation: scale-up 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Fade in */
+@keyframes fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fade-in 150ms ease-out forwards;
+}
+
+/* Slide up from bottom (mobile panels) */
+@keyframes slide-up {
+  0% { transform: translateY(16px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+.animate-slide-up {
+  animation: slide-up 250ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ROI SVG handle glow effect */
+.roi-handle-glow {
+  filter: drop-shadow(0 0 6px rgba(0, 35, 111, 0.35));
+  transition: r 150ms ease, fill 150ms ease;
+}
+.roi-handle-glow:hover {
+  filter: drop-shadow(0 0 10px rgba(0, 35, 111, 0.5));
+}
+.roi-handle-selected {
+  filter: drop-shadow(0 0 8px rgba(186, 26, 26, 0.5));
+}
+
+/* ROI canvas crosshair cursor */
+.roi-canvas-drawing {
+  cursor: crosshair;
+}
+.roi-canvas-editing {
+  cursor: default;
+}
+.roi-canvas-idle {
+  cursor: default;
+}
+
+/* Prevent browser gestures on ROI canvas */
+.roi-canvas-container {
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* ROI sensitivity indicator bar */
+.roi-sensitivity-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #22c55e 0%, #eab308 50%, #ef4444 100%);
+}
+
+/* Stepper transition */
+.stepper-step {
+  transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Bottom sheet overlay for mobile */
+@keyframes sheet-up {
+  0% { transform: translateY(100%); }
+  100% { transform: translateY(0); }
+}
+.animate-sheet-up {
+  animation: sheet-up 300ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Popover shadow for dropdowns */
+.popover-shadow {
+  box-shadow: 0 8px 30px rgba(11, 28, 48, 0.12), 0 2px 8px rgba(11, 28, 48, 0.06);
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-scale-up,
+  .animate-fade-in,
+  .animate-slide-up,
+  .animate-sheet-up {
+    animation: none !important;
+  }
+  .stepper-step {
+    transition: none !important;
+  }
+  .roi-handle-glow {
+    transition: none !important;
+  }
+  .roi-pulse-ring,
+  [style*="animation: roi-pulse"] {
+    animation: none !important;
+  }
 }

@@ -23,6 +23,7 @@ from configs.settings import get_settings
 @dataclass
 class AuthToken:
     """JWT-like auth token."""
+
     user_id: str
     token: str
     expires_at: float

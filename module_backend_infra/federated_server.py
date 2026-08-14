@@ -7,8 +7,6 @@ Cập nhật trọng số mô hình qua OTA mà không cần nhận video thô.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 from loguru import logger
 
 from configs.settings import get_settings
@@ -32,12 +30,13 @@ class FederatedServer:
 
     def receive_update(self, client_id: str, weights: dict) -> None:
         """Nhận model update từ edge device."""
-        self._client_updates.append({
-            "client_id": client_id,
-            "weights": weights,
-        })
-        logger.info(f"Received update from {client_id}. "
-                     f"Total: {len(self._client_updates)} updates")
+        self._client_updates.append(
+            {
+                "client_id": client_id,
+                "weights": weights,
+            }
+        )
+        logger.info(f"Received update from {client_id}. Total: {len(self._client_updates)} updates")
 
     def aggregate(self, min_clients: int = 3) -> dict | None:
         """Aggregate weights sử dụng FedAvg."""

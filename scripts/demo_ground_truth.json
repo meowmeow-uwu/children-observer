@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "video": "module_edge_firmware/test_video.mp4",
+  "video_fps": 30.0,
+  "note": "Ground truth demo: khoảng thời gian trẻ nhìn thấy rõ ỔN ĐỊNH (detection >= 0.2 bền vững) trong đoạn demo [10s, 22.6s] của test_video.mp4. Trẻ đứng yên tại (cx~0.38, foot~0.35) từ ~13.4s đến 16.2s; trước 13.4s detection chập chờn (0.05-0.2). Không chỉnh sửa/nhân bản video. Đoạn 13.4-16.2 ngắn hơn 3s nên gate run yêu cầu track bao phủ TOÀN BỘ lần xuất hiện.",
+  "segments": [
+    { "start_s": 10.0, "end_s": 22.6, "label": "demo_segment" }
+  ],
+  "intervals": [
+    { "start_s": 13.47, "end_s": 16.2, "label": "child_stationary_clear" }
+  ]
+}

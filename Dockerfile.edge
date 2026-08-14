@@ -6,17 +6,24 @@ ENV UV_PYTHON_PREFERENCE=only-system
 
 WORKDIR /app
 
-# Cài đặt thư viện hệ thống cần thiết cho OpenCV
+# Cài đặt thư viện hệ thống cần thiết cho OpenCV (bookworm: dùng libgl1, libgl1-mesa-glx đã bị bỏ)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip install uv
 
 COPY pyproject.toml uv.lock ./
-RUN uv sync
+# Chỉ cài nhóm edge (AI/WebRTC/video) — backend image không cài nhóm này
+RUN uv sync --extra edge
 
-COPY . /app
+# COPY có chọn lọc — không mang .venv/node_modules/.git (xem .dockerignore)
+COPY configs ./configs
+COPY module_edge_firmware ./module_edge_firmware
+COPY module_backend_infra ./module_backend_infra
+# Chỉ copy ONNX runtime cần thiết (không copy best.pt)
+COPY weights/roi_detection/best.onnx ./weights/roi_detection/best.onnx
 
-CMD ["uv", "run", "module_edge_firmware/pipeline.py"]
+# Entry: pipeline demo duy nhất (video + ONNX + ByteTrack + WebRTC + datachannel)
+CMD ["uv", "run", "python", "-m", "module_edge_firmware.demo_stream"]

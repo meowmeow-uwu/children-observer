@@ -4,11 +4,19 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [
     react(),
     tailwindcss(),
     VitePWA({
+      // Local demo/dev dùng cùng origin :5173 với Docker production. Nếu SW
+      // production cũ còn giữ bundle, refresh thường sẽ hiện UI cũ. Dev SW
+      // tự unregister + xóa cache; production vẫn giữ PWA bình thường.
+      selfDestroying: command === 'serve',
+      devOptions: {
+        enabled: command === 'serve',
+        type: 'classic'
+      },
       registerType: 'autoUpdate',
       injectRegister: 'auto',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
@@ -84,4 +92,4 @@ export default defineConfig({
       }
     })
   ]
-})
+}))
