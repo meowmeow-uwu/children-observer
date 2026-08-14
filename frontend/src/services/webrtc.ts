@@ -91,13 +91,21 @@ const playVideo = (el: HTMLVideoElement) => {
 };
 
 /**
- * Builds the WS/WSS signaling URL depending on environment and user ID
+ * Builds the WS/WSS signaling URL depending on environment and user ID.
+ * Theo Task 3.1: ws://localhost:8007/ws/signaling/web_parent_01?token=<JWT_TOKEN>
  */
 export const buildSignalingUrl = (userId: string): string => {
   const protocol = import.meta.env.VITE_SIGNALING_PROTOCOL || "ws";
   const host = import.meta.env.VITE_SIGNALING_HOST || "localhost:8007";
   const path = import.meta.env.VITE_SIGNALING_PATH || "/ws/signaling";
-  return `${protocol}://${host}${path}/${userId}`;
+  const base = `${protocol}://${host}${path}/${userId}`;
+
+  // Gắn JWT token vào query string để backend xác thực WebSocket client
+  const token = localStorage.getItem("safekid_token");
+  if (token) {
+    return `${base}?token=${encodeURIComponent(token)}`;
+  }
+  return base;
 };
 
 /**

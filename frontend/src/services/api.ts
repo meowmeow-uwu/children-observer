@@ -2,6 +2,27 @@ import type { Camera, ROIZone } from "../types";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8007/api";
 
+// Base URL riêng cho snapshot (không đi qua /api prefix)
+export const SNAPSHOT_BASE =
+  import.meta.env.VITE_SNAPSHOT_BASE ||
+  (import.meta.env.VITE_API_BASE
+    ? import.meta.env.VITE_API_BASE.replace(/\/api$/, "")
+    : "http://localhost:8007");
+
+/**
+ * Xây dựng URL đầy đủ cho ảnh snapshot bằng chứng.
+ * Theo spec Task 4.2: http://localhost:8007/snapshots/{snapshot_url}
+ */
+export const buildSnapshotUrl = (snapshotPath: string): string => {
+  if (!snapshotPath) return "";
+  // Tránh double-prefix nếu đã là URL đầy đủ
+  if (snapshotPath.startsWith("http://") || snapshotPath.startsWith("https://")) {
+    return snapshotPath;
+  }
+  const clean = snapshotPath.replace(/^\/+/, "");
+  return `${SNAPSHOT_BASE}/snapshots/${clean}`;
+};
+
 export class ApiError extends Error {
   status?: number;
   constructor(message: string, status?: number) {
@@ -10,10 +31,36 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Lấy JWT token hiện tại từ localStorage.
+ * AuthContext lưu token với key "safekid_token".
+ */
+const getToken = (): string | null => {
+  try {
+    return localStorage.getItem("safekid_token");
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Helper request chung — tự động gắn Authorization: Bearer <JWT_TOKEN>
+ * theo đặc tả Task 1.1: "Cấu hình Axios / Fetch Interceptor tự động gắn
+ * Header Authorization: Bearer <JWT_TOKEN> cho mọi request HTTP."
+ */
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = getToken();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
   const res = await fetch(`${API_BASE}${path}`, {
-    headers: { "Content-Type": "application/json" },
     ...init,
+    headers: {
+      ...headers,
+      // Cho phép caller override header nếu cần
+      ...(init?.headers as Record<string, string> | undefined),
+    },
   });
   if (!res.ok) {
     let detail = `HTTP ${res.status}`;
