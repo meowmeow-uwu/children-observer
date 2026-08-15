@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { ROIPoint, ROIZone } from "../types";
 import { useCameraStore } from "./cameraStore";
-import { isValidPolygon } from "../utils/roiGeometry";
+import { validatePolygonStrict } from "../utils/roiGeometry";
 
 export type DrawingMode = "polygon" | "rectangle" | "edit" | "idle";
 export type DrawingState = "roi_empty" | "roi_drawing" | "roi_unsaved" | "roi_saved" | "roi_editing" | "roi_invalid";
@@ -20,6 +20,8 @@ interface RoiState {
 
   // Actions
   initializeZones: () => void;
+  hydrateFromCameras: () => void;
+  setZonesFromServer: (zones: ROIZone[], cameraId: string) => void;
   selectZone: (zoneId: string | null) => void;
   startDrawingPolygon: (cameraId: string) => void;
   startDrawingRectangle: (cameraId: string) => void;
@@ -31,11 +33,12 @@ interface RoiState {
   redo: () => void;
   resetDraft: () => void;
   completeZone: () => void;
-  saveDraftZone: () => boolean;
+  saveDraftZone: () => ROIZone | null;
   deleteZone: (zoneId: string) => void;
   setZoneName: (name: string) => void;
   setSensitivity: (sensitivity: ROIZone["sensitivity"]) => void;
   toggleRule: (ruleKey: keyof ROIZone["rules"]) => void;
+  setStayDurationSeconds: (seconds: number) => void;
   setEnabled: (zoneId: string, enabled: boolean) => void;
   validateDraftZone: () => boolean;
   cancelDrawing: () => void;
@@ -63,11 +66,33 @@ export const useRoiStore = create<RoiState>((set, get) => ({
     set({ zones: getInitialZones() });
   },
 
+  hydrateFromCameras: () => {
+    // Sau loadCameras, chỉ thay nguồn zones canonical. Không reset selection/
+    // draft vì hydrate có thể hoàn tất sau khi trang edit đã khởi tạo; reset ở
+    // đây sẽ làm vùng đang sửa xuất hiện lại như một vùng nền.
+    set({ zones: getInitialZones() });
+  },
+
+  setZonesFromServer: (serverZones, cameraId) => {
+    // Dùng danh sách ROI server trả về làm nguồn cho camera này (canonical)
+    const zones = get().zones;
+    const nextZones = [
+      ...zones.filter((z) => z.cameraId !== cameraId),
+      ...serverZones,
+    ];
+    set({ zones: nextZones });
+    useCameraStore.getState().updateCameraZones(cameraId, serverZones);
+  },
+
   selectZone: (selectedZoneId) => {
     set({ selectedZoneId });
   },
 
   startDrawingPolygon: (cameraId) => {
+    const { selectedZoneId, draftZone } = get();
+    const isReplacingEditedZone = Boolean(
+      selectedZoneId && draftZone?.id === selectedZoneId
+    );
     set({
       drawingMode: "polygon",
       drawingState: "roi_drawing",
@@ -76,25 +101,31 @@ export const useRoiStore = create<RoiState>((set, get) => ({
       redoStack: [],
       validationError: null,
       selectedPointIndex: null,
+      selectedZoneId: isReplacingEditedZone ? selectedZoneId : null,
       draftZone: {
-        id: `roi_${Date.now()}`,
-        cameraId,
-        name: "",
+        ...(isReplacingEditedZone ? draftZone : {}),
+        id: isReplacingEditedZone ? selectedZoneId! : `roi_${Date.now()}`,
+        cameraId: cameraId || draftZone?.cameraId || "",
+        name: isReplacingEditedZone ? draftZone?.name || "" : "",
         type: "polygon",
-        sensitivity: "medium",
-        rules: {
+        sensitivity: isReplacingEditedZone ? draftZone?.sensitivity || "medium" : "medium",
+        rules: isReplacingEditedZone && draftZone?.rules ? draftZone.rules : {
           enterZone: true,
           stayTooLong: false,
           stayDurationSeconds: 5,
           approachZone: false
         },
-        enabled: true,
-        createdBy: "Nguyễn Văn A"
+        enabled: isReplacingEditedZone ? draftZone?.enabled ?? true : true,
+        createdBy: isReplacingEditedZone ? draftZone?.createdBy || "Nguyễn Văn A" : "Nguyễn Văn A"
       }
     });
   },
 
   startDrawingRectangle: (cameraId) => {
+    const { selectedZoneId, draftZone } = get();
+    const isReplacingEditedZone = Boolean(
+      selectedZoneId && draftZone?.id === selectedZoneId
+    );
     set({
       drawingMode: "rectangle",
       drawingState: "roi_drawing",
@@ -103,20 +134,22 @@ export const useRoiStore = create<RoiState>((set, get) => ({
       redoStack: [],
       validationError: null,
       selectedPointIndex: null,
+      selectedZoneId: isReplacingEditedZone ? selectedZoneId : null,
       draftZone: {
-        id: `roi_${Date.now()}`,
-        cameraId,
-        name: "",
+        ...(isReplacingEditedZone ? draftZone : {}),
+        id: isReplacingEditedZone ? selectedZoneId! : `roi_${Date.now()}`,
+        cameraId: cameraId || draftZone?.cameraId || "",
+        name: isReplacingEditedZone ? draftZone?.name || "" : "",
         type: "rectangle",
-        sensitivity: "medium",
-        rules: {
+        sensitivity: isReplacingEditedZone ? draftZone?.sensitivity || "medium" : "medium",
+        rules: isReplacingEditedZone && draftZone?.rules ? draftZone.rules : {
           enterZone: true,
           stayTooLong: false,
           stayDurationSeconds: 5,
           approachZone: false
         },
-        enabled: true,
-        createdBy: "Nguyễn Văn A"
+        enabled: isReplacingEditedZone ? draftZone?.enabled ?? true : true,
+        createdBy: isReplacingEditedZone ? draftZone?.createdBy || "Nguyễn Văn A" : "Nguyễn Văn A"
       }
     });
   },
@@ -224,10 +257,11 @@ export const useRoiStore = create<RoiState>((set, get) => ({
   completeZone: () => {
     const { draftPoints, draftZone } = get();
     if (draftZone?.type === "polygon") {
-      if (isValidPolygon(draftPoints)) {
-        set({ drawingState: "roi_unsaved", validationError: null });
+      const result = validatePolygonStrict(draftPoints, "polygon");
+      if (result.valid) {
+        set({ drawingState: "roi_unsaved", validationError: null, selectedPointIndex: null });
       } else {
-        set({ drawingState: "roi_invalid", validationError: "Vùng đa giác cần ít nhất 3 điểm." });
+        set({ drawingState: "roi_invalid", validationError: result.error, selectedPointIndex: null });
       }
     }
   },
@@ -265,6 +299,19 @@ export const useRoiStore = create<RoiState>((set, get) => ({
     });
   },
 
+  setStayDurationSeconds: (seconds) => {
+    const { draftZone } = get();
+    if (!draftZone || !draftZone.rules) return;
+    const clamped = Math.max(1, Math.min(3600, Math.round(seconds)));
+    set({
+      draftZone: {
+        ...draftZone,
+        rules: { ...draftZone.rules, stayDurationSeconds: clamped }
+      },
+      drawingState: "roi_unsaved"
+    });
+  },
+
   setEnabled: (zoneId, enabled) => {
     const nextZones = get().zones.map((z) =>
       z.id === zoneId ? { ...z, enabled } : z
@@ -284,18 +331,16 @@ export const useRoiStore = create<RoiState>((set, get) => ({
     const { draftZone, draftPoints } = get();
     if (!draftZone) return false;
 
-    if (!draftZone.name || draftZone.name.trim() === "") {
-      set({ validationError: "Vui lòng đặt tên vùng nguy hiểm trước khi lưu." });
+    // Validation chặt: điểm trùng, tự cắt, diện tích tối thiểu
+    const result = validatePolygonStrict(draftPoints, draftZone.type || "polygon");
+    if (!result.valid) {
+      set({ validationError: result.error });
       return false;
     }
 
-    if (draftZone.type === "polygon" && draftPoints.length < 3) {
-      set({ validationError: "Vùng đa giác cần ít nhất 3 điểm." });
-      return false;
-    }
-
-    if (draftZone.type === "rectangle" && draftPoints.length < 4) {
-      set({ validationError: "Vùng hình chữ nhật chưa hoàn thành vẽ (cần 4 góc)." });
+    // Tên vùng bắt buộc (backend lưu name)
+    if (!draftZone.name || !draftZone.name.trim()) {
+      set({ validationError: "Vui lòng đặt tên cho vùng nguy hiểm." });
       return false;
     }
 
@@ -305,7 +350,7 @@ export const useRoiStore = create<RoiState>((set, get) => ({
 
   saveDraftZone: () => {
     const { draftZone, draftPoints, validateDraftZone, zones } = get();
-    if (!validateDraftZone() || !draftZone) return false;
+    if (!validateDraftZone() || !draftZone) return null;
 
     const completedZone: ROIZone = {
       ...(draftZone as ROIZone),
@@ -334,7 +379,7 @@ export const useRoiStore = create<RoiState>((set, get) => ({
     const cameraZones = nextZones.filter((z) => z.cameraId === cameraId);
     useCameraStore.getState().updateCameraZones(cameraId, cameraZones);
 
-    return true;
+    return completedZone;
   },
 
   deleteZone: (zoneId) => {

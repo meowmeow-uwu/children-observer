@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 
 export const Sidebar: React.FC = () => {
   const { user } = useAuth();
-  
+
   const menuItems = [
     { to: "/dashboard", icon: "dashboard", label: "Tổng quan", roles: ["parent", "guardian", "viewer"] },
     { to: "/cameras", icon: "videocam", label: "Camera trực tiếp", roles: ["parent", "guardian", "viewer"] },
@@ -27,7 +27,7 @@ export const Sidebar: React.FC = () => {
           <p className="text-secondary-fixed dark:text-primary-fixed-dim text-xs">Giám sát an toàn</p>
         </div>
       </div>
-      
+
       <nav className="flex-1 overflow-y-auto mt-4 px-2">
         <ul className="space-y-1">
           {allowedMenuItems.map((item) => (
@@ -35,10 +35,10 @@ export const Sidebar: React.FC = () => {
               <NavLink
                 to={item.to}
                 className={({ isActive }) =>
-                  `rounded-lg mx-2 px-4 py-3 flex items-center gap-3 transition-all ${
+                  `rounded-xl mx-2 px-4 py-3 flex items-center gap-3 transition-all duration-200 cursor-pointer ${
                     isActive
-                      ? "bg-secondary-container text-on-secondary-container shadow-sm scale-95"
-                      : "text-on-primary-container hover:bg-on-primary-fixed-variant"
+                      ? "bg-secondary-container text-on-secondary-container shadow-sm"
+                      : "text-on-primary-container hover:bg-white/10 active:bg-white/15"
                   }`
                 }
               >
@@ -51,14 +51,41 @@ export const Sidebar: React.FC = () => {
       </nav>
 
       {user?.role === "parent" && (
-        <div className="px-2 mt-auto">
+        <div className="px-4 mt-auto space-y-1 mb-4">
+          <div className="px-4 py-2 mt-4 text-[11px] font-bold text-on-primary-container/60 uppercase tracking-wider">Hệ thống</div>
+          <NavLink
+            to="/settings/family"
+            className={({ isActive }) =>
+              `rounded-xl px-4 py-3 flex items-center gap-3 transition-all duration-200 cursor-pointer ${
+                isActive
+                  ? "bg-secondary-container text-on-secondary-container shadow-sm"
+                  : "text-on-primary-container hover:bg-white/10 active:bg-white/15"
+              }`
+            }
+          >
+            <span className="material-symbols-outlined">group</span>
+            <span className="text-sm font-medium">Gia đình</span>
+          </NavLink>
+          <NavLink
+            to="/billing"
+            className={({ isActive }) =>
+              `rounded-xl px-4 py-3 flex items-center gap-3 transition-all duration-200 cursor-pointer ${
+                isActive
+                  ? "bg-secondary-container text-on-secondary-container shadow-sm"
+                  : "text-on-primary-container hover:bg-white/10 active:bg-white/15"
+              }`
+            }
+          >
+            <span className="material-symbols-outlined">diamond</span>
+            <span className="text-sm font-medium">Gói dịch vụ</span>
+          </NavLink>
           <NavLink
             to="/settings/privacy"
             className={({ isActive }) =>
-              `rounded-lg mx-2 px-4 py-3 flex items-center gap-3 transition-all ${
+              `rounded-xl px-4 py-3 flex items-center gap-3 transition-all duration-200 cursor-pointer ${
                 isActive
-                  ? "bg-secondary-container text-on-secondary-container shadow-sm scale-95"
-                  : "text-on-primary-container hover:bg-on-primary-fixed-variant"
+                  ? "bg-secondary-container text-on-secondary-container shadow-sm"
+                  : "text-on-primary-container hover:bg-white/10 active:bg-white/15"
               }`
             }
           >

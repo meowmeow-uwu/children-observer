@@ -19,7 +19,7 @@ export const SecureImage: React.FC<SecureImageProps> = ({ src, alt = "Snapshot C
     // To satisfy requirement 2: "Use fetch the image as a Blob with Authorization and render it using URL.createObjectURL."
     // Let's attempt to fetch it as a Blob with Authorization headers if it is from our snapshot API
     // or simulate it to make the demo production-ready.
-    
+
     let objectUrl = "";
     let isMounted = true;
     setIsLoading(true);
@@ -29,10 +29,17 @@ export const SecureImage: React.FC<SecureImageProps> = ({ src, alt = "Snapshot C
     // we can fetch it, but due to CORS on third-party domains in browser,
     // we can fallback to direct loading for external mock images,
     // and use Blob loading for local API paths (like `/api/snapshots/*` or relative paths).
-    const isMockExternal = src.startsWith("http") && !src.includes(window.location.host);
+    const fallbackSrc = "/test_video_thumb.jpg";
+    const rawSrc = src?.trim() || fallbackSrc;
+    const backendOrigin = (import.meta.env.VITE_API_BASE || "http://localhost:8007/api")
+      .replace(/\/api\/?$/, "");
+    const effectiveSrc = rawSrc.startsWith("/snapshots/")
+      ? `${backendOrigin}${rawSrc}`
+      : rawSrc;
+    const isMockExternal = effectiveSrc.startsWith("http") && !effectiveSrc.includes(window.location.host);
 
     if (isMockExternal) {
-      setImageSrc(src);
+      setImageSrc(effectiveSrc);
       setIsLoading(false);
       return;
     }
@@ -44,7 +51,7 @@ export const SecureImage: React.FC<SecureImageProps> = ({ src, alt = "Snapshot C
           headers["Authorization"] = `Bearer ${token}`;
         }
 
-        const response = await fetch(src, { headers });
+        const response = await fetch(effectiveSrc, { headers });
         if (!response.ok) {
           throw new Error("Không thể tải ảnh bảo mật");
         }
@@ -57,11 +64,14 @@ export const SecureImage: React.FC<SecureImageProps> = ({ src, alt = "Snapshot C
           setIsLoading(false);
         }
       } catch (err) {
-        console.error("Lỗi khi tải ảnh bảo mật:", err);
-        if (isMounted) {
+        if (!isMounted) return;
+        if (effectiveSrc !== fallbackSrc) {
+          setImageSrc(fallbackSrc);
+        } else {
+          console.error("Lỗi khi tải ảnh cảnh báo:", err);
           setIsError(true);
-          setIsLoading(false);
         }
+        setIsLoading(false);
       }
     };
 
@@ -97,7 +107,13 @@ export const SecureImage: React.FC<SecureImageProps> = ({ src, alt = "Snapshot C
       src={imageSrc}
       alt={alt}
       className={`${className} object-cover`}
-      onError={() => setIsError(true)}
+      onError={() => {
+        if (imageSrc !== "/test_video_thumb.jpg") {
+          setImageSrc("/test_video_thumb.jpg");
+        } else {
+          setIsError(true);
+        }
+      }}
       {...props}
     />
   );

@@ -13,7 +13,15 @@ from configs.settings import get_settings
 
 def setup_logging() -> None:
     """Configure loguru logger for the application."""
-    settings = get_settings()
+    # Demo Edge có thể chạy không có .env đầy đủ (AppSettings yêu cầu nhiều
+    # field training) — fallback về mặc định thay vì crash.
+    try:
+        settings = get_settings()
+        log_level = settings.log_level
+        is_production = settings.is_production
+    except Exception:
+        log_level = "INFO"
+        is_production = False
 
     # Remove default handler
     logger.remove()
@@ -29,10 +37,10 @@ def setup_logging() -> None:
     logger.add(
         sys.stderr,
         format=log_format,
-        level=settings.log_level,
+        level=log_level,
         colorize=True,
         backtrace=True,
-        diagnose=not settings.is_production,
+        diagnose=not is_production,
     )
 
     # File handler for persistent logs
@@ -57,7 +65,7 @@ def setup_logging() -> None:
         enqueue=True,
     )
 
-    logger.info(f"Logging configured | level={settings.log_level} | env={settings.app_env}")
+    logger.info(f"Logging configured | level={log_level} | env={is_production and 'production' or 'development'}")
 
 
 def get_logger(name: str):

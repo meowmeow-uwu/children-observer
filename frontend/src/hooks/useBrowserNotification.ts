@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 export type NotificationPermissionState = "default" | "granted" | "denied" | "unsupported";
 
@@ -32,7 +32,7 @@ export const useBrowserNotification = () => {
     }
   };
 
-  const showNotification = (title: string, options?: NotificationOptions) => {
+  const showNotification = useCallback((title: string, options?: NotificationOptions) => {
     if (!("Notification" in window) || Notification.permission !== "granted") {
       return;
     }
@@ -50,7 +50,7 @@ export const useBrowserNotification = () => {
     } catch {
       // Handle older/mobile browsers failure to build constructor
     }
-  };
+  }, []);
 
   return {
     permission,

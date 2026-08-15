@@ -2,14 +2,13 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCameraStore } from "../store/cameraStore";
 import { StatusBadge } from "../components/StatusBadge";
-import { ErrorState } from "../components/ErrorState";
 
 export const CameraListView: React.FC = () => {
   const navigate = useNavigate();
   const { cameras } = useCameraStore();
   const [filter, setFilter] = useState<"all" | "online" | "offline" | "failed">("all");
 
-  // Filter cameras
+  // Filter bằng status thật từ backend (không dùng demoCameraState)
   const filteredCameras = cameras.filter((cam) => {
     if (filter === "all") return true;
     if (filter === "online") return cam.status === "online";
@@ -18,15 +17,17 @@ export const CameraListView: React.FC = () => {
     return true;
   });
 
+  const countByStatus = (s: typeof filter) =>
+    s === "all"
+      ? cameras.length
+      : cameras.filter((c) => c.status === s).length;
+
   const getSignalIcon = (quality: "good" | "fair" | "poor") => {
     switch (quality) {
-      case "good":
-        return "signal_cellular_4_bar";
-      case "fair":
-        return "signal_cellular_3_bar";
+      case "good": return "signal_cellular_4_bar";
+      case "fair": return "signal_cellular_3_bar";
       case "poor":
-      default:
-        return "signal_cellular_1_bar";
+      default: return "signal_cellular_1_bar";
     }
   };
 
@@ -35,8 +36,7 @@ export const CameraListView: React.FC = () => {
       case "good": return "text-emerald-500";
       case "fair": return "text-amber-500";
       case "poor":
-      default:
-        return "text-error";
+      default: return "text-error";
     }
   };
 
@@ -44,7 +44,7 @@ export const CameraListView: React.FC = () => {
     <div className="p-4 md:p-6 space-y-6">
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
-          <h2 className="text-xl md:text-2xl font-bold text-on-surface">Camera giám sát trực tiếp</h2>
+          <h1 className="text-xl md:text-2xl font-bold text-on-surface">Camera giám sát trực tiếp</h1>
           <p className="text-sm text-on-surface-variant mt-1">Theo dõi các luồng video và trạng thái kết nối thời gian thực.</p>
         </div>
       </div>
@@ -61,10 +61,10 @@ export const CameraListView: React.FC = () => {
                 : "border-transparent text-on-surface-variant hover:text-on-surface"
             }`}
           >
-            {tab === "all" && `Tất cả (${cameras.length})`}
-            {tab === "online" && `Đang hoạt động (${cameras.filter(c => c.status === "online").length})`}
-            {tab === "offline" && `Mất kết nối (${cameras.filter(c => c.status === "offline").length})`}
-            {tab === "failed" && `Lỗi kết nối (${cameras.filter(c => c.streamStatus === "failed").length})`}
+            {tab === "all" && `Tất cả (${countByStatus("all")})`}
+            {tab === "online" && `Đang hoạt động (${countByStatus("online")})`}
+            {tab === "offline" && `Mất kết nối (${countByStatus("offline")})`}
+            {tab === "failed" && `Lỗi kết nối (${countByStatus("failed")})`}
           </button>
         ))}
       </div>
@@ -73,6 +73,7 @@ export const CameraListView: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {filteredCameras.map((cam) => {
           const activeRois = cam.roiZones.filter((z) => z.enabled).length;
+          const isOnline = cam.status === "online";
 
           return (
             <div
@@ -81,27 +82,24 @@ export const CameraListView: React.FC = () => {
             >
               {/* Camera Preview Area */}
               <div className="aspect-video bg-black relative flex items-center justify-center overflow-hidden">
-                {cam.status === "offline" ? (
-                  <div className="text-center p-6 w-full h-full bg-stone-900/50 flex flex-col items-center justify-center">
-                    <span className="material-symbols-outlined text-error text-[48px] mb-2">videocam_off</span>
-                    <h4 className="text-sm font-bold text-outline">Camera Ngoại Tuyến</h4>
-                    <p className="text-xs text-outline-variant mt-1">Vui lòng kiểm tra cáp nguồn thiết bị</p>
-                  </div>
-                ) : cam.streamStatus === "failed" ? (
-                  <div className="w-full h-full bg-error-container/10 flex items-center justify-center p-4 text-center">
-                    <ErrorState
-                      message="Không thể kết nối camera. Vui lòng kiểm tra mạng hoặc thiết bị."
-                    />
+                {cam.status === "offline" || cam.streamStatus === "failed" ? (
+                  <div className="text-center p-6 w-full h-full bg-error-container/10 flex flex-col items-center justify-center">
+                    <span className="material-symbols-outlined text-error text-[48px] mb-2">
+                      {cam.status === "offline" ? "videocam_off" : "signal_disconnected"}
+                    </span>
+                    <h4 className="text-sm font-bold text-error">
+                      {cam.status === "offline" ? "Camera Ngoại Tuyến" : "Lỗi kết nối camera"}
+                    </h4>
+                    <p className="text-xs text-outline-variant mt-1">Vui lòng kiểm tra mạng hoặc thiết bị</p>
                   </div>
                 ) : cam.streamStatus === "connected" ? (
                   <div className="w-full h-full relative">
                     <img
-                      src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&auto=format&fit=crop"
+                      src="/test_video_thumb.jpg"
                       alt={cam.name}
                       className="w-full h-full object-cover opacity-80"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent"></div>
-                    <span className="absolute top-3 left-3 px-2 py-0.5 bg-red-600 text-white rounded text-[10px] font-bold tracking-wider animate-pulse uppercase z-10">Live</span>
                   </div>
                 ) : cam.streamStatus === "connecting" ? (
                   <div className="text-center p-6">
@@ -110,17 +108,19 @@ export const CameraListView: React.FC = () => {
                     <p className="text-xs text-outline-variant mt-1">Đang đàm phán tín hiệu bảo mật</p>
                   </div>
                 ) : (
-                  <div className="text-center p-6 text-outline">
-                    <span className="material-symbols-outlined text-[48px] mb-2">pause_circle</span>
-                    <h4 className="text-sm font-bold">Chưa khởi tạo kết nối</h4>
-                    <p className="text-xs text-outline-variant mt-1">Nhấp xem chi tiết để kết nối luồng trực tiếp</p>
+                  <div className="text-center p-6 w-full h-full flex flex-col items-center justify-center">
+                    <span className="material-symbols-outlined text-outline text-[48px] mb-2">videocam</span>
+                    <h4 className="text-sm font-bold text-outline">Sẵn sàng</h4>
+                    <p className="text-xs text-outline-variant mt-1">Nhấn "Xem chi tiết" để bắt đầu xem</p>
                   </div>
                 )}
 
                 {/* Overlays */}
                 <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end z-10">
-                  <StatusBadge type={cam.status} label={cam.status === "online" ? "Online" : "Offline"} />
-                  <StatusBadge type={cam.streamStatus} />
+                  <StatusBadge
+                    type={cam.streamStatus === "connected" ? "connected" : cam.status === "online" && cam.streamStatus !== "failed" ? "online" : cam.streamStatus === "failed" ? "failed" : "offline"}
+                    label={cam.streamStatus === "connected" ? "Đang xem Live" : cam.status === "online" && cam.streamStatus !== "failed" ? "Sẵn sàng" : undefined}
+                  />
                 </div>
               </div>
 
@@ -164,7 +164,12 @@ export const CameraListView: React.FC = () => {
                   </button>
                   <button
                     onClick={() => navigate(`/roi/${cam.id}`)}
-                    className="py-2.5 px-4 text-xs font-bold bg-primary hover:bg-primary/95 text-white rounded-xl transition-all text-center focus:outline-none shadow-sm"
+                    disabled={!isOnline}
+                    className={`py-2.5 px-4 text-xs font-bold rounded-xl transition-all text-center focus:outline-none ${
+                      isOnline
+                        ? "bg-primary hover:bg-primary/95 text-white shadow-sm"
+                        : "bg-outline-variant/30 text-on-surface-variant cursor-not-allowed opacity-70"
+                    }`}
                   >
                     Thiết lập ROI
                   </button>

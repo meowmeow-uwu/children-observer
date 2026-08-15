@@ -3,11 +3,10 @@ Tests cho Edge Firmware - analysis components.
 """
 
 import numpy as np
-import pytest
 
 from module_edge_firmware.analysis.roi_checker import ROIChecker, ROIZone
-from module_edge_firmware.ingestion.preprocessor import FramePreprocessor
 from module_edge_firmware.buffer.circular_buffer import CircularBuffer
+from module_edge_firmware.ingestion.preprocessor import FramePreprocessor
 
 
 class TestROIZone:
@@ -34,8 +33,11 @@ class TestROIChecker:
     def test_update_zones(self, tmp_path):
         checker = ROIChecker(config_path=str(tmp_path / "roi.json"))
         zones = [
-            {"zone_id": "kitchen", "vertices": [[0, 0], [100, 0], [100, 100], [0, 100]],
-             "label": "Bếp"},
+            {
+                "zone_id": "kitchen",
+                "vertices": [[0, 0], [100, 0], [100, 100], [0, 100]],
+                "label": "Bếp",
+            },
         ]
         checker.update_zones(zones)
         assert checker.has_zones is True

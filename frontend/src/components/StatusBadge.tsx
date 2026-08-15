@@ -29,7 +29,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ type, label }) => {
       case "false_alarm":
       case "idle":
       case "closed":
-        return "bg-outline-variant/30 text-on-surface-variant border-outline-variant/50";
+        return "bg-surface-container-highest text-on-surface shadow-sm border-outline-variant/50";
       case "info":
       default:
         return "bg-secondary/10 text-secondary border-secondary/20";
@@ -57,7 +57,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ type, label }) => {
       case "false_alarm":
         return "Báo nhầm";
       case "connected":
-        return "Đang phát trực tiếp";
+        return "Live";
       case "connecting":
         return "Đang kết nối";
       case "reconnecting":

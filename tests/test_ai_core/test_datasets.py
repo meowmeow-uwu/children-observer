@@ -23,7 +23,10 @@ class TestChildSUnDataset:
 
     def test_get_class_name(self):
         ds = ChildSUnDataset(root_dir="/nonexistent/path")
-        assert ds.get_class_name(0) == "child"
+        # Class order khớp với model thật (data/childsun/data.yaml):
+        # 0=adult, 1=child, 2=knife, 3=outlet, 4=scissors
+        assert ds.get_class_name(0) == "adult"
+        assert ds.get_class_name(1) == "child"
         assert ds.get_class_name(999).startswith("unknown")
 
 

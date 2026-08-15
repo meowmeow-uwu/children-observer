@@ -7,10 +7,11 @@ import { StatusBadge } from "../components/StatusBadge";
 import { SecureImage } from "../components/SecureImage";
 import { useToast } from "../components/Toast";
 
+
 export const DashboardView: React.FC = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
-  
+
   const { cameras } = useCameraStore();
   const { alerts, updateAlertStatus } = useAlertStore();
   const { deviceInfo } = useSystemStatusStore();
@@ -19,10 +20,10 @@ export const DashboardView: React.FC = () => {
   const totalCameras = cameras.length;
   const onlineCameras = cameras.filter((c) => c.status === "online").length;
   const offlineCameras = cameras.filter((c) => c.status === "offline" || c.status === "loading").length;
-  
+
   // Count ROI active
   const totalRoiActive = cameras.reduce((acc, cam) => acc + cam.roiZones.filter(r => r.enabled).length, 0);
-  
+
   // Count alerts today
   const alertsToday = alerts.filter(a => {
     const alertDate = new Date(a.createdAt);
@@ -38,13 +39,13 @@ export const DashboardView: React.FC = () => {
     const date = new Date(isoString);
     const diffMs = Date.now() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
-    
+
     if (diffMins < 1) return "Vừa xong";
     if (diffMins < 60) return `${diffMins} phút trước`;
-    
+
     const diffHours = Math.floor(diffMins / 60);
     if (diffHours < 24) return `${diffHours} giờ trước`;
-    
+
     return date.toLocaleDateString("vi-VN", { hour: "2-digit", minute: "2-digit" });
   };
 
@@ -69,10 +70,10 @@ export const DashboardView: React.FC = () => {
 
   return (
     <div className="p-4 md:p-6 space-y-6">
-      
+
       {/* Bento Grid Header / Stats Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-        
+
         {/* System Health Card */}
         <div className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/30 flex items-start gap-4 shadow-sm hover:shadow-md transition-shadow">
           <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${offlineCameras > 0 ? 'bg-amber-50 text-amber-500' : 'bg-emerald-50 text-emerald-500'}`}>
@@ -83,8 +84,8 @@ export const DashboardView: React.FC = () => {
           <div>
             <h4 className="text-xs font-semibold text-on-surface-variant">Trạng thái hệ thống</h4>
             <p className="font-bold text-sm text-on-surface mt-1 leading-tight">
-              {offlineCameras > 0 
-                ? `Phát hiện ${offlineCameras} thiết bị gián đoạn` 
+              {offlineCameras > 0
+                ? `Phát hiện ${offlineCameras} thiết bị gián đoạn`
                 : "Hoạt động bình thường"
               }
             </p>
@@ -156,13 +157,13 @@ export const DashboardView: React.FC = () => {
 
       {/* Main Grid: Cameras & Alerts Panel */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* Left Column: Camera Preview Cards */}
         <div className="lg:col-span-2 space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-bold text-on-surface">Camera trực tiếp</h3>
-            <button 
-              onClick={() => navigate("/cameras")} 
+            <button
+              onClick={() => navigate("/cameras")}
               className="text-xs font-bold text-secondary hover:underline flex items-center gap-1"
             >
               Xem tất cả <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
@@ -172,43 +173,52 @@ export const DashboardView: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {cameras.map((cam) => {
               const activeRois = cam.roiZones.filter((z) => z.enabled).length;
+              const isLivingRoom = cam.id === "cam_living_room_01" || cam.streamStatus === "connected";
               return (
                 <div key={cam.id} className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 overflow-hidden shadow-sm flex flex-col group hover:shadow-md transition-all">
-                  
-                  {/* Mock Video Placeholder */}
+
+                  {/* Ảnh xem trước trạng thái camera; WebRTC chỉ mở ở trang chi tiết. */}
                   <div className="aspect-video bg-black relative flex items-center justify-center overflow-hidden">
-                    {cam.status === "offline" ? (
-                      <div className="text-center p-4">
-                        <span className="material-symbols-outlined text-error text-[40px] mb-2">videocam_off</span>
-                        <p className="text-xs font-medium text-outline">Mất kết nối tín hiệu</p>
-                      </div>
-                    ) : cam.streamStatus === "connected" ? (
+                    {isLivingRoom ? (
                       <div className="w-full h-full relative">
-                        {/* Mock stream visual */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10"></div>
-                        <img 
-                          src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=500&auto=format&fit=crop" 
-                          alt={cam.name} 
-                          className="w-full h-full object-cover opacity-80" 
+                        <img
+                          src="/test_video_thumb.jpg"
+                          alt={`Ảnh xem trước ${cam.name}`}
+                          className="w-full h-full object-cover opacity-80"
                         />
-                        <span className="absolute top-2 left-2 z-10 px-2 py-0.5 bg-red-600 text-white rounded text-[10px] font-bold tracking-wider animate-pulse uppercase">Live</span>
                       </div>
                     ) : cam.streamStatus === "connecting" ? (
                       <div className="text-center p-4">
                         <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                        <p className="text-xs text-outline">Đang kết nối luồng WebRTC...</p>
+                        <p className="text-xs font-medium text-outline">Đang kết nối tín hiệu...</p>
+                      </div>
+                    ) : cam.streamStatus === "failed" ? (
+                      <div className="text-center p-4">
+                        <span className="material-symbols-outlined text-error text-[40px] mb-2">signal_disconnected</span>
+                        <p className="text-xs font-medium text-outline">Lỗi kết nối camera</p>
                       </div>
                     ) : (
-                      <div className="text-center p-4 text-outline flex flex-col items-center">
-                        <span className="material-symbols-outlined text-[36px] mb-1">pause_circle</span>
-                        <p className="text-xs">Chưa kết nối</p>
+                      <div className="text-center p-4">
+                        <span className="material-symbols-outlined text-error text-[40px] mb-2">videocam_off</span>
+                        <p className="text-xs font-medium text-outline">Mất kết nối tín hiệu</p>
                       </div>
                     )}
-                    
+
                     {/* Corner badges */}
                     <div className="absolute top-2 right-2 flex flex-col gap-1 items-end z-10">
-                      <StatusBadge type={cam.status} label={cam.status === "online" ? "Online" : "Offline"} />
-                      <StatusBadge type={cam.streamStatus} />
+                      {isLivingRoom ? (
+                        <StatusBadge
+                          type={cam.streamStatus === "connected" ? "connected" : "online"}
+                          label={cam.streamStatus === "connected" ? "Đang xem Live" : "Sẵn sàng"}
+                        />
+                      ) : cam.streamStatus === "connecting" ? (
+                        <StatusBadge type="connecting" />
+                      ) : cam.streamStatus === "failed" ? (
+                        <StatusBadge type="failed" />
+                      ) : (
+                        <StatusBadge type="offline" />
+                      )}
                     </div>
                   </div>
 
@@ -238,7 +248,12 @@ export const DashboardView: React.FC = () => {
                       </button>
                       <button
                         onClick={() => navigate(`/roi/${cam.id}`)}
-                        className="py-2 px-3 text-xs font-semibold bg-primary text-white hover:bg-primary/90 rounded-lg transition-all text-center focus:outline-none"
+                        disabled={!isLivingRoom}
+                        className={`py-2 px-3 text-xs font-semibold rounded-lg transition-all text-center focus:outline-none ${
+                          isLivingRoom
+                            ? "bg-primary text-white hover:bg-primary/90"
+                            : "bg-outline-variant/30 text-on-surface-variant cursor-not-allowed opacity-70"
+                        }`}
                       >
                         Thiết lập ROI
                       </button>
@@ -255,8 +270,8 @@ export const DashboardView: React.FC = () => {
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-bold text-on-surface">Cảnh báo gần đây</h3>
-            <button 
-              onClick={() => navigate("/alerts")} 
+            <button
+              onClick={() => navigate("/alerts")}
               className="text-xs font-bold text-secondary hover:underline"
             >
               Lịch sử cảnh báo
@@ -265,8 +280,8 @@ export const DashboardView: React.FC = () => {
 
           <div className="flex flex-col gap-3">
             {alerts.slice(0, 3).map((al) => {
-              const borderStyles = al.status === "unread" 
-                ? "border-l-4 border-l-error bg-red-500/[0.02]" 
+              const borderStyles = al.status === "unread"
+                ? "border-l-4 border-l-error bg-red-500/[0.02]"
                 : al.status === "checking"
                 ? "border-l-4 border-l-amber-500 bg-amber-500/[0.02]"
                 : "border-l-4 border-l-outline-variant";
@@ -292,7 +307,7 @@ export const DashboardView: React.FC = () => {
                         {getRelativeTime(al.createdAt)}
                       </span>
                     </div>
-                    
+
                     <h4 className="font-semibold text-xs text-on-surface truncate mt-1">{al.title}</h4>
                     <p className="text-[10px] text-on-surface-variant truncate mt-0.5">
                       Cam: {al.cameraName} • Vùng: {al.roiName || "Không có"}

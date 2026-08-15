@@ -1,5 +1,6 @@
-import type { Camera } from "../types";
+import type { AiFeedMessage, Camera } from "../types";
 import { useCameraStore } from "../store/cameraStore";
+import { normalizeAiFeedMessage } from "../utils/aiFeed";
 
 export interface WebRTCServiceOptions {
   cameraId: string;
@@ -35,20 +36,76 @@ export interface SignalingMessage {
 // Global active connections map
 const activeConnections = new Map<string, WebRTCConnectionHandle>();
 
+// AI track feed: subscribers per cameraId (nhận message từ data channel)
+const feedSubscribers = new Map<string, Set<(msg: AiFeedMessage) => void>>();
+
+const emitFeed = (cameraId: string, msg: AiFeedMessage) => {
+  const subs = feedSubscribers.get(cameraId);
+  if (!subs) return;
+  subs.forEach((cb) => {
+    try {
+      cb(msg);
+    } catch {
+      // subscriber errors không làm sập pipeline
+    }
+  });
+};
+
+export const subscribeToTrackFeed = (
+  cameraId: string,
+  handler: (msg: AiFeedMessage) => void
+): (() => void) => {
+  let subs = feedSubscribers.get(cameraId);
+  if (!subs) {
+    subs = new Set();
+    feedSubscribers.set(cameraId, subs);
+  }
+  subs.add(handler);
+  return () => {
+    subs?.delete(handler);
+    if (subs && subs.size === 0) {
+      feedSubscribers.delete(cameraId);
+    }
+  };
+};
+
 // STUN configuration
 const iceServers = [
   { urls: "stun:stun.l.google.com:19302" }
   // TODO: Fetch short-lived TURN credentials from backend in production.
 ];
 
+const DATA_CHANNEL_LABEL = "detections";
+
 /**
- * Builds the WS/WSS signaling URL depending on environment and user ID
+ * Play video an toàn: play() gọi ngay sau khi set srcObject có thể bị reject
+ * (media chưa sẵn sàng) → retry khi element báo canplay/loadeddata.
+ * Tránh hiện tượng video kẹt ở frame đầu tiên (paused) khi vừa kết nối.
+ */
+const playVideo = (el: HTMLVideoElement) => {
+  el.play().catch(() => {
+    const retry = () => el.play().catch(() => {});
+    el.addEventListener("canplay", retry, { once: true });
+    el.addEventListener("loadeddata", retry, { once: true });
+  });
+};
+
+/**
+ * Builds the WS/WSS signaling URL depending on environment and user ID.
+ * Theo Task 3.1: ws://localhost:8007/ws/signaling/web_parent_01?token=<JWT_TOKEN>
  */
 export const buildSignalingUrl = (userId: string): string => {
   const protocol = import.meta.env.VITE_SIGNALING_PROTOCOL || "ws";
   const host = import.meta.env.VITE_SIGNALING_HOST || "localhost:8007";
   const path = import.meta.env.VITE_SIGNALING_PATH || "/ws/signaling";
-  return `${protocol}://${host}${path}/${userId}`;
+  const base = `${protocol}://${host}${path}/${userId}`;
+
+  // Gắn JWT token vào query string để backend xác thực WebSocket client
+  const token = localStorage.getItem("safekid_token");
+  if (token) {
+    return `${base}?token=${encodeURIComponent(token)}`;
+  }
+  return base;
 };
 
 /**
@@ -85,13 +142,17 @@ export const disconnectCamera = (cameraId: string) => {
   const handle = activeConnections.get(cameraId);
   if (!handle) return;
 
-  // Clear any pending reconnect timers
+  // Clear any pending reconnect/stop timers
   if (handle.reconnectTimer) {
     window.clearTimeout(handle.reconnectTimer);
     handle.reconnectTimer = undefined;
   }
+  if (handle.stopTimer) {
+    window.clearTimeout(handle.stopTimer);
+    handle.stopTimer = undefined;
+  }
 
-  // Stop all media tracks to release camera hardware
+  // Stop all media tracks
   if (handle.stream) {
     handle.stream.getTracks().forEach((track) => track.stop());
     handle.stream = null;
@@ -116,12 +177,9 @@ export const disconnectCamera = (cameraId: string) => {
     // Ignore errors during element detach
   }
 
-  // If explicitly closed, update camera store state
   if (handle.isExplicitlyClosed) {
     useCameraStore.getState().updateCameraStreamStatus(cameraId, "idle");
-    if (handle.onStatusChange) {
-      handle.onStatusChange("idle");
-    }
+    handle.onStatusChange?.("idle");
     activeConnections.delete(cameraId);
   }
 };
@@ -136,42 +194,33 @@ const triggerReconnect = (cameraId: string) => {
   if (handle.reconnectCount >= 3) {
     // Exhausted retries
     useCameraStore.getState().updateCameraStreamStatus(cameraId, "failed");
-    if (handle.onStatusChange) {
-      handle.onStatusChange("failed");
-    }
-    if (handle.onError) {
-      handle.onError("Mất kết nối tới camera sau 3 lần thử lại.");
-    }
+    handle.onStatusChange?.("failed");
+    handle.onError?.("Mất kết nối tới camera sau 3 lần thử lại.");
     disconnectCamera(cameraId);
     return;
   }
 
-  // Increment retries count
   handle.reconnectCount += 1;
   useCameraStore.getState().updateCameraStreamStatus(cameraId, "reconnecting");
-  if (handle.onStatusChange) {
-    handle.onStatusChange("reconnecting");
-  }
+  handle.onStatusChange?.("reconnecting");
 
   const delay = Math.pow(2, handle.reconnectCount - 1) * 1000; // 1000ms, 2000ms, 4000ms
-  
-  // Cleanup current socket/connection before trying new connect
+
   disconnectCamera(cameraId);
 
   handle.reconnectTimer = window.setTimeout(() => {
-    // Reconnect
     connectToCamera({
       cameraId: handle.cameraId,
       userId: handle.userId,
       videoElement: handle.videoElement,
       onStatusChange: handle.onStatusChange,
-      onError: handle.onError
+      onError: handle.onError,
     }, handle.reconnectCount);
   }, delay);
 };
 
 /**
- * Initiates WebRTC streaming connection
+ * Initiates WebRTC streaming connection (Edge stream video + data channel)
  */
 export const connectToCamera = async (
   options: WebRTCServiceOptions,
@@ -186,7 +235,7 @@ export const connectToCamera = async (
       window.clearTimeout(existing.stopTimer);
       existing.stopTimer = undefined;
     }
-    
+
     // Update handle with new component's references
     existing.videoElement = videoElement;
     existing.onStatusChange = onStatusChange;
@@ -194,25 +243,33 @@ export const connectToCamera = async (
 
     if (existing.stream) {
       videoElement.srcObject = existing.stream;
-      videoElement.play().catch(e => console.error("Play auto-resume failed:", e));
+      playVideo(videoElement);
     }
 
     if (existing.pc || existing.ws) {
-      // Immediately notify the new component of the current stream status
-      if (onStatusChange) {
-        onStatusChange(useCameraStore.getState().cameras.find(c => c.id === cameraId)?.streamStatus || "connected");
-      }
+      onStatusChange?.(useCameraStore.getState().cameras.find((c) => c.id === cameraId)?.streamStatus || "connected");
       return; // Connection is active, don't duplicate
     }
   }
 
   // Initialize camera store loading state
   useCameraStore.getState().updateCameraStreamStatus(cameraId, "connecting");
-  if (onStatusChange) {
-    onStatusChange("connecting");
-  }
+  onStatusChange?.("connecting");
 
-  // Build signaling path
+  const handle: WebRTCConnectionHandle = {
+    cameraId,
+    userId,
+    pc: null,
+    ws: null as unknown as WebSocket,
+    stream: null,
+    videoElement,
+    reconnectCount: currentReconnectCount,
+    isExplicitlyClosed: false,
+    onStatusChange,
+    onError,
+  };
+  activeConnections.set(cameraId, handle);
+
   const wsUrl = buildSignalingUrl(userId);
   let ws: WebSocket;
 
@@ -220,42 +277,44 @@ export const connectToCamera = async (
     ws = new WebSocket(wsUrl);
   } catch {
     useCameraStore.getState().updateCameraStreamStatus(cameraId, "failed");
-    if (onStatusChange) {
-      onStatusChange("failed");
-    }
-    if (onError) {
-      onError("Không thể kết nối tới máy chủ camera.");
-    }
+    onStatusChange?.("failed");
+    onError?.("Không thể kết nối tới máy chủ camera.");
     return;
   }
-
-  const handle: WebRTCConnectionHandle = {
-    cameraId,
-    userId,
-    pc: null,
-    ws,
-    stream: null,
-    videoElement,
-    reconnectCount: currentReconnectCount,
-    isExplicitlyClosed: false,
-    onStatusChange,
-    onError
-  };
-
-  activeConnections.set(cameraId, handle);
+  handle.ws = ws;
 
   ws.onopen = async () => {
     try {
       const pc = new RTCPeerConnection({ iceServers });
       handle.pc = pc;
 
-      // Listen for ICE state changes
+      // Data channel "detections" — Edge bơm track metadata theo đúng
+      // source_time_ms của frame WebRTC để frontend đồng bộ qua rVFC.
+      const dc = pc.createDataChannel(DATA_CHANNEL_LABEL, { ordered: true });
+      dc.onopen = () => {
+        console.debug(`[webrtc] data channel open (${cameraId})`);
+      };
+      dc.onmessage = (event) => {
+        try {
+          const raw = JSON.parse(String(event.data));
+          // Normalize/validate tại biên nhận — không cast mù
+          const msg = normalizeAiFeedMessage(raw);
+          if (msg) {
+            emitFeed(cameraId, msg);
+          }
+        } catch {
+          // ignore malformed messages
+        }
+      };
+      dc.onerror = () => {
+        console.warn(`[webrtc] data channel error (${cameraId})`);
+      };
+
       pc.onconnectionstatechange = () => {
         if (pc.connectionState === "connected") {
           useCameraStore.getState().updateCameraStreamStatus(cameraId, "connected");
-          if (onStatusChange) onStatusChange("connected");
-        } 
-        else if (pc.connectionState === "disconnected" || pc.connectionState === "failed") {
+          onStatusChange?.("connected");
+        } else if (pc.connectionState === "disconnected" || pc.connectionState === "failed") {
           triggerReconnect(cameraId);
         }
       };
@@ -266,19 +325,16 @@ export const connectToCamera = async (
           const stream = event.streams[0];
           handle.stream = stream;
           videoElement.srcObject = stream;
-          videoElement.play().catch(() => {
-            // Autoplay blocked fallback or stream closed
-          });
+          playVideo(videoElement);
 
           useCameraStore.getState().updateCameraStreamStatus(cameraId, "connected");
-          if (onStatusChange) onStatusChange("connected");
+          onStatusChange?.("connected");
         }
       };
 
       // Add transceiver to indicate we only want to receive video
       pc.addTransceiver("video", { direction: "recvonly" });
 
-      // Create local SDP Offer
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
 
@@ -290,7 +346,7 @@ export const connectToCamera = async (
           JSON.stringify({
             type: "offer",
             target: cameraId,
-            sdp: pc.localDescription?.sdp
+            sdp: pc.localDescription?.sdp,
           })
         );
       }
@@ -307,22 +363,16 @@ export const connectToCamera = async (
         await handle.pc.setRemoteDescription(
           new RTCSessionDescription({
             type: "answer",
-            sdp: msg.sdp
+            sdp: msg.sdp,
           })
         );
-      } 
-      else if (msg.type === "error") {
-        if (onError) {
-          onError(msg.message || "Không thể nhận luồng camera. Vui lòng thử lại.");
-        }
+      } else if (msg.type === "error") {
+        onError?.(msg.message || "Không thể nhận luồng camera. Vui lòng thử lại.");
         triggerReconnect(cameraId);
-      } 
-      else if (msg.type === "camera_offline" || msg.type === "offline") {
-        if (onError) {
-          onError("Camera đang mất kết nối.");
-        }
+      } else if (msg.type === "camera_offline" || msg.type === "offline") {
+        onError?.("Camera đang mất kết nối.");
         useCameraStore.getState().updateCameraStreamStatus(cameraId, "failed");
-        if (onStatusChange) onStatusChange("failed");
+        onStatusChange?.("failed");
         disconnectCamera(cameraId);
       }
     } catch {
@@ -331,9 +381,7 @@ export const connectToCamera = async (
   };
 
   ws.onerror = () => {
-    if (onError) {
-      onError("Kết nối tới máy chủ signaling bị lỗi.");
-    }
+    onError?.("Kết nối tới máy chủ signaling bị lỗi.");
   };
 
   ws.onclose = () => {
@@ -350,7 +398,6 @@ export const reconnectCamera = (cameraId: string) => {
   const handle = activeConnections.get(cameraId);
   if (!handle) return;
 
-  // Reset reconnect counters
   handle.reconnectCount = 0;
   handle.isExplicitlyClosed = false;
 
@@ -359,25 +406,47 @@ export const reconnectCamera = (cameraId: string) => {
     userId: handle.userId,
     videoElement: handle.videoElement,
     onStatusChange: handle.onStatusChange,
-    onError: handle.onError
+    onError: handle.onError,
   });
 };
 
 /**
- * Explicitly requests closing a specific camera connection
- * Uses a debounce timer to allow reusing the connection when navigating between views
+ * Rời view: đóng hẳn kết nối WebRTC.
+ *
+ * Quay lại trang hoặc refresh sẽ tạo kết nối MỚI và Edge tự tua video về
+ * ĐẦU đoạn demo (set_channel → source.restart) — video luôn chạy lại từ đầu
+ * mỗi lần vào xem, không dừng rồi chiếu tiếp ở đoạn giữa chừng.
  */
 export const stopCameraConnection = (cameraId: string) => {
   const handle = activeConnections.get(cameraId);
-  if (handle) {
-    if (handle.stopTimer) {
-      window.clearTimeout(handle.stopTimer);
-    }
-    handle.stopTimer = window.setTimeout(() => {
-      handle.isExplicitlyClosed = true;
-      disconnectCamera(cameraId);
-    }, 250); // 250ms debounce
+  if (!handle) return;
+
+  if (handle.stopTimer) {
+    window.clearTimeout(handle.stopTimer);
   }
+  // React StrictMode mount → cleanup → mount lại ngay. Grace ngắn cho phép
+  // remount tái sử dụng cùng PC; rời route thật vẫn đóng sau 250 ms.
+  handle.stopTimer = window.setTimeout(() => {
+    if (activeConnections.get(cameraId) !== handle) return;
+    handle.stopTimer = undefined;
+    handle.isExplicitlyClosed = true;
+    disconnectCamera(cameraId);
+  }, 250);
+};
+
+/**
+ * Đóng kết nối thật sự — dùng cho nút "Ngắt xem trực tiếp" (tương đương
+ * stopCameraConnection khi rời trang).
+ */
+export const stopCameraStream = (cameraId: string) => {
+  const handle = activeConnections.get(cameraId);
+  if (!handle) return;
+  if (handle.stopTimer) {
+    window.clearTimeout(handle.stopTimer);
+    handle.stopTimer = undefined;
+  }
+  handle.isExplicitlyClosed = true;
+  disconnectCamera(cameraId);
 };
 
 /**
@@ -389,4 +458,5 @@ export const cleanupAllConnections = () => {
     disconnectCamera(cameraId);
   });
   activeConnections.clear();
+  feedSubscribers.clear();
 };

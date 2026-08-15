@@ -13,23 +13,12 @@ description = "AI Child Guardian: Hệ thống Giám sát & Bảo vệ Trẻ em 
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "opencv-python-headless>=4.10",
-    "ultralytics>=8.3",
-    "torch>=2.4",
-    "torchvision>=0.19",
-    "albumentations>=1.4",
-    "pydantic-settings>=2.5",
-    "loguru>=0.7",
     "numpy>=1.26",
     "pillow>=10.4",
-    "onnxruntime>=1.19",
-    "psutil>=5.9",
-    "cryptography>=43.0",
+    "pydantic-settings>=2.5",
+    "loguru>=0.7",
     "python-dotenv>=1.0",
-    "mediapipe>=0.10",
-    "aiortc>=1.14.0",
-    "av>=16.1.0",
-    "opencv-python>=4.13.0.92",
+    "cryptography>=43.0",
     "fastapi>=0.139.0",
     "uvicorn>=0.49.0",
     "websockets>=16.0",
@@ -47,12 +36,29 @@ dependencies = [
     "pytest-mock>=3.15.1",
 ]
 
+# Phân tách dependency: backend chỉ cài nhóm cốt lõi (FastAPI/DB/relay).
+# Edge (AI/WebRTC/video) cài qua `uv sync --extra edge` — không tải
+# Torch/Ultralytics/ONNX nặng nề lên backend container.
 [project.optional-dependencies]
+edge = [
+    "opencv-python-headless>=4.10",
+    "ultralytics>=8.3",
+    "lap>=0.5.12",
+    "torch>=2.4",
+    "torchvision>=0.19",
+    "onnxruntime>=1.19",
+    "mediapipe>=0.10",
+    "aiortc>=1.14.0",
+    "av>=16.1.0",
+    "psutil>=5.9",
+    "albumentations>=1.4",
+]
 gpu = ["onnxruntime-gpu>=1.19"]
 tensorrt = ["tensorrt>=10.0"]
 dev = [
     "pytest>=8.3",
-    "pytest-asyncio>=0.24",
+    "pytest-asyncio>=1.3.0",
+    "httpx2>=2.10.0",
     "ruff>=0.7",
 ]
 
@@ -66,13 +72,20 @@ select = ["E", "F", "I", "W"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+markers = [
+    "integration: long-running end-to-end pipeline tests (chạy riêng với -m integration)",
+]
+addopts = "-m 'not integration'"
 
 [tool.uv.sources]
-torch = { index = "pytorch-cu128" }
-torchvision = { index = "pytorch-cu128" }
+# CPU build của PyTorch — demo Edge chỉ cần ByteTrack chạy CPU (ONNX là engine
+# thật). Bản cu128 nặng ~9GB (image edge 13.4GB, .venv 4.2GB) gây tốn ổ C
+# và build rất lâu. Training nếu cần GPU vẫn có thể đổi index cu128 lại.
+torch = { index = "pytorch-cpu" }
+torchvision = { index = "pytorch-cpu" }
 
 [[tool.uv.index]]
-name = "pytorch-cu128"
-url = "https://download.pytorch.org/whl/cu128"
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 

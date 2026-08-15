@@ -4,16 +4,15 @@
   "description": "Shared label map for AI Training and Edge Inference logic",
   "object_detection": {
     "classes": [
-      { "id": 0, "name": "child", "description": "Human children" },
-      { "id": 1, "name": "knife", "description": "Kitchen knives or sharp tools" },
-      { "id": 2, "name": "scissors", "description": "Handheld scissors" },
-      { "id": 3, "name": "socket", "description": "Electrical power outlets" },
-      { "id": 4, "name": "lighter", "description": "Cigarette lighters or fire starters" },
-      { "id": 5, "name": "stove", "description": "Gas or electric kitchen stoves" }
+      { "id": 0, "name": "adult", "description": "Human adults" },
+      { "id": 1, "name": "child", "description": "Human children" },
+      { "id": 2, "name": "knife", "description": "Kitchen knives or sharp tools" },
+      { "id": 3, "name": "outlet", "description": "Electrical power outlets" },
+      { "id": 4, "name": "scissors", "description": "Handheld scissors" }
     ]
   },
   "risk_mapping": {
-    "danger_objects": ["knife", "scissors", "socket", "lighter", "stove"],
+    "danger_objects": ["knife", "scissors", "outlet"],
     "priority_alerts": ["child"]
   }
 }

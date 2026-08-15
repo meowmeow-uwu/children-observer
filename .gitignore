@@ -5,6 +5,8 @@ build/
 dist/
 wheels/
 *.egg-info
+.pytest_cache/
+.ruff_cache/
 
 # Virtual environments
 .venv
@@ -29,6 +31,20 @@ logs/
 clips/
 snapshots/
 runs/
+uvicorn.log
+*.db
+*.db-journal
+
+# Node
+node_modules/
+frontend/dist/
+frontend/dev-dist/
+
+# Local agent tooling (not product source)
+.agents/
+
+# Generated demo artifacts
+frontend/public/test_video.mp4
 
 # OS
 .DS_Store
@@ -36,3 +52,5 @@ Thumbs.db
 
 namtrung1.md
 namtrung2.md
+# Demo run artifacts
+.demo/

@@ -36,4 +36,8 @@ class AlertRepository(CRUDBase[Alert, AlertCreate, AlertUpdate]):
         db.refresh(new_alert)
         return new_alert
 
+    def delete_all_alerts(self, db: Session):
+        db.query(self.model).delete()
+        db.commit()
+
 alert_repo = AlertRepository(Alert)

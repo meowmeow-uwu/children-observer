@@ -1,0 +1,49 @@
+# VCS
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[oc]
+*.egg-info
+.pytest_cache
+.ruff_cache
+.venv
+venv
+
+# Node
+node_modules
+frontend/node_modules
+frontend/dist
+frontend/.vite
+
+# Environment & secrets
+.env
+.env.local
+
+# Runtime artifacts
+logs
+clips
+snapshots
+runs
+*.db
+*.db-journal
+uvicorn.log
+e2e_check.db
+test_local.db
+
+# Data & training (không cần trong image demo)
+data
+scripts/download_dataset.py
+*.pt
+*.engine
+
+# Tooling/docs không cần runtime
+.agents
+docs
+module_mobile_app
+module_security
+module_ai_core
+
+# Demo assets trùng
+frontend/public/test_video.mp4

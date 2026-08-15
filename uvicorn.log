@@ -1,5 +1,0 @@
-nohup: ignoring input
-Traceback (most recent call last):
-  File "/home/nguyenhuynh/.local/bin/uvicorn", line 3, in <module>
-    from uvicorn.main import main
-ModuleNotFoundError: No module named 'uvicorn'

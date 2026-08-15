@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Outlet, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Sidebar } from "../components/Sidebar";
@@ -7,12 +7,28 @@ import { MobileBottomNav } from "../components/MobileBottomNav";
 import { PWAInstallPrompt } from "../components/PWAInstallPrompt";
 import { OfflineBanner } from "../components/OfflineBanner";
 import { useRealtimeAlerts } from "../hooks/useRealtimeAlerts";
+import { useCameraStore } from "../store/cameraStore";
+import { useRoiStore } from "../store/roiStore";
 
 export const Layout: React.FC = () => {
   const { isAuthenticated } = useAuth();
 
   // Lắng nghe cảnh báo thời gian thực từ Backend
   useRealtimeAlerts();
+
+  // Tải camera + ROI mới nhất từ backend rồi hydrate roiStore.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      await useCameraStore.getState().loadCameras();
+      if (!cancelled) {
+        useRoiStore.getState().hydrateFromCameras();
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Redirect to login if not authenticated
   if (!isAuthenticated) {

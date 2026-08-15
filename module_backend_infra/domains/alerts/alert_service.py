@@ -63,8 +63,12 @@ class AlertService:
         return new_alert
     
     @staticmethod
-    def update_alert(db: Session, alert_id: str, update_in: AlertUpdate):
+    def update_alert(db: Session, alert_id: int, update_in: AlertUpdate):
         alert_obj = alert_repo.get(db, id=alert_id)
         if not alert_obj:
             return None
         return alert_repo.update(db, db_obj=alert_obj, obj_in=update_in)
+        
+    @staticmethod
+    def delete_all_alerts(db: Session):
+        alert_repo.delete_all_alerts(db)
