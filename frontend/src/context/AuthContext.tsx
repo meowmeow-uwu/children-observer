@@ -42,6 +42,7 @@ const mapApiUserToUser = (apiUser: Awaited<ReturnType<typeof getMeApi>>): User =
   name: apiUser.full_name,
   email: apiUser.email,
   role: "parent", // Backend không trả về role — mặc định parent
+  telegramChatId: apiUser.telegram_chat_id,
 });
 
 // ---- Demo users (giữ lại để demo nhanh không cần backend) ----

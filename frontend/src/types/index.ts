@@ -9,6 +9,7 @@ export interface User {
   email: string;
   role: Role;
   avatarUrl?: string;
+  telegramChatId?: number | null;
 }
 
 export interface ROIPoint {

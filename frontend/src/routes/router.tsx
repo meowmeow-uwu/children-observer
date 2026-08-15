@@ -27,9 +27,9 @@ import { FamilySharingView } from "../views/FamilySharingView";
 import { SubscriptionView } from "../views/SubscriptionView";
 import { CheckoutView } from "../views/CheckoutView";
 import { InvoiceListView } from "../views/InvoiceListView";
+import { AccountSettingsView } from "../views/AccountSettingsView";
 import {
-  DeviceDetailView,
-  AccountSettingsView
+  DeviceDetailView
 } from "../views/Placeholders";
 
 const router = createHashRouter([
