@@ -217,15 +217,26 @@ export const fetchAlertsApi = async (cameraId?: string): Promise<AlertApiItem[] 
 };
 
 export const clearAlertsApi = async (): Promise<boolean> => {
-  // Backend chưa hỗ trợ DELETE /alerts, mock success
-  console.log("[Mock] Đã xóa toàn bộ cảnh báo");
-  return true;
+  try {
+    await request<{ detail: string }>("/alerts", { method: "DELETE" });
+    return true;
+  } catch (err) {
+    console.warn("Không thể xóa cảnh báo cũ khi tải lại trang:", err);
+    return false;
+  }
 };
 
-export const updateAlertStatusApi = async (alertId: string | number, status: string, _notes?: string): Promise<boolean> => {
-  // Backend chưa hỗ trợ PATCH /alerts/{id}, mock success
-  console.log(`[Mock] Cập nhật trạng thái alert ${alertId} thành ${status}`);
-  return true;
+export const updateAlertStatusApi = async (alertId: string | number, status: string, notes?: string): Promise<boolean> => {
+  try {
+    await request(`/alerts/${alertId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status, notes }),
+    });
+    return true;
+  } catch (err) {
+    console.error("Lỗi khi cập nhật cảnh báo:", err);
+    return false;
+  }
 };
 
 // ---- Devices ----

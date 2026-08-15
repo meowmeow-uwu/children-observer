@@ -37,3 +37,27 @@ def get_alerts(
 @router.post("/", response_model=alert_schemas.AlertResponse)
 async def create_alert(alert: alert_schemas.AlertCreate, db: Session = Depends(get_db)):
     return await AlertService.create_and_broadcast_alert(db, alert)
+
+@router.delete("/")
+def delete_all_alerts(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """
+    Xóa toàn bộ cảnh báo (Demo mục đích).
+    """
+    db.query(alert_repo.model).delete()
+    db.commit()
+    return {"detail": "Đã xóa toàn bộ cảnh báo"}
+
+@router.patch("/{alert_id}", response_model=alert_schemas.AlertResponse)
+def update_alert_status(
+    alert_id: int,
+    alert_in: alert_schemas.AlertUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Cập nhật trạng thái hoặc ghi chú của cảnh báo.
+    """
+    alert = alert_repo.get(db, id=alert_id)
+    if not alert:
+        raise HTTPException(status_code=404, detail="Không tìm thấy cảnh báo")
+    return alert_repo.update(db, db_obj=alert, obj_in=alert_in)
