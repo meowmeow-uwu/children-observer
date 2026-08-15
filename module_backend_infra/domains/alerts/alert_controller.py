@@ -43,8 +43,7 @@ def delete_all_alerts(db: Session = Depends(get_db), current_user: User = Depend
     """
     Xóa toàn bộ cảnh báo (Demo mục đích).
     """
-    db.query(alert_repo.model).delete()
-    db.commit()
+    AlertService.delete_all_alerts(db)
     return {"detail": "Đã xóa toàn bộ cảnh báo"}
 
 @router.patch("/{alert_id}", response_model=alert_schemas.AlertResponse)
@@ -57,7 +56,7 @@ def update_alert_status(
     """
     Cập nhật trạng thái hoặc ghi chú của cảnh báo.
     """
-    alert = alert_repo.get(db, id=alert_id)
+    alert = AlertService.update_alert(db, alert_id, alert_in)
     if not alert:
         raise HTTPException(status_code=404, detail="Không tìm thấy cảnh báo")
-    return alert_repo.update(db, db_obj=alert, obj_in=alert_in)
+    return alert
