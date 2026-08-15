@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import json
 import time
-from dataclasses import dataclass
 from pathlib import Path
+from dataclasses import dataclass, field
 
 from loguru import logger
 
@@ -18,7 +18,6 @@ from loguru import logger
 @dataclass
 class FeedbackEntry:
     """Một feedback từ phụ huynh."""
-
     alert_id: str
     timestamp: float
     is_false_alarm: bool
@@ -55,9 +54,8 @@ class ActiveLearningService:
         self._total_feedback = 0
         self._false_alarm_count = 0
 
-    def submit_feedback(
-        self, alert_id: str, is_false_alarm: bool, correct_label: str | None = None, notes: str = ""
-    ) -> None:
+    def submit_feedback(self, alert_id: str, is_false_alarm: bool,
+                        correct_label: str | None = None, notes: str = "") -> None:
         """Nhận feedback từ phụ huynh (HITL)."""
         entry = FeedbackEntry(
             alert_id=alert_id,

@@ -16,7 +16,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from core.database import Base, get_db
-from module_backend_infra.domain_app import app
+from main import app
 
 # Sử dụng SQLite in-memory để test chạy nhanh và bị xóa ngay sau khi test xong
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
