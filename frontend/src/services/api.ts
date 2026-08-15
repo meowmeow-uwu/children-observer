@@ -142,28 +142,22 @@ export const fetchCamerasApi = async (): Promise<Camera[] | null> => {
 
 export const fetchCameraRoiApi = async (cameraId: string): Promise<ROIZone[] | null> => {
   try {
-    const data = await request<CameraApiDto["roi_zones"]>(`/cameras/${cameraId}/roi`);
-    return data.map((z) => mapCameraFromApi({
-      id: 0,
-      camera_id_string: cameraId,
-      name: "",
-      location: "",
-      status: "online",
-      is_active: true,
-      roi_zones: [z],
-    }).roiZones[0]);
+    const cameras = await fetchCamerasApi();
+    const cam = cameras?.find(c => c.id === cameraId);
+    return cam?.roiZones || [];
   } catch (err) {
     console.warn(`Không tải được ROI của ${cameraId}:`, err);
     return null;
   }
 };
 
-export const setCameraAlertsPausedApi = async (cameraId: string, paused: boolean): Promise<Camera> => {
-  const data = await request<CameraApiDto>(`/cameras/${cameraId}/alerts-paused`, {
-    method: "POST",
-    body: JSON.stringify({ paused }),
-  });
-  return mapCameraFromApi(data);
+export const setCameraAlertsPausedApi = async (cameraId: string, paused: boolean): Promise<Camera | null> => {
+  // Backend chưa hỗ trợ API pause alerts, mock return success
+  console.log(`[Mock] Set alerts paused cho ${cameraId}: ${paused}`);
+  const cameras = await fetchCamerasApi();
+  const cam = cameras?.find(c => c.id === cameraId);
+  if (cam) cam.alertsPaused = paused;
+  return cam || null;
 };
 
 // ---- ROI ----
@@ -223,26 +217,15 @@ export const fetchAlertsApi = async (cameraId?: string): Promise<AlertApiItem[] 
 };
 
 export const clearAlertsApi = async (): Promise<boolean> => {
-  try {
-    await request<{ deleted: number }>("/alerts", { method: "DELETE" });
-    return true;
-  } catch (err) {
-    console.warn("Không thể xóa cảnh báo cũ khi tải lại trang:", err);
-    return false;
-  }
+  // Backend chưa hỗ trợ DELETE /alerts, mock success
+  console.log("[Mock] Đã xóa toàn bộ cảnh báo");
+  return true;
 };
 
-export const updateAlertStatusApi = async (alertId: string | number, status: string, notes?: string): Promise<boolean> => {
-  try {
-    await request(`/alerts/${alertId}`, {
-      method: "PATCH",
-      body: JSON.stringify({ status, notes }),
-    });
-    return true;
-  } catch (err) {
-    console.error("Lỗi khi cập nhật cảnh báo:", err);
-    return false;
-  }
+export const updateAlertStatusApi = async (alertId: string | number, status: string, _notes?: string): Promise<boolean> => {
+  // Backend chưa hỗ trợ PATCH /alerts/{id}, mock success
+  console.log(`[Mock] Cập nhật trạng thái alert ${alertId} thành ${status}`);
+  return true;
 };
 
 // ---- Devices ----

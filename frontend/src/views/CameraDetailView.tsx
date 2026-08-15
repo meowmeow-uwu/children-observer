@@ -71,7 +71,7 @@ export const CameraDetailView: React.FC = () => {
     const nextPaused = !cam.alertsPaused;
     try {
       const updated = await setCameraAlertsPausedApi(cam.id, nextPaused);
-      updateCameraAlertsPaused(cam.id, updated.alertsPaused ?? nextPaused);
+      updateCameraAlertsPaused(cam.id, updated?.alertsPaused ?? nextPaused);
       showToast(
         nextPaused ? "Đã tạm dừng cảnh báo từ camera này" : "Hệ thống cảnh báo đã hoạt động trở lại",
         nextPaused ? "warning" : "success"
