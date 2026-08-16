@@ -142,10 +142,36 @@ class ChildSUnDataset:
         with open(label_path) as f:
             for line in f:
                 parts = line.strip().split()
-                if len(parts) >= 5:
+                if len(parts) < 5:
+                    continue
+
+                try:
                     class_id = int(parts[0])
-                    bbox = [float(x) for x in parts[1:5]]
-                    labels.append([class_id, *bbox])
+                    coordinates = [float(value) for value in parts[1:]]
+                except ValueError:
+                    logger.warning(f"Invalid YOLO label in {label_path}: {line.strip()}")
+                    continue
+
+                if len(coordinates) == 4:
+                    # YOLO detection: x_center, y_center, width, height.
+                    bbox = coordinates
+                elif len(coordinates) >= 6 and len(coordinates) % 2 == 0:
+                    # YOLO segmentation polygon: x1, y1, x2, y2, ...
+                    # Convert it to its enclosing normalized detection box.
+                    xs, ys = coordinates[::2], coordinates[1::2]
+                    x_min, x_max = min(xs), max(xs)
+                    y_min, y_max = min(ys), max(ys)
+                    bbox = [
+                        (x_min + x_max) / 2,
+                        (y_min + y_max) / 2,
+                        x_max - x_min,
+                        y_max - y_min,
+                    ]
+                else:
+                    logger.warning(f"Unsupported YOLO label format in {label_path}: {line.strip()}")
+                    continue
+
+                labels.append([class_id, *bbox])
 
         if not labels:
             return np.zeros((0, 5), dtype=np.float32)
