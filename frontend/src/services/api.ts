@@ -152,8 +152,10 @@ export const fetchCameraRoiApi = async (cameraId: string): Promise<ROIZone[] | n
 };
 
 export const setCameraAlertsPausedApi = async (cameraId: string, paused: boolean): Promise<Camera | null> => {
-  // Backend chưa hỗ trợ API pause alerts, mock return success
-  console.log(`[Mock] Set alerts paused cho ${cameraId}: ${paused}`);
+  await request(`/cameras/${cameraId}/alerts-paused`, {
+    method: "POST",
+    body: JSON.stringify({ paused }),
+  });
   const cameras = await fetchCamerasApi();
   const cam = cameras?.find(c => c.id === cameraId);
   if (cam) cam.alertsPaused = paused;

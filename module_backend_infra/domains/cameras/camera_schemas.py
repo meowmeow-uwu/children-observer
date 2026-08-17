@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import datetime
 
@@ -11,9 +11,11 @@ class PointSchema(BaseModel):
 # --- ROI Schemas ---
 class ROIZoneBase(BaseModel):
     name: str
+    type: str = "polygon"
     points: List[PointSchema]
     sensitivity: Optional[str] = "high"
     enabled: Optional[bool] = True
+    rules: dict = Field(default_factory=dict)
 
 class ROIZoneCreate(ROIZoneBase):
     camera_id: str
@@ -39,7 +41,8 @@ class CameraCreate(CameraBase):
     
 class CameraResponse(CameraBase):
     id: int
-    roi_zones: List[ROIZoneResponse] = []
+    alerts_paused: bool = False
+    roi_zones: List[ROIZoneResponse] = Field(default_factory=list)
 
     class Config:
         from_attributes = True

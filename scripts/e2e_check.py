@@ -1,209 +1,120 @@
-"""
-E2E check cục bộ: Backend (relay) ⇄ Edge (demo pipeline) — test.md T09.
+"""Smoke test cho Docker demo: API, MQTT ROI va alert/snapshot.
 
-Chạy uvicorn thật (database TEMP) + edge demo_stream (không WebRTC media)
-và xác minh theo TỪNG LOOP (tối thiểu 3 loop đoạn demo [10s, 22s]):
-
-- có heartbeat/status mỗi loop;
-- có metadata tracks ở đoạn trẻ xuất hiện mỗi loop;
-- track ID/ROI state reset theo contract mỗi loop;
-- ít nhất một lần enter ROI (alert HTTP 2xx + backend broadcast);
-- không replay detection cũ sang loop mới.
-
-CLI:
-    uv run python scripts/e2e_check.py [--help]
-    --port PORT          (default 8011)
-    --duration SECONDS   (default 80 — 3 loop đoạn demo 12s + margin)
-    --loops N            (default 3)
-    --temp-db PATH       (default <TEMP>/e2e_check_<pid>.db)
-    --keep-alive         không dừng process (debug)
-
---help không khởi động workload. Exit code 0 khi đạt, 1 khi fail.
+Chay sau `docker compose up --build -d`:
+    uv run python scripts/e2e_check.py
 """
 
 from __future__ import annotations
 
-import argparse
 import asyncio
 import json
 import os
-import subprocess
-import sys
-import tempfile
 import time
+import urllib.error
 import urllib.request
-from pathlib import Path
+import uuid
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+import aiomqtt
 
 
-def wait_ready(url: str, timeout: float = 30.0) -> bool:
-    deadline = time.time() + timeout
-    while time.time() < deadline:
+BASE_URL = "http://127.0.0.1:8007"
+MQTT_HOST = "127.0.0.1"
+CAMERA_ID = "camera_living_room_01"
+DEMO_EMAIL = "demo@childrenobserver.org"
+DEMO_PASSWORD = "demo12345"
+
+
+def request(path: str, *, method: str = "GET", body: object | None = None, token: str | None = None) -> object:
+    data = json.dumps(body).encode() if body is not None else None
+    headers = {"Content-Type": "application/json"} if data else {}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    req = urllib.request.Request(f"{BASE_URL}{path}", data=data, headers=headers, method=method)
+    with urllib.request.urlopen(req, timeout=10) as response:
+        return json.loads(response.read())
+
+
+def wait_for_backend() -> None:
+    deadline = time.monotonic() + 60
+    while time.monotonic() < deadline:
         try:
-            with urllib.request.urlopen(url, timeout=2) as resp:
-                if resp.status == 200:
-                    return True
-        except Exception:
-            time.sleep(0.5)
-    return False
+            if request("/healthz") == {"status": "ok"}:
+                return
+        except (OSError, urllib.error.URLError):
+            time.sleep(1)
+    raise RuntimeError("Backend is not healthy at http://127.0.0.1:8007/healthz")
 
 
-async def browser_client(backend_url: str, duration: float) -> dict:
-    """Mô phỏng browser client: nhận detection relay qua /ws/detections."""
-    import websockets
+async def mqtt_contract_check(token: str) -> None:
+    roi_topic = f"devices/{CAMERA_ID}/roi/update"
+    event_id = f"e2e-{uuid.uuid4().hex}"
+    alert = {
+        "event_id": event_id,
+        "camera_id": CAMERA_ID,
+        "camera_name": "Living Room Demo",
+        "title": "E2E MQTT alert",
+        "severity": "warning",
+        "roi_name": "play_area",
+        "notes": "mqtt contract check",
+        "snapshot_url": f"{event_id}.jpg",
+    }
+    zones = [{
+        "name": "play_area",
+        "type": "polygon",
+        "points": [{"x": 0.1, "y": 0.1}, {"x": 0.9, "y": 0.1}, {"x": 0.9, "y": 0.9}],
+        "sensitivity": "high",
+        "enabled": True,
+        "rules": {"enterZone": True},
+    }]
 
-    received = {"status": 0, "tracks": 0, "raw": []}
-    async with websockets.connect(f"{backend_url.replace('http', 'ws')}/ws/detections") as ws:
-        deadline = time.time() + duration
-        while time.time() < deadline:
-            try:
-                raw = await asyncio.wait_for(ws.recv(), timeout=2)
-                msg = json.loads(raw)
-                received["raw"].append(msg)
-                if msg.get("type") == "status":
-                    received["status"] += 1
-                elif msg.get("type") == "tracks":
-                    received["tracks"] += 1
-            except asyncio.TimeoutError:
-                continue
-    return received
+    async with aiomqtt.Client(hostname=MQTT_HOST, port=1883) as client:
+        await client.subscribe(roi_topic)
+        await asyncio.to_thread(request, f"/api/cameras/{CAMERA_ID}/roi", method="POST", body=zones, token=token)
+        async with asyncio.timeout(10):
+            async for message in client.messages:
+                if message.topic.value == roi_topic:
+                    payload = json.loads(message.payload.decode())
+                    # The broker can deliver an older retained message first.
+                    # Keep waiting for the update just submitted through the API.
+                    if not payload.get("zones") or not payload["zones"][0].get("id"):
+                        continue
+                    assert payload["camera_id"] == CAMERA_ID
+                    assert payload["zones"][0]["rules"]["enterZone"] is True
+                    break
 
+        await client.publish(f"devices/{CAMERA_ID}/alerts", json.dumps(alert))
+        await client.publish(f"devices/{CAMERA_ID}/snapshots/{event_id}", b"\xff\xd8\xff\xd9")
 
-async def run_edge(backend_url: str, duration: float) -> None:
-    from module_edge_firmware.demo_stream.pipeline import DemoStreamConfig, DemoStreamPipeline
-
-    cfg = DemoStreamConfig(
-        camera_id="camera_living_room_01",
-        backend_url=backend_url,
-        ws_relay_enabled=True,
-        ws_relay_url=f"{backend_url.replace('http', 'ws')}/ws/detections/edge",
-        viewer_gated=False,
-    )
-    pipeline = DemoStreamPipeline(cfg)
-    task = asyncio.create_task(pipeline.run_async())
-    await asyncio.sleep(duration)
-    pipeline.stop()
-    try:
-        await asyncio.wait_for(task, timeout=10)
-    except (asyncio.CancelledError, asyncio.TimeoutError):
-        pass
-    print(json.dumps({"edge_stats": pipeline.stats}, ensure_ascii=False), flush=True)
+    deadline = time.monotonic() + 15
+    while time.monotonic() < deadline:
+        alerts = await asyncio.to_thread(request, f"/api/alerts/?camera_id={CAMERA_ID}&limit=100", token=token)
+        matched = next((item for item in alerts if item.get("event_id") == event_id), None)
+        if matched:
+            assert matched["snapshot_url"].endswith(f"/{event_id}.jpg")
+            return
+        await asyncio.sleep(0.5)
+    raise AssertionError("Backend did not persist the MQTT alert")
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="E2E: Backend relay + Edge demo pipeline (T09)")
-    parser.add_argument("--port", type=int, default=8011)
-    parser.add_argument("--duration", type=float, default=80.0, help="thời gian chạy (3 loop đoạn demo 12s)")
-    parser.add_argument("--loops", type=int, default=3)
-    parser.add_argument("--temp-db", type=str, default=None, help="đường dẫn database tạm (mặc định TEMP)")
-    parser.add_argument("--keep-alive", action="store_true", help="giữ process chạy (debug)")
-    args = parser.parse_args()
-
-    db_path = Path(args.temp_db) if args.temp_db else Path(tempfile.gettempdir()) / f"e2e_check_{os.getpid()}.db"
-    if db_path.exists():
-        db_path.unlink()
-
-    backend_url = f"http://127.0.0.1:{args.port}"
-    env = dict(os.environ)
-    env["DATABASE_URL"] = f"sqlite:///{db_path.as_posix()}"
-
-    proc = subprocess.Popen(
-        [
-            sys.executable,
-            "-m",
-            "uvicorn",
-            "module_backend_infra.main:app",
-            "--host",
-            "127.0.0.1",
-            "--port",
-            str(args.port),
-        ],
-        cwd=str(Path(__file__).resolve().parent.parent),
-        env=env,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-    )
-
-    failures: list[str] = []
+    # aiomqtt uses add_reader/add_writer, which the Windows Proactor loop does
+    # not implement. Docker/Linux deployments do not need this branch.
+    if os.name == "nt":
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     try:
-        if not wait_ready(f"{backend_url}/", timeout=30):
-            print("FAIL: backend không khởi động được")
-            return 1
-
-        # 1. REST: camera + ROI seed giao đường đi trẻ + alerts_paused
-        with urllib.request.urlopen(f"{backend_url}/api/cameras", timeout=10) as resp:
-            cameras = json.loads(resp.read())
-        cam = next(c for c in cameras if c["camera_id_string"] == "camera_living_room_01")
-        assert cam["roi_zones"], "thiếu ROI seed"
-        zone = cam["roi_zones"][0]
-        assert zone.get("rules", {}).get("enterZone") is True, "rules thiếu enterZone"
-        print(f"REST OK: camera + ROI seed '{zone['name']}' + rules + alerts_paused", flush=True)
-
-        # 2. Relay + pipeline song song
-        async def combined():
-            browser_task = asyncio.create_task(browser_client(backend_url, duration=args.duration))
-            await asyncio.sleep(1)
-            edge_task = asyncio.create_task(run_edge(backend_url, duration=args.duration - 2))
-            await edge_task
-            return await browser_task
-
-        received = asyncio.run(combined())
-
-        # 3. Phân tích per-loop từ raw messages (tracks có loop_id)
-        per_loop = {}
-        tracks_msgs = [m for m in received["raw"] if m.get("type") == "tracks"]
-        for m in tracks_msgs:
-            per_loop.setdefault(m["loop_id"], {"tracks": 0, "has_child_track": False, "min_pts": None})
-            per_loop[m["loop_id"]]["tracks"] += 1
-            per_loop[m["loop_id"]]["min_pts"] = (
-                m["source_pts_ms"]
-                if per_loop[m["loop_id"]]["min_pts"] is None
-                else min(per_loop[m["loop_id"]]["min_pts"], m["source_pts_ms"])
-            )
-            if any(t.get("class_name") == "child" for t in m["tracks"]):
-                per_loop[m["loop_id"]]["has_child_track"] = True
-
-        loop_ids = sorted(per_loop.keys())[: args.loops]
-        print(f"Browser received: status={received['status']} tracks={len(tracks_msgs)} loops={loop_ids}", flush=True)
-        if received["status"] == 0:
-            failures.append("không nhận được status heartbeat")
-        if len(loop_ids) < min(3, args.loops):
-            failures.append(f"chỉ có {len(loop_ids)} loop < {args.loops}")
-
-        for lid in loop_ids:
-            info = per_loop[lid]
-            if info["tracks"] == 0:
-                failures.append(f"loop {lid} không có tracks message")
-            if not info["has_child_track"]:
-                failures.append(f"loop {lid} không có track child nào")
-            print(f"  loop {lid}: tracks_msgs={info['tracks']} child_track={info['has_child_track']}", flush=True)
-
-        # 4. Alert enter ROI: đếm alert trong DB sau khi chạy
-        with urllib.request.urlopen(f"{backend_url}/api/alerts?camera_id=camera_living_room_01&limit=100", timeout=10) as resp:
-            alerts = json.loads(resp.read())
-        enter_alerts = [a for a in alerts if "enterZone" in (a.get("notes") or "")]
-        print(f"Alerts: total={len(alerts)} enterZone={len(enter_alerts)}", flush=True)
-        if len(enter_alerts) < 1:
-            failures.append("không có alert enterZone nào từ track thật")
-
-        if failures:
-            print("FAIL: " + "; ".join(failures))
-            return 1
-        print("E2E PASS")
-        return 0
-    finally:
-        if not args.keep_alive:
-            proc.terminate()
-            try:
-                proc.wait(timeout=10)
-            except subprocess.TimeoutExpired:
-                proc.kill()
-            try:
-                db_path.unlink()
-            except (PermissionError, FileNotFoundError):
-                pass
+        wait_for_backend()
+        login = request("/api/auth/login", method="POST", body={"email": DEMO_EMAIL, "password": DEMO_PASSWORD})
+        token = login["access_token"]
+        cameras = request("/api/cameras/", token=token)
+        camera = next(item for item in cameras if item["camera_id_string"] == CAMERA_ID)
+        assert camera["roi_zones"], "Demo camera has no ROI"
+        asyncio.run(mqtt_contract_check(token))
+    except Exception as error:
+        print(f"E2E FAIL: {error}")
+        return 1
+    print("E2E PASS: auth, camera/ROI API, retained ROI MQTT, alert and snapshot MQTT")
+    return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())

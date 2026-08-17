@@ -33,9 +33,10 @@ from loguru import logger
 
 from module_edge_firmware.demo_stream.backend_sync import BackendSync
 from module_edge_firmware.demo_stream.detector import OnnxDetector
-from module_edge_firmware.demo_stream.frame_source import DemoVideoSource, FrameStore
+from module_edge_firmware.demo_stream.frame_source import DemoVideoSource, FrameStore, RtspVideoSource
 from module_edge_firmware.demo_stream.roi_engine import AlertEvent, RoiStateEngine
 from module_edge_firmware.demo_stream.tracker import ByteTrackAdapter
+from module_edge_firmware.mqtt_client import EdgeMqttClient
 
 VIDEO_DEFAULT_PATH = Path("module_edge_firmware/test_video.mp4")
 MODEL_DEFAULT_PATH = Path("weights/roi_detection/best.onnx")
@@ -48,6 +49,7 @@ class DemoStreamConfig:
     camera_id: str = "camera_living_room_01"
     signaling_url: str = "ws://127.0.0.1:8007/ws/signaling"
     backend_url: str = "http://127.0.0.1:8007"
+    rtsp_url: str | None = None
     video_path: Path = VIDEO_DEFAULT_PATH
     model_path: Path = MODEL_DEFAULT_PATH
     detection_fps: float = 12.0
@@ -57,6 +59,14 @@ class DemoStreamConfig:
     track_match_thresh: float = 0.8
     roi_poll_seconds: float = 5.0
     alert_cooldown_seconds: float = 5.0
+    # Production contract in task_edge_firmware_integration.md.
+    mqtt_enabled: bool = True
+    mqtt_host: str = "127.0.0.1"
+    mqtt_port: int = 1883
+    mqtt_username: str | None = None
+    mqtt_password: str | None = None
+    # REST is only a compatibility fallback for the previous web demo.
+    rest_sync_enabled: bool = False
     ws_relay_enabled: bool = True
     ws_relay_url: str = "ws://127.0.0.1:8007/ws/detections/edge"
     heartbeat_seconds: float = 1.0
@@ -97,6 +107,7 @@ def build_config_from_settings() -> DemoStreamConfig:
             "EDGE_SIGNALING_URL", "ws://127.0.0.1:8007/ws/signaling"
         ),
         backend_url=os.getenv("EDGE_BACKEND_URL", "http://127.0.0.1:8007"),
+        rtsp_url=os.getenv("EDGE_RTSP_URL") or None,
         video_path=Path(os.getenv("EDGE_VIDEO_PATH", str(VIDEO_DEFAULT_PATH))),
         model_path=Path(os.getenv("EDGE_MODEL_PATH", str(MODEL_DEFAULT_PATH))),
         detection_fps=env_float("EDGE_DETECTION_FPS", "12.0"),
@@ -107,6 +118,12 @@ def build_config_from_settings() -> DemoStreamConfig:
         viewer_gated=env_bool("EDGE_VIEWER_GATED", True),
         roi_poll_seconds=env_float("EDGE_ROI_POLL_SECONDS", "5.0"),
         alert_cooldown_seconds=env_float("EDGE_ALERT_COOLDOWN_SECONDS", "5.0"),
+        mqtt_enabled=env_bool("EDGE_MQTT_ENABLED", True),
+        mqtt_host=os.getenv("MQTT_BROKER_HOST", "127.0.0.1"),
+        mqtt_port=env_int("MQTT_BROKER_PORT", "1883"),
+        mqtt_username=os.getenv("MQTT_USERNAME") or None,
+        mqtt_password=os.getenv("MQTT_PASSWORD") or None,
+        rest_sync_enabled=env_bool("EDGE_REST_SYNC_ENABLED", False),
         ws_relay_url=os.getenv(
             "EDGE_WS_RELAY_URL", "ws://127.0.0.1:8007/ws/detections/edge"
         ),
@@ -125,13 +142,20 @@ class DemoStreamPipeline:
         self.pipeline_stream_id = f"pipeline-{uuid.uuid4().hex[:8]}"
 
         self.store = FrameStore()
-        self.source = DemoVideoSource(
-            self.config.video_path,
-            frame_store=self.store,
-            start_time=self.start_time,
-            start_seconds=self.config.start_seconds,
-            end_seconds=self.config.end_seconds,
-            initial_active=not self.config.viewer_gated,
+        source_kwargs = {
+            "frame_store": self.store,
+            "start_time": self.start_time,
+            "initial_active": not self.config.viewer_gated,
+        }
+        self.source = (
+            RtspVideoSource(self.config.rtsp_url, **source_kwargs)
+            if self.config.rtsp_url
+            else DemoVideoSource(
+                self.config.video_path,
+                start_seconds=self.config.start_seconds,
+                end_seconds=self.config.end_seconds,
+                **source_kwargs,
+            )
         )
         self.detector = OnnxDetector(
             self.config.model_path,
@@ -153,14 +177,19 @@ class DemoStreamPipeline:
             camera_id=self.config.camera_id,
             cooldown_seconds=self.config.alert_cooldown_seconds,
         )
-        self.backend = BackendSync(
-            backend_url=self.config.backend_url,
-            camera_id=self.config.camera_id,
-            poll_interval=self.config.roi_poll_seconds,
-            on_roi_update=self.engine.set_zones,
-            on_pause_change=self.engine.set_paused,
-            on_camera_meta=lambda name: self._set_camera_name(name),
+        self.backend = (
+            BackendSync(
+                backend_url=self.config.backend_url,
+                camera_id=self.config.camera_id,
+                poll_interval=self.config.roi_poll_seconds,
+                on_roi_update=self.engine.set_zones,
+                on_pause_change=self.engine.set_paused,
+                on_camera_meta=lambda name: self._set_camera_name(name),
+            )
+            if self.config.rest_sync_enabled
+            else None
         )
+        self.mqtt: EdgeMqttClient | None = None
 
         # Outbox thread-safe: detection/status messages → async sender
         self.outbox: queue.Queue[dict] = queue.Queue(maxsize=64)
@@ -192,6 +221,10 @@ class DemoStreamPipeline:
     def _set_camera_name(self, name: str) -> None:
         if name and name != self._camera_name:
             self._camera_name = name
+
+    def attach_mqtt(self, mqtt: EdgeMqttClient) -> None:
+        """Attach the shared MQTT transport before the pipeline starts."""
+        self.mqtt = mqtt
 
     # ---- WebRTC attach ----
     def prepare_viewer_session(self) -> None:
@@ -283,7 +316,8 @@ class DemoStreamPipeline:
         self._stop.clear()
 
         self.detector.load()
-        self.backend.start()
+        if self.backend:
+            self.backend.start()
         self.source.start()
 
         self._detection_thread = threading.Thread(
@@ -315,7 +349,8 @@ class DemoStreamPipeline:
         except queue.Full:
             pass
         self.source.stop()
-        self.backend.stop()
+        if self.backend:
+            self.backend.stop()
         if self._detection_thread:
             self._detection_thread.join(timeout=5)
         if self._alert_worker:
@@ -338,7 +373,18 @@ class DemoStreamPipeline:
             if item is None:
                 return
             alert, snapshot_jpeg = item
-            self.backend.post_alert(alert, snapshot_jpeg)
+            if self.mqtt:
+                self.mqtt.publish_alert_and_snapshot(
+                    camera_id=alert.camera_id,
+                    title=f"{alert.title} ({alert.zone_name})",
+                    severity="danger" if alert.rule == "enterZone" else "warning",
+                    roi_name=alert.zone_name,
+                    snapshot_jpeg=snapshot_jpeg,
+                )
+            elif self.backend:
+                self.backend.post_alert(alert, snapshot_jpeg)
+            else:
+                logger.warning("Alert dropped: neither MQTT nor REST backend is configured")
 
     # ---- Detection thread ----
     def _detection_loop(self) -> None:
@@ -574,7 +620,7 @@ class DemoStreamPipeline:
 
 
 async def run(config: DemoStreamConfig | None = None) -> DemoStreamPipeline:
-    """Chạy pipeline demo + WebRTC client (video track + data channel)."""
+    """Run the edge pipeline with MQTT (production) or WebSocket (demo fallback)."""
     from module_edge_firmware.webrtc.client import EdgeWebRTCClient
     from module_edge_firmware.webrtc.video_track import AIVideoTrack
 
@@ -593,11 +639,30 @@ async def run(config: DemoStreamConfig | None = None) -> DemoStreamPipeline:
         channel_handler=pipeline.set_channel,
         session_prepare_handler=pipeline.prepare_viewer_session,
     )
+    mqtt: EdgeMqttClient | None = None
+    if cfg.mqtt_enabled:
+        mqtt = EdgeMqttClient(
+            host=cfg.mqtt_host,
+            port=cfg.mqtt_port,
+            device_id=cfg.camera_id,
+            username=cfg.mqtt_username,
+            password=cfg.mqtt_password,
+            on_roi_update=pipeline.engine.set_zones,
+            on_webrtc_offer=client.handle_offer,
+        )
+        pipeline.attach_mqtt(mqtt)
+        mqtt.start()
 
-    await asyncio.gather(
-        pipeline.run_async(),
-        client.connect(),
-    )
+    try:
+        tasks = [pipeline.run_async()]
+        # Preserve the existing WebSocket signaling only when explicitly
+        # running without MQTT, e.g. the old frontend demo.
+        if not cfg.mqtt_enabled:
+            tasks.append(client.connect())
+        await asyncio.gather(*tasks)
+    finally:
+        if mqtt:
+            mqtt.stop()
     return pipeline
 
 

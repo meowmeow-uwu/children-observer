@@ -31,13 +31,17 @@ class AlertService:
         
         # 4. Đóng gói dữ liệu gửi qua WebSocket cho Frontend
         alert_dict = {
-            "id": str(new_alert.id),
-            "cameraId": camera_obj.camera_id_string, # Trả lại String cho Frontend dễ dùng
+            "id": new_alert.id,
+            "event_id": new_alert.event_id,
+            "camera_id": camera_obj.camera_id_string,
+            "camera_name": camera_obj.name,
             "title": new_alert.title,
             "severity": new_alert.severity,
-            "snapshotUrl": new_alert.snapshot_url,
+            "status": new_alert.status,
+            "snapshot_url": new_alert.snapshot_url,
+            "roi_name": new_alert.roi_name,
         }
-        await manager.broadcast({"type": "new_alert", "alert": alert_dict})
+        await manager.broadcast({"type": "ALERT_NEW", "data": alert_dict})
         
         # 5. Lấy Telegram Chat ID tự động từ Chủ sở hữu Camera (Owner)
         telegram_chat_id = None

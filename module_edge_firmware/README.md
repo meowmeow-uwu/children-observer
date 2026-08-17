@@ -38,6 +38,29 @@ pipeline.start()
 - `ALERT_BUFFER_SECONDS`: Độ dài video lưu trữ trong bộ đệm.
 - `MOBILE_GATEWAY_HOST` / `MOBILE_GATEWAY_PORT`: TCP gateway để mobile gửi ROI, nhận alert và gửi feedback.
 
+## 🚀 Chạy trên phần cứng (MQTT + RTSP)
+
+Entrypoint production là pipeline `demo_stream` (tên cũ, nhưng hiện hỗ trợ cả
+RTSP). Nó nhận ROI/WebRTC offer qua MQTT và gửi SDP answer, alert JSON và JPEG
+binary lại broker.
+
+```bash
+EDGE_CAMERA_ID=camera_living_room_01 \
+EDGE_RTSP_URL='rtsp://user:password@camera/stream1' \
+MQTT_BROKER_HOST=school-server.local \
+MQTT_BROKER_PORT=1883 \
+EDGE_MQTT_ENABLED=true \
+python -m module_edge_firmware.demo_stream
+```
+
+Topics theo `docs/tasks/task_edge_firmware_integration.md`:
+
+- Subscribe: `devices/{device_id}/roi/update`, `devices/{device_id}/webrtc/offer`
+- Publish: `devices/{device_id}/webrtc/answer`, `devices/{device_id}/alerts`, `devices/{device_id}/snapshots`
+
+Đặt `EDGE_MQTT_ENABLED=false` và `EDGE_REST_SYNC_ENABLED=true` chỉ khi cần chạy
+luồng REST/WebSocket demo cũ. Docker Compose đã kèm Mosquitto cho môi trường local.
+
 ## 📡 Mobile Gateway Protocol
 
 Gateway dùng newline-delimited JSON qua TCP. Mặc định lắng nghe tại `0.0.0.0:8765`.

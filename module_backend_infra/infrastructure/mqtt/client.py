@@ -44,7 +44,7 @@ class MQTTManager:
                     # 1. Subscribe các topic từ Raspberry Pi
                     # Sử dụng wildcard (+) để lắng nghe toàn bộ thiết bị
                     await client.subscribe("devices/+/alerts")
-                    await client.subscribe("devices/+/snapshots")
+                    await client.subscribe("devices/+/snapshots/#")
                     await client.subscribe("devices/+/webrtc/answer")
 
                     # 2. Vòng lặp nhận tin nhắn
