@@ -8,8 +8,8 @@ class UserRepository(CRUDBase[User, UserCreate, UserCreate]):
     def get_by_email(self, db: Session, email: str) -> User | None:
         return db.query(self.model).filter(self.model.email == email).first()
 
-    def create_user(self, db: Session, email: str, password_hash: str) -> User:
-        db_user = User(email=email, password_hash=password_hash)
+    def create_user(self, db: Session, email: str, password_hash: str, full_name: str = "") -> User:
+        db_user = User(email=email, password_hash=password_hash, full_name=full_name)
         db.add(db_user)
         db.commit()
         db.refresh(db_user)

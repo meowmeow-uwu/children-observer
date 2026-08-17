@@ -19,20 +19,22 @@ class ROIRepository(CRUDBase[ROIZone, ROIZoneCreate, ROIZoneCreate]):
 
     def replace_rois_for_camera(self, db: Session, camera_pk: int, zones_data: list[dict]) -> list[ROIZone]:
         db.query(self.model).filter(self.model.camera_id == camera_pk).delete()
-        db.commit()
-        
         saved_zones = []
         for zd in zones_data:
             new_zone = ROIZone(
                 camera_id=camera_pk,
                 name=zd["name"],
-                polygon_points=zd["polygon_points"]
+                polygon_points=zd["polygon_points"],
+                zone_type=zd.get("zone_type", "polygon"),
+                sensitivity=zd.get("sensitivity", "high"),
+                enabled=zd.get("enabled", True),
+                rules=zd.get("rules", {}),
             )
             db.add(new_zone)
-            db.commit()
-            db.refresh(new_zone)
             saved_zones.append(new_zone)
-            
+        db.commit()
+        for zone in saved_zones:
+            db.refresh(zone)
         return saved_zones
 
 camera_repo = CameraRepository(Camera)

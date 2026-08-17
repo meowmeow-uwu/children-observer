@@ -1,4 +1,14 @@
 services:
+  mqtt:
+    image: eclipse-mosquitto:2
+    container_name: guardian_mqtt
+    restart: "no"
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./configs/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mqtt_data:/mosquitto/data
+
   db:
     image: postgres:15-alpine
     container_name: guardian_postgres
@@ -17,6 +27,33 @@ services:
       timeout: 5s
       retries: 5
 
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    command: ["sh", "-c", "cd /app/module_backend_infra && uv run alembic upgrade head"]
+    environment:
+      - DATABASE_URL=postgresql://admin:secretpassword123@db:5432/child_guardian_db
+    depends_on:
+      db:
+        condition: service_healthy
+
+  seed:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    command: ["sh", "-c", "cd /app/module_backend_infra && uv run python seed_demo.py"]
+    environment:
+      - DATABASE_URL=postgresql://admin:secretpassword123@db:5432/child_guardian_db
+      - MQTT_BROKER_HOST=mqtt
+      - MQTT_BROKER_PORT=1883
+      - SEED_PUBLISH_MQTT=true
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      mqtt:
+        condition: service_started
+
   backend:
     build:
       context: .
@@ -27,9 +64,18 @@ services:
       - "8007:8000"
     environment:
       - DATABASE_URL=postgresql://admin:secretpassword123@db:5432/child_guardian_db
+      - MQTT_BROKER_HOST=mqtt
+      - MQTT_BROKER_PORT=1883
     depends_on:
-      db:
-        condition: service_healthy
+      mqtt:
+        condition: service_started
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz')"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
 
   frontend:
     build:
@@ -40,7 +86,10 @@ services:
     ports:
       - "5173:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+      seed:
+        condition: service_completed_successfully
 
   edge:
     build:
@@ -51,14 +100,23 @@ services:
     environment:
       - EDGE_CAMERA_ID=camera_living_room_01
       - EDGE_BACKEND_URL=http://backend:8000
-      - EDGE_SIGNALING_URL=ws://backend:8000/ws/signaling
-      - EDGE_WS_RELAY_URL=ws://backend:8000/ws/detections/edge
+      - MQTT_BROKER_HOST=mqtt
+      - MQTT_BROKER_PORT=1883
+      - EDGE_MQTT_ENABLED=true
+      - EDGE_REST_SYNC_ENABLED=false
+      - EDGE_VIEWER_GATED=false
       - EDGE_VIDEO_PATH=/app/module_edge_firmware/test_video.mp4
       - EDGE_MODEL_PATH=/app/weights/roi_detection/best.onnx
       - EDGE_ONNX_INTRA_THREADS=8
       - EDGE_ALERT_COOLDOWN_SECONDS=5
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+      mqtt:
+        condition: service_started
+      seed:
+        condition: service_completed_successfully
 
 volumes:
   postgres_data:
+  mqtt_data:

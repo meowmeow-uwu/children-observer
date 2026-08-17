@@ -25,5 +25,6 @@ COPY ./configs /app/configs
 # Expose port 8000 cho FastAPI
 EXPOSE 8000
 
-# Lệnh khởi chạy server bằng uv
-CMD ["uv", "run", "uvicorn", "module_backend_infra.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run inside the backend directory: the existing modules use ``core.*`` and
+# ``domains.*`` imports and Alembic keeps its configuration there.
+CMD ["sh", "-c", "cd /app/module_backend_infra && uv run uvicorn main:app --host 0.0.0.0 --port 8000"]

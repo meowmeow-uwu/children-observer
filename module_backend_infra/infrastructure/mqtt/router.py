@@ -15,9 +15,11 @@ async def handle_mqtt_message(message):
 
     if topic.endswith("/alerts"):
         await _process_alert(payload)
-    elif topic.endswith("/snapshots"):
-        device_id = topic.split("/")[1]
-        await _process_snapshot(device_id, payload)
+    elif "/snapshots" in topic:
+        parts = topic.split("/")
+        device_id = parts[1]
+        event_id = parts[3] if len(parts) > 3 and parts[3] else None
+        await _process_snapshot(device_id, payload, event_id)
     elif topic.endswith("/webrtc/answer"):
         try:
             answer_data = json.loads(payload.decode())
@@ -44,6 +46,6 @@ async def _process_alert(payload: bytes):
     finally:
         db.close()
 
-async def _process_snapshot(device_id: str, payload: bytes):
+async def _process_snapshot(device_id: str, payload: bytes, event_id: str | None = None):
     """Ủy quyền lưu byte ảnh chụp xuống đĩa cho image_helpers"""
-    save_snapshot_bytes(device_id, payload)
+    save_snapshot_bytes(device_id, payload, event_id)

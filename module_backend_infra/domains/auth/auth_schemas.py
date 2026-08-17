@@ -6,6 +6,7 @@ from typing import Optional
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
+    full_name: Optional[str] = None
 
 # Schema dùng để kiểm tra dữ liệu khi Đăng nhập
 class UserLogin(BaseModel):
@@ -16,6 +17,7 @@ class UserLogin(BaseModel):
 class UserResponse(BaseModel):
     id: int
     email: EmailStr
+    full_name: str = ""
     telegram_chat_id: Optional[int] = None
 
     class Config:

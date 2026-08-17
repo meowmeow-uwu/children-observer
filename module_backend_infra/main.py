@@ -1,5 +1,14 @@
 import asyncio
+import sys
 from contextlib import asynccontextmanager
+from pathlib import Path
+
+# Backend modules currently use imports such as ``core.database``.  Keep that
+# layout importable whether Uvicorn is started from the repository root or from
+# this directory inside Docker.
+BACKEND_DIR = Path(__file__).resolve().parent
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -25,8 +34,13 @@ async def lifespan(app: FastAPI):
     )
     yield
     # --- SHUTDOWN ---
-    # Hủy tiến trình khi tắt server
+    # Hủy và await task để TestClient/Docker shutdown không bị giữ bởi vòng
+    # reconnect MQTT đang ngủ.
     mqtt_task.cancel()
+    try:
+        await mqtt_task
+    except asyncio.CancelledError:
+        pass
 
 app = FastAPI(title="AI Child Guardian Backend API", lifespan=lifespan)
 
@@ -53,3 +67,8 @@ app.include_router(webrtc_router)
 @app.get("/")
 async def root():
     return {"message": "Hệ thống Modular Monolith & MQTT đã sẵn sàng."}
+
+
+@app.get("/healthz")
+async def healthz():
+    return {"status": "ok"}
