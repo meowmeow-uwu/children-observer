@@ -35,3 +35,5 @@ runs/
 Thumbs.db
 
 readme_task_namtrung.md
+frontend/node_modules/
+frontend/.env
