@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export const LoginView: React.FC = () => {
-  const { loginWithCredentials, login, loginError, isLoggingIn } = useAuth();
+  const { loginWithCredentials, loginError, isLoggingIn } = useAuth();
   const navigate = useNavigate();
   const [showDemo, setShowDemo] = useState(false);
   const [email, setEmail] = useState("");
@@ -94,7 +94,7 @@ export const LoginView: React.FC = () => {
           Chưa có tài khoản? <Link to="/register" className="font-bold text-primary hover:underline">Đăng ký ngay</Link>
         </p>
 
-        {/* Quick Demo Access — giữ nguyên cho demo không cần backend */}
+        {/* Quick Demo Access — dùng tài khoản được seed trong Docker. */}
         {!showDemo ? (
           <button
             onClick={() => setShowDemo(true)}
@@ -104,18 +104,15 @@ export const LoginView: React.FC = () => {
           </button>
         ) : (
           <div className="flex flex-col gap-2 mt-4 animate-fade-in bg-surface-container-low p-4 rounded-xl border border-outline-variant/20">
-            <p className="text-xs font-bold text-on-surface mb-1">Quick Demo Access <span className="text-outline font-normal">(không cần backend)</span></p>
+            <p className="text-xs font-bold text-on-surface mb-1">Quick Demo Access <span className="text-outline font-normal">(backend thật)</span></p>
             <button
-              onClick={() => { login("parent"); navigate("/dashboard"); }}
+              onClick={async () => {
+                const ok = await loginWithCredentials("demo@childrenobserver.org", "demo12345");
+                if (ok) navigate("/dashboard");
+              }}
               className="py-2.5 px-4 bg-primary/10 text-primary text-xs font-bold rounded-lg hover:bg-primary/20 text-left flex justify-between items-center"
             >
               Phụ huynh (Admin) <span className="material-symbols-outlined text-[16px]">admin_panel_settings</span>
-            </button>
-            <button
-              onClick={() => { login("guardian"); navigate("/dashboard"); }}
-              className="py-2.5 px-4 bg-secondary/10 text-secondary text-xs font-bold rounded-lg hover:bg-secondary/20 text-left flex justify-between items-center"
-            >
-              Người giám hộ <span className="material-symbols-outlined text-[16px]">family_home</span>
             </button>
           </div>
         )}

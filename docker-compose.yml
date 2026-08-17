@@ -1,4 +1,14 @@
 services:
+  mqtt:
+    image: eclipse-mosquitto:2
+    container_name: guardian_mqtt
+    restart: "no"
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./configs/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mqtt_data:/mosquitto/data
+
   db:
     image: postgres:15-alpine
     container_name: guardian_postgres
@@ -17,6 +27,33 @@ services:
       timeout: 5s
       retries: 5
 
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    command: ["sh", "-c", "cd /app/module_backend_infra && uv run alembic upgrade head"]
+    environment:
+      - DATABASE_URL=postgresql://admin:secretpassword123@db:5432/child_guardian_db
+    depends_on:
+      db:
+        condition: service_healthy
+
+  seed:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    command: ["sh", "-c", "cd /app/module_backend_infra && uv run python seed_demo.py"]
+    environment:
+      - DATABASE_URL=postgresql://admin:secretpassword123@db:5432/child_guardian_db
+      - MQTT_BROKER_HOST=mqtt
+      - MQTT_BROKER_PORT=1883
+      - SEED_PUBLISH_MQTT=true
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      mqtt:
+        condition: service_started
+
   backend:
     build:
       context: .
@@ -28,9 +65,17 @@ services:
     env_file:
       - .env
     depends_on:
-      db:
-        condition: service_healthy
+      mqtt:
+        condition: service_started
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz')"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
 
 
 volumes:
   postgres_data:
+  mqtt_data:

@@ -8,6 +8,7 @@ class Alert(Base):
     
     # ID dạng số nguyên (Khớp với AlertResponse schema)
     id = Column(Integer, primary_key=True, index=True)
+    event_id = Column(String(64), unique=True, nullable=True, index=True)
     
     # Khóa ngoại liên kết tới camera
     camera_id = Column(Integer, ForeignKey("cameras.id", ondelete="CASCADE"), nullable=False)

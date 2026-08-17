@@ -98,19 +98,9 @@ class EdgeWebRTCClient:
 
         if msg_type == "offer":
             logger.info(f"Nhận được SDP Offer từ {sender}")
-            await self.create_peer_connection()
-
-            offer = RTCSessionDescription(sdp=message["sdp"], type=message["type"])
-            await self.pc.setRemoteDescription(offer)
-
-            answer = await self.pc.createAnswer()
-            await self.pc.setLocalDescription(answer)
-
-            response = {
-                "type": "answer",
-                "target": sender,
-                "sdp": self.pc.localDescription.sdp,
-            }
+            response = await self.handle_offer(message)
+            if self.websocket is None:
+                raise RuntimeError("WebSocket signaling is not connected")
             await self.websocket.send(json.dumps(response))
 
         elif msg_type == "candidate":
@@ -122,6 +112,27 @@ class EdgeWebRTCClient:
                     candidate=candidate_info["candidate"],
                 )
                 await self.pc.addIceCandidate(candidate)
+
+    async def handle_offer(self, message: dict) -> dict:
+        """Tạo SDP answer cho một offer, độc lập với transport signaling.
+
+        WebSocket demo và MQTT firmware dùng chung chính xác luồng aiortc này;
+        chỉ cách gửi ``response`` ra ngoài là khác nhau.
+        """
+        if message.get("type") != "offer" or not message.get("sdp"):
+            raise ValueError("A valid SDP offer is required")
+
+        await self.create_peer_connection()
+        offer = RTCSessionDescription(sdp=message["sdp"], type="offer")
+        assert self.pc is not None
+        await self.pc.setRemoteDescription(offer)
+        answer = await self.pc.createAnswer()
+        await self.pc.setLocalDescription(answer)
+        return {
+            "type": "answer",
+            "target": message.get("sender"),
+            "sdp": self.pc.localDescription.sdp,
+        }
 
     async def connect(self):
         """Kết nối signaling server với vòng lặp reconnect tự động."""

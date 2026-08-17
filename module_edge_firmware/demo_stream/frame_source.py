@@ -272,3 +272,96 @@ class DemoVideoSource:
 
         cap.release()
         logger.info("Demo video source stopped")
+
+
+class RtspVideoSource:
+    """Latest-frame RTSP source for hardware deployments.
+
+    Unlike the demo file source this never loops or seeks.  On a read failure
+    it releases the decoder and reconnects with bounded backoff, keeping the
+    last valid ROI/model state in the pipeline.
+    """
+
+    def __init__(
+        self,
+        rtsp_url: str,
+        frame_store: FrameStore | None = None,
+        start_time: float | None = None,
+        reconnect_delay: float = 3.0,
+        initial_active: bool = True,
+    ) -> None:
+        self.rtsp_url = rtsp_url
+        self._store = frame_store or FrameStore()
+        self._start_time = start_time if start_time is not None else time.monotonic()
+        self._reconnect_delay = reconnect_delay
+        self._running = False
+        self._thread: threading.Thread | None = None
+        self._active = threading.Event()
+        if initial_active:
+            self._active.set()
+
+    def start(self) -> None:
+        if self._running:
+            return
+        self._running = True
+        self._thread = threading.Thread(target=self._read_loop, name="rtsp-video-source", daemon=True)
+        self._thread.start()
+
+    def stop(self) -> None:
+        self._running = False
+        self._active.set()  # unblock wait before joining
+        if self._thread:
+            self._thread.join(timeout=5)
+
+    def set_active(self, active: bool) -> None:
+        if active:
+            self._active.set()
+        else:
+            self._active.clear()
+            self._store.clear()
+
+    def restart(self) -> None:
+        # A live camera cannot seek; a new viewer simply starts from the next
+        # available frame and receives a new stream identity.
+        self._store.next_loop()
+
+    def restart_and_wait(self, timeout: float = 2.0) -> bool:
+        previous_loop = self._store.loop_id
+        self.set_active(True)
+        self.restart()
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            snap = self._store.snapshot()
+            if self._store.loop_id > previous_loop and snap is not None and snap.is_valid:
+                return True
+            time.sleep(0.01)
+        logger.error("Timed out waiting for first RTSP frame")
+        return False
+
+    def _read_loop(self) -> None:
+        frame_index = 0
+        while self._running:
+            cap = cv2.VideoCapture(self.rtsp_url, cv2.CAP_FFMPEG)
+            cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+            if not cap.isOpened():
+                logger.warning("Cannot open RTSP stream; retrying in {}s", self._reconnect_delay)
+                cap.release()
+                time.sleep(self._reconnect_delay)
+                continue
+
+            fps = cap.get(cv2.CAP_PROP_FPS) or 25.0
+            self._store.set_meta(fps, 0.0, 0)
+            logger.info("RTSP stream connected: {}", self.rtsp_url)
+            while self._running:
+                if not self._active.wait(timeout=0.2):
+                    continue
+                ok, frame = cap.read()
+                if not ok:
+                    logger.warning("RTSP frame read failed; reconnecting")
+                    break
+                source_time_ms = (time.monotonic() - self._start_time) * 1000.0
+                self._store.publish(frame, frame_index, source_time_ms)
+                frame_index += 1
+            cap.release()
+            if self._running:
+                time.sleep(self._reconnect_delay)

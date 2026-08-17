@@ -23,7 +23,12 @@ class AuthService:
         hashed_pw = hash_password(user_in.password)
         
         # 3. Tạo User mới trong DB thông qua Repository
-        return user_repo.create_user(db, email=user_in.email, password_hash=hashed_pw)
+        return user_repo.create_user(
+            db,
+            email=user_in.email,
+            password_hash=hashed_pw,
+            full_name=user_in.full_name or "",
+        )
 
     @staticmethod
     def authenticate(db: Session, user_in: UserLogin) -> dict:

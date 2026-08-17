@@ -1,5 +1,6 @@
 # domains/cameras/camera_service.py
 import json
+
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from .camera_repository import camera_repo, roi_repo
@@ -9,6 +10,26 @@ from domains.auth.auth_models import User
 from domains.devices.device_repository import device_repo
 
 class CameraService:
+    @staticmethod
+    def _zone_response(zone: object, camera_id_string: str) -> dict:
+        points = getattr(zone, "polygon_points", []) or []
+        # Compatibility with old databases which stored JSON text.
+        if isinstance(points, str):
+            try:
+                points = json.loads(points)
+            except json.JSONDecodeError:
+                points = []
+        return {
+            "id": zone.id,
+            "camera_id": camera_id_string,
+            "name": zone.name,
+            "type": getattr(zone, "zone_type", "polygon"),
+            "points": points,
+            "sensitivity": getattr(zone, "sensitivity", "high"),
+            "enabled": getattr(zone, "enabled", True),
+            "rules": getattr(zone, "rules", {}) or {},
+        }
+
     @staticmethod
     def create_camera(db: Session, cam_in: CameraCreate, current_user: User):
         # 1. BẢO MẬT: Kiểm tra xem User có quyền với Device này không
@@ -32,18 +53,7 @@ class CameraService:
             roi_db = roi_repo.get_by_camera_pk(db, cam.id)
             roi_zones = []
             for r in roi_db:
-                try:
-                    pts = json.loads(r.polygon_points) if r.polygon_points else []
-                except Exception:
-                    pts = []
-                roi_zones.append({
-                    "id": r.id,
-                    "camera_id": cam.camera_id_string,
-                    "name": r.name,
-                    "points": pts,
-                    "sensitivity": getattr(r, "sensitivity", "high"),
-                    "enabled": getattr(r, "enabled", True)
-                })
+                roi_zones.append(CameraService._zone_response(r, cam.camera_id_string))
             
             cam_data = cam.__dict__.copy()
             cam_data["roi_zones"] = roi_zones
@@ -65,7 +75,11 @@ class CameraService:
         zones_payload = [
             {
                 "name": z.name,
-                "polygon_points": json.dumps([p.model_dump() for p in z.points])
+                "polygon_points": [p.model_dump() for p in z.points],
+                "zone_type": z.type,
+                "sensitivity": z.sensitivity or "high",
+                "enabled": z.enabled if z.enabled is not None else True,
+                "rules": z.rules or {},
             } for z in zones
         ]
         new_roi_models = roi_repo.replace_rois_for_camera(db, camera_obj.id, zones_payload)
@@ -76,9 +90,11 @@ class CameraService:
                 "id": new_zone.id,
                 "camera_id": camera_id_string,
                 "name": new_zone.name,
+                "type": z.type,
                 "points": [p.model_dump() for p in z.points],
-                "sensitivity": getattr(z, "sensitivity", "high"),
-                "enabled": getattr(z, "enabled", True)
+                "sensitivity": z.sensitivity or "high",
+                "enabled": z.enabled if z.enabled is not None else True,
+                "rules": z.rules or {},
             }
             saved_zones.append(zone_response)
             
@@ -86,9 +102,14 @@ class CameraService:
             "camera_id": camera_id_string,
             "zones": [
                 {
+                    "id": new_zone.id,
                     "name": z.name,
-                    "points": [{"x": p.x, "y": p.y} for p in z.points]
-                } for z in zones
+                    "type": z.type,
+                    "points": [{"x": p.x, "y": p.y} for p in z.points],
+                    "sensitivity": z.sensitivity or "high",
+                    "enabled": z.enabled if z.enabled is not None else True,
+                    "rules": z.rules or {},
+                } for new_zone, z in zip(new_roi_models, zones)
             ]
         }
         
@@ -99,6 +120,27 @@ class CameraService:
         )
         
         return saved_zones
+
+    @staticmethod
+    def get_camera_with_roi(db: Session, camera_id_string: str, current_user: User):
+        camera = camera_repo.get_by_camera_id_string(db, camera_id_string)
+        if not camera or camera.device.user_id != current_user.id:
+            raise HTTPException(status_code=404, detail="Không tìm thấy Camera")
+        data = camera.__dict__.copy()
+        data["roi_zones"] = [
+            CameraService._zone_response(zone, camera.camera_id_string)
+            for zone in roi_repo.get_by_camera_pk(db, camera.id)
+        ]
+        return data
+
+    @staticmethod
+    def update_alerts_paused(db: Session, camera_id_string: str, paused: bool, current_user: User):
+        camera = camera_repo.get_by_camera_id_string(db, camera_id_string)
+        if not camera or camera.device.user_id != current_user.id:
+            raise HTTPException(status_code=404, detail="Không tìm thấy Camera")
+        camera.alerts_paused = paused
+        db.commit()
+        return {"camera_id": camera_id_string, "alerts_paused": paused}
 
     @staticmethod
     def delete_camera(db: Session, camera_id_string: str, current_user: User):

@@ -4,6 +4,7 @@ from typing import Optional
 from datetime import datetime
 
 class AlertCreate(BaseModel):
+    event_id: Optional[str] = None
     camera_id: str
     camera_name: Optional[str] = ""
     title: str
@@ -20,6 +21,7 @@ class AlertUpdate(BaseModel):
 # TÁCH RỜI ALERT RESPONSE (Không kế thừa AlertCreate nữa)
 class AlertResponse(BaseModel):
     id: int
+    event_id: Optional[str] = None
     camera_id: int  # <-- Chuyển thành int để khớp với Khóa ngoại trong DB
     camera_name: Optional[str] = ""
     title: str
