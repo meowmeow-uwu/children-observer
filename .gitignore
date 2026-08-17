@@ -21,8 +21,8 @@ venv/
 data/
 weights/
 *.pt
-*.onnx
 *.engine
+!module_ai_core/violence_detection/src/CodeBase/Final_Deployment/*.onnx
 
 # Logs & Output
 logs/
