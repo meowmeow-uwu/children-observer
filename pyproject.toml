@@ -47,12 +47,15 @@ edge = [
     "torch>=2.4",
     "torchvision>=0.19",
     "onnxruntime>=1.19",
-    "mediapipe>=0.10",
     "aiortc>=1.14.0",
     "av>=16.1.0",
     "psutil>=5.9",
     "albumentations>=1.4",
 ]
+# MediaPipe has no Linux aarch64 wheel.  The production `demo_stream`
+# entrypoint uses ONNX + ByteTrack and does not import it; retain it only for
+# the older multi-task/pose pipeline on supported development platforms.
+edge-legacy-pose = ["mediapipe>=0.10"]
 gpu = ["onnxruntime-gpu>=1.19"]
 tensorrt = ["tensorrt>=10.0"]
 dev = [
