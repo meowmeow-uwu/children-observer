@@ -62,6 +62,8 @@ services:
     restart: "no"
     ports:
       - "8007:8000"
+    volumes:
+      - snapshot_data:/app/module_backend_infra/data/snapshots
     environment:
       - DATABASE_URL=postgresql://admin:secretpassword123@db:5432/child_guardian_db
       - MQTT_BROKER_HOST=mqtt
@@ -120,3 +122,4 @@ services:
 volumes:
   postgres_data:
   mqtt_data:
+  snapshot_data:
