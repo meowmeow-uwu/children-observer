@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
 import type { User, Role } from "../types";
-import { loginApi, getMeApi, updateMeApi } from "../services/authApi";
+import { loginApi, getMeApi, updateMeApi, registerApi } from "../services/authApi";
 import type { UpdateMePayload } from "../services/authApi";
 import { cleanupAllConnections } from "../services/webrtc";
 
@@ -9,6 +9,8 @@ interface AuthContextType {
   token: string | null;
   /** Đăng nhập thật: gọi POST /api/auth/login + GET /api/auth/me */
   loginWithCredentials: (email: string, password: string) => Promise<boolean>;
+  /** Đăng ký thật: gọi POST /api/auth/register rồi tự động login */
+  registerWithCredentials: (email: string, password: string) => Promise<boolean>;
   /** Demo mode: tạo fake token theo role, không cần backend */
   login: (role: Role) => Promise<boolean>;
   logout: () => void;
@@ -123,6 +125,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     []
   );
 
+  // ---- Đăng ký thật: POST /api/auth/register → auto login ----
+
+  const registerWithCredentials = useCallback(
+    async (email: string, password: string): Promise<boolean> => {
+      setIsLoggingIn(true);
+      setLoginError(null);
+      try {
+        // Bước 1: Đăng ký tài khoản trên backend
+        await registerApi({ email, password });
+
+        // Bước 2: Tự động đăng nhập để lấy JWT token thật
+        const tokenResp = await loginApi({ email, password });
+        const accessToken = tokenResp.access_token;
+
+        // Bước 3: Lấy thông tin profile
+        const apiUser = await getMeApi(accessToken);
+        const userDetails = mapApiUserToUser(apiUser);
+
+        setToken(accessToken);
+        setUser(userDetails);
+        persistSession(accessToken, userDetails);
+        return true;
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error ? err.message : "Đăng ký thất bại. Vui lòng thử lại.";
+        setLoginError(message);
+        return false;
+      } finally {
+        setIsLoggingIn(false);
+      }
+    },
+    []
+  );
+
   // ---- Demo mode login (không cần backend) ----
 
   const login = useCallback(async (role: Role): Promise<boolean> => {
@@ -171,6 +207,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         token,
         loginWithCredentials,
+        registerWithCredentials,
         login,
         logout,
         updateProfile,

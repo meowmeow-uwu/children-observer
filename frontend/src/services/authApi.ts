@@ -85,6 +85,24 @@ export const loginApi = async (payload: LoginPayload): Promise<TokenResponse> =>
   });
 };
 
+// ---- POST /api/auth/register ----
+
+export interface RegisterPayload {
+  email: string;
+  password: string;
+}
+
+/**
+ * Đăng ký tài khoản mới.
+ * Trả về UserProfile (id, email).
+ */
+export const registerApi = async (payload: RegisterPayload): Promise<UserProfileApi> => {
+  return authRequest<UserProfileApi>("/auth/register", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+};
+
 // ---- Task 1.1: GET /api/auth/me ----
 
 /**
