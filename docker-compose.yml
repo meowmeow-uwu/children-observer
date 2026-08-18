@@ -62,8 +62,12 @@ services:
     restart: "no"
     ports:
       - "8007:8000"
-    env_file:
-      - .env
+    volumes:
+      - snapshot_data:/app/module_backend_infra/data/snapshots
+    environment:
+      - DATABASE_URL=postgresql://admin:secretpassword123@db:5432/child_guardian_db
+      - MQTT_BROKER_HOST=mqtt
+      - MQTT_BROKER_PORT=1883
     depends_on:
       mqtt:
         condition: service_started
@@ -75,7 +79,47 @@ services:
       timeout: 3s
       retries: 12
 
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: guardian_frontend
+    restart: "no"
+    ports:
+      - "5173:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+      seed:
+        condition: service_completed_successfully
+
+  edge:
+    build:
+      context: .
+      dockerfile: Dockerfile.edge
+    container_name: guardian_edge
+    restart: "no"
+    environment:
+      - EDGE_CAMERA_ID=camera_living_room_01
+      - EDGE_BACKEND_URL=http://backend:8000
+      - MQTT_BROKER_HOST=mqtt
+      - MQTT_BROKER_PORT=1883
+      - EDGE_MQTT_ENABLED=true
+      - EDGE_REST_SYNC_ENABLED=false
+      - EDGE_VIEWER_GATED=false
+      - EDGE_VIDEO_PATH=/app/module_edge_firmware/test_video.mp4
+      - EDGE_MODEL_PATH=/app/weights/roi_detection/best.onnx
+      - EDGE_ONNX_INTRA_THREADS=8
+      - EDGE_ALERT_COOLDOWN_SECONDS=5
+    depends_on:
+      backend:
+        condition: service_healthy
+      mqtt:
+        condition: service_started
+      seed:
+        condition: service_completed_successfully
 
 volumes:
   postgres_data:
   mqtt_data:
+  snapshot_data:

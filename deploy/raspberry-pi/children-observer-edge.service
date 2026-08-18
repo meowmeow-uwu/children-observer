@@ -1,0 +1,21 @@
+[Unit]
+Description=Children Observer Edge AI (one Raspberry Pi, one IP camera)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=children-observer
+Group=children-observer
+WorkingDirectory=/opt/children-observer
+EnvironmentFile=/etc/children-observer/edge.env
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/opt/children-observer/.venv/bin/python -m module_edge_firmware.demo_stream
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target
