@@ -1,7 +1,15 @@
 import React from "react";
-import { Outlet, Link } from "react-router-dom";
+import { Outlet, Link, Navigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export const PublicLayout: React.FC = () => {
+  const { isAuthenticated } = useAuth();
+
+  // Đã đăng nhập → vào thẳng dashboard
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   return (
     <div className="h-screen overflow-y-auto bg-surface flex flex-col font-sans">
       {/* Public Navbar */}

@@ -1,7 +1,15 @@
 import React from "react";
-import { Outlet, Link } from "react-router-dom";
+import { Outlet, Link, Navigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export const AuthLayout: React.FC = () => {
+  const { isAuthenticated } = useAuth();
+
+  // Đã đăng nhập → vào thẳng dashboard
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   return (
     <div className="h-screen overflow-y-auto bg-surface flex flex-col md:flex-row font-sans">
       {/* Left side: Form content */}
