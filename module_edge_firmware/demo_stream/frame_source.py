@@ -21,6 +21,8 @@ import cv2
 import numpy as np
 from loguru import logger
 
+from module_edge_firmware.rtsp_utils import redact_rtsp_url
+
 
 @dataclass
 class FrameSnapshot:
@@ -351,7 +353,7 @@ class RtspVideoSource:
 
             fps = cap.get(cv2.CAP_PROP_FPS) or 25.0
             self._store.set_meta(fps, 0.0, 0)
-            logger.info("RTSP stream connected: {}", self.rtsp_url)
+            logger.info("RTSP stream connected: {}", redact_rtsp_url(self.rtsp_url))
             while self._running:
                 if not self._active.wait(timeout=0.2):
                     continue

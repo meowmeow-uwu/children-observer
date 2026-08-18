@@ -16,6 +16,7 @@ from typing import Callable
 import cv2
 import numpy as np
 from loguru import logger
+from module_edge_firmware.rtsp_utils import redact_rtsp_url
 
 from configs.settings import get_settings
 
@@ -61,7 +62,7 @@ class RTSPCapture:
         self._running = True
         self._thread = threading.Thread(target=self._capture_loop, daemon=True)
         self._thread.start()
-        logger.info(f"RTSP capture started: {self.rtsp_url}")
+        logger.info(f"RTSP capture started: {redact_rtsp_url(self.rtsp_url)}")
 
     def stop(self) -> None:
         """Dừng capture stream."""
@@ -162,7 +163,7 @@ class RTSPCapture:
             self._cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 
             if not self._cap.isOpened():
-                logger.error(f"Cannot open RTSP stream: {self.rtsp_url}")
+                logger.error(f"Cannot open RTSP stream: {redact_rtsp_url(self.rtsp_url)}")
                 return False
 
             return True

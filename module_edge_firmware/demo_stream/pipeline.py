@@ -124,9 +124,11 @@ def build_config_from_settings() -> DemoStreamConfig:
         mqtt_username=os.getenv("MQTT_USERNAME") or None,
         mqtt_password=os.getenv("MQTT_PASSWORD") or None,
         rest_sync_enabled=env_bool("EDGE_REST_SYNC_ENABLED", False),
+        ws_relay_enabled=env_bool("EDGE_WS_RELAY_ENABLED", True),
         ws_relay_url=os.getenv(
             "EDGE_WS_RELAY_URL", "ws://127.0.0.1:8007/ws/detections/edge"
         ),
+        frame_rate=env_int("EDGE_WEBRTC_FPS", "30"),
         start_seconds=float(start_s) if start_s is not None else 0.0,
         end_seconds=float(end_s) if end_s else None,
     )
