@@ -424,7 +424,6 @@ edge = [
     { name = "albumentations" },
     { name = "av" },
     { name = "lap" },
-    { name = "mediapipe" },
     { name = "onnxruntime" },
     { name = "opencv-python-headless" },
     { name = "psutil" },
@@ -433,6 +432,9 @@ edge = [
     { name = "torchvision", version = "0.28.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "sys_platform == 'darwin'" },
     { name = "torchvision", version = "0.28.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "sys_platform != 'darwin'" },
     { name = "ultralytics" },
+]
+edge-legacy-pose = [
+    { name = "mediapipe" },
 ]
 gpu = [
     { name = "onnxruntime-gpu" },
@@ -456,7 +458,7 @@ requires-dist = [
     { name = "httpx2", marker = "extra == 'dev'", specifier = ">=2.10.0" },
     { name = "lap", marker = "extra == 'edge'", specifier = ">=0.5.12" },
     { name = "loguru", specifier = ">=0.7" },
-    { name = "mediapipe", marker = "extra == 'edge'", specifier = ">=0.10" },
+    { name = "mediapipe", marker = "extra == 'edge-legacy-pose'", specifier = ">=0.10" },
     { name = "numpy", specifier = ">=1.26" },
     { name = "onnxruntime", marker = "extra == 'edge'", specifier = ">=1.19" },
     { name = "onnxruntime-gpu", marker = "extra == 'gpu'", specifier = ">=1.19" },
@@ -482,7 +484,7 @@ requires-dist = [
     { name = "uvicorn", specifier = ">=0.49.0" },
     { name = "websockets", specifier = ">=16.0" },
 ]
-provides-extras = ["edge", "gpu", "tensorrt", "dev"]
+provides-extras = ["edge", "edge-legacy-pose", "gpu", "tensorrt", "dev"]
 
 [[package]]
 name = "click"
