@@ -90,7 +90,7 @@ export const DashboardView: React.FC = () => {
               }
             </p>
             <span className="text-[10px] text-on-surface-variant block mt-0.5">
-              {offlineCameras > 0 ? "Vui lòng kiểm tra thiết bị cầu thang" : "Tất cả camera đều online"}
+              {offlineCameras > 0 ? "Vui lòng kiểm tra camera mất kết nối" : "Tất cả camera đều online"}
             </span>
           </div>
         </div>
@@ -173,22 +173,19 @@ export const DashboardView: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {cameras.map((cam) => {
               const activeRois = cam.roiZones.filter((z) => z.enabled).length;
-              const isLivingRoom = cam.id === "cam_living_room_01" || cam.streamStatus === "connected";
+              const isSourceOnline = cam.status === "online";
+              const isViewingLive = isSourceOnline && cam.streamStatus === "connected";
               return (
                 <div key={cam.id} className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 overflow-hidden shadow-sm flex flex-col group hover:shadow-md transition-all">
 
                   {/* Ảnh xem trước trạng thái camera; WebRTC chỉ mở ở trang chi tiết. */}
                   <div className="aspect-video bg-black relative flex items-center justify-center overflow-hidden">
-                    {isLivingRoom ? (
-                      <div className="w-full h-full relative">
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10"></div>
-                        <img
-                          src="/test_video_thumb.jpg"
-                          alt={`Ảnh xem trước ${cam.name}`}
-                          className="w-full h-full object-cover opacity-80"
-                        />
+                    {!isSourceOnline ? (
+                      <div className="text-center p-4">
+                        <span className="material-symbols-outlined text-error text-[40px] mb-2">videocam_off</span>
+                        <p className="text-xs font-medium text-outline">Mất kết nối tín hiệu</p>
                       </div>
-                    ) : cam.streamStatus === "connecting" ? (
+                    ) : cam.streamStatus === "connecting" || cam.streamStatus === "reconnecting" ? (
                       <div className="text-center p-4">
                         <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
                         <p className="text-xs font-medium text-outline">Đang kết nối tín hiệu...</p>
@@ -200,24 +197,27 @@ export const DashboardView: React.FC = () => {
                       </div>
                     ) : (
                       <div className="text-center p-4">
-                        <span className="material-symbols-outlined text-error text-[40px] mb-2">videocam_off</span>
-                        <p className="text-xs font-medium text-outline">Mất kết nối tín hiệu</p>
+                        <span className="material-symbols-outlined text-emerald-500 text-[40px] mb-2">videocam</span>
+                        <p className="text-xs font-semibold text-white">
+                          {isViewingLive ? "Đang xem trực tiếp" : "Sẵn sàng"}
+                        </p>
+                        <p className="mt-1 text-[10px] text-white/60">Nhấn “Xem camera” để bắt đầu xem</p>
                       </div>
                     )}
 
                     {/* Corner badges */}
                     <div className="absolute top-2 right-2 flex flex-col gap-1 items-end z-10">
-                      {isLivingRoom ? (
-                        <StatusBadge
-                          type={cam.streamStatus === "connected" ? "connected" : "online"}
-                          label={cam.streamStatus === "connected" ? "Đang xem Live" : "Sẵn sàng"}
-                        />
-                      ) : cam.streamStatus === "connecting" ? (
-                        <StatusBadge type="connecting" />
+                      {!isSourceOnline ? (
+                        <StatusBadge type="offline" />
+                      ) : cam.streamStatus === "connecting" || cam.streamStatus === "reconnecting" ? (
+                        <StatusBadge type={cam.streamStatus} />
                       ) : cam.streamStatus === "failed" ? (
                         <StatusBadge type="failed" />
                       ) : (
-                        <StatusBadge type="offline" />
+                        <StatusBadge
+                          type={isViewingLive ? "connected" : "online"}
+                          label={isViewingLive ? "Đang xem Live" : "Sẵn sàng"}
+                        />
                       )}
                     </div>
                   </div>
@@ -248,9 +248,9 @@ export const DashboardView: React.FC = () => {
                       </button>
                       <button
                         onClick={() => navigate(`/roi/${cam.id}`)}
-                        disabled={!isLivingRoom}
+                        disabled={!isSourceOnline}
                         className={`py-2 px-3 text-xs font-semibold rounded-lg transition-all text-center focus:outline-none ${
-                          isLivingRoom
+                          isSourceOnline
                             ? "bg-primary text-white hover:bg-primary/90"
                             : "bg-outline-variant/30 text-on-surface-variant cursor-not-allowed opacity-70"
                         }`}
