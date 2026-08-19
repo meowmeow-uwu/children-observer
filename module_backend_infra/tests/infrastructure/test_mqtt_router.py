@@ -36,7 +36,7 @@ async def test_mqtt_route_to_snapshot(mock_process_snapshot):
     await handle_mqtt_message(msg)
     
     # Đảm bảo hàm xử lý ảnh được gọi và bóc tách đúng device_id
-    mock_process_snapshot.assert_called_once_with("mac_123", fake_image_bytes)
+    mock_process_snapshot.assert_called_once_with("mac_123", fake_image_bytes, None)
 
 @pytest.mark.asyncio
 @patch("infrastructure.mqtt.router.manager.send_personal_message", new_callable=AsyncMock)
@@ -53,3 +53,14 @@ async def test_mqtt_route_to_webrtc_answer(mock_send_ws):
     
     # Đảm bảo lệnh đẩy WebSocket tới Web App được gọi
     mock_send_ws.assert_called_once_with(fake_sdp, "web_parent_01")
+
+
+@pytest.mark.asyncio
+@patch("infrastructure.mqtt.router._process_camera_status", new_callable=AsyncMock)
+async def test_mqtt_route_to_camera_status(mock_process_status):
+    payload = json.dumps({"online": False, "reason": "rtsp_unavailable"}).encode()
+    msg = MockMessage("devices/camera_01/status", payload)
+
+    await handle_mqtt_message(msg)
+
+    mock_process_status.assert_called_once_with("camera_01", payload)
