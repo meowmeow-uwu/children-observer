@@ -22,24 +22,6 @@ export const CameraListView: React.FC = () => {
       ? cameras.length
       : cameras.filter((c) => c.status === s).length;
 
-  const getSignalIcon = (quality: "good" | "fair" | "poor") => {
-    switch (quality) {
-      case "good": return "signal_cellular_4_bar";
-      case "fair": return "signal_cellular_3_bar";
-      case "poor":
-      default: return "signal_cellular_1_bar";
-    }
-  };
-
-  const getSignalColor = (quality: "good" | "fair" | "poor") => {
-    switch (quality) {
-      case "good": return "text-emerald-500";
-      case "fair": return "text-amber-500";
-      case "poor":
-      default: return "text-error";
-    }
-  };
-
   return (
     <div className="p-4 md:p-6 space-y-6">
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
@@ -136,10 +118,10 @@ export const CameraListView: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-1 text-on-surface-variant font-semibold text-xs shrink-0 bg-surface-container-low px-2 py-1 rounded-lg">
-                      <span className={`material-symbols-outlined text-[16px] ${getSignalColor(cam.signalQuality)}`}>
-                        {getSignalIcon(cam.signalQuality)}
+                      <span className={`material-symbols-outlined text-[16px] ${isOnline ? "text-emerald-500" : "text-error"}`}>
+                        {isOnline ? "signal_cellular_4_bar" : "signal_disconnected"}
                       </span>
-                      {cam.signalQuality === "good" ? "Tốt" : cam.signalQuality === "fair" ? "Ổn định" : "Yếu"}
+                      {isOnline ? "Đã kết nối" : "Mất tín hiệu"}
                     </div>
                   </div>
 
@@ -150,7 +132,7 @@ export const CameraListView: React.FC = () => {
                     </span>
                     <span className="flex items-center gap-1 bg-surface-container-low px-2.5 py-1 rounded-lg">
                       <span className="material-symbols-outlined text-[15px] text-primary">settings_system_daydream</span>
-                      {cam.resolution} • {cam.fps} FPS
+                      Luồng Edge AI
                     </span>
                   </div>
                 </div>

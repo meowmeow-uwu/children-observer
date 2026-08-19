@@ -115,7 +115,7 @@ export const CameraDetailView: React.FC = () => {
             >
               {({ videoRef: stageVideo, streamStatus }) => {
                 stageVideoRef.current = stageVideo.current;
-                const isConnected = streamStatus === "connected";
+                const isConnected = streamStatus === "connected" && cam.status === "online";
                 const aiTracks = isConnected ? tracks : [];
                 return (
                   <>
@@ -218,7 +218,11 @@ export const CameraDetailView: React.FC = () => {
                   <span className="material-symbols-outlined text-[18px]">
                     {cam.alertsPaused ? "pause_circle" : "notifications_active"}
                   </span>
-                  {cam.alertsPaused ? "Đã tạm dừng" : "Đang hoạt động"}
+                  {cam.status === "offline"
+                    ? "Chờ camera kết nối lại"
+                    : cam.alertsPaused
+                    ? "Đã tạm dừng"
+                    : "Đang hoạt động"}
                 </span>
               </div>
               <div className="flex justify-between items-center text-sm">
@@ -227,7 +231,7 @@ export const CameraDetailView: React.FC = () => {
                   <span className="material-symbols-outlined text-emerald-500 text-[18px]">
                     {cam.signalQuality === "good" ? "signal_cellular_4_bar" : cam.signalQuality === "fair" ? "signal_cellular_3_bar" : "signal_cellular_1_bar"}
                   </span>
-                  {cam.signalQuality === "good" ? "Tốt (94ms)" : cam.signalQuality === "fair" ? "Trung bình" : "Yếu"}
+                  {cam.status === "online" ? "Đã kết nối" : "Mất tín hiệu"}
                 </span>
               </div>
               <div className="flex justify-between items-center text-sm">
