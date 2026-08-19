@@ -1,4 +1,3 @@
-# domains/devices/device_controller.py
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from typing import List
@@ -11,7 +10,7 @@ from .device_service import DeviceService
 
 router = APIRouter(prefix="/api/devices", tags=["Devices"])
 
-@router.get("/", response_model=List[device_schemas.DeviceResponse])
+@router.get("", response_model=List[device_schemas.DeviceResponse])
 def get_devices(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -21,7 +20,7 @@ def get_devices(
     """
     return DeviceService.get_user_devices(db, current_user)
 
-@router.post("/", response_model=device_schemas.DeviceResponse)
+@router.post("", response_model=device_schemas.DeviceResponse)
 def register_device(
     device_in: device_schemas.DeviceCreate,
     db: Session = Depends(get_db),
