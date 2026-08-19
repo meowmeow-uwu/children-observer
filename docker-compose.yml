@@ -27,8 +27,8 @@ services:
     restart: always
     ports:
       - "8007:8000"
-    environment:
-      - DATABASE_URL=postgresql://admin:secretpassword123@db:5432/child_guardian_db
+    env_file:
+      - .env
     depends_on:
       db:
         condition: service_healthy
@@ -50,6 +50,17 @@ services:
       dockerfile: Dockerfile.edge
     container_name: guardian_edge
     restart: always
+    environment:
+      - EDGE_CAMERA_ID=camera_living_room_01
+      - EDGE_BACKEND_URL=http://backend:8000
+      - EDGE_SIGNALING_URL=ws://backend:8000/ws/signaling
+      - EDGE_WS_RELAY_URL=ws://backend:8000/ws/detections/edge
+      - EDGE_VIDEO_PATH=/app/module_edge_firmware/test_video.mp4
+      - EDGE_MODEL_PATH=/app/weights/roi_detection/best.onnx
+      - EDGE_ONNX_INTRA_THREADS=8
+      - EDGE_ALERT_COOLDOWN_SECONDS=5
+      - MQTT_BROKER_HOST=20.205.138.61 
+      - MQTT_BROKER_PORT=1883
     depends_on:
       - backend
 

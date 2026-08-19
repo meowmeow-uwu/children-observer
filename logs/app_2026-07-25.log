@@ -1,0 +1,39 @@
+2026-07-25 23:44:49.579 | INFO     | configs.logging_config:setup_logging:60 | Logging configured | level=DEBUG | env=development
+2026-07-25 23:44:49.579 | INFO     | __main__:main:79 | AI Child Guardian starting | mode=edge
+2026-07-25 23:44:52.337 | WARNING  | module_ai_core.model_registry:reload:60 | Registry not found: weights/registry.json
+2026-07-25 23:44:52.337 | INFO     | module_edge_firmware.analysis.roi_checker:_load_config:93 | No ROI config found. Running without zone protection.
+2026-07-25 23:44:52.338 | INFO     | module_edge_firmware.buffer.circular_buffer:__init__:59 | CircularBuffer initialized: 15s @ 25fps (max 375 frames)
+2026-07-25 23:44:52.345 | INFO     | configs.logging_config:setup_logging:60 | Logging configured | level=DEBUG | env=development
+2026-07-25 23:44:52.346 | INFO     | module_edge_firmware.pipeline:start:86 | ============================================================
+2026-07-25 23:44:52.346 | INFO     | module_edge_firmware.pipeline:start:87 | AI Child Guardian - Edge Pipeline Starting
+2026-07-25 23:44:52.346 | INFO     | module_edge_firmware.pipeline:start:88 | ============================================================
+2026-07-25 23:44:52.346 | INFO     | module_edge_firmware.pipeline:start:91 | Loading AI models...
+2026-07-25 23:44:52.346 | WARNING  | module_ai_core.model_registry:reload:60 | Registry not found: weights/registry.json
+2026-07-25 23:44:52.346 | INFO     | module_edge_firmware.inference.multi_task_runner:load_all:127 | Model Registry Status:
+2026-07-25 23:44:52.346 | WARNING  | module_edge_firmware.inference.multi_task_runner:load_all:149 | ⏭️ ROI Detection: SKIPPED (model not ready)
+2026-07-25 23:44:52.346 | WARNING  | module_edge_firmware.inference.multi_task_runner:load_all:164 | ⏭️ Fall Detection: SKIPPED (model not ready)
+2026-07-25 23:44:52.346 | WARNING  | module_edge_firmware.inference.multi_task_runner:load_all:179 | ⏭️ Violence Detection: SKIPPED (model not ready)
+2026-07-25 23:44:52.346 | INFO     | module_edge_firmware.inference.multi_task_runner:load_all:183 | ==================================================
+2026-07-25 23:44:52.346 | INFO     | module_edge_firmware.inference.multi_task_runner:load_all:184 | MultiTaskRunner: 0/3 models loaded → []
+2026-07-25 23:44:52.346 | WARNING  | module_edge_firmware.inference.multi_task_runner:load_all:186 | ⚠️ Không có model nào! Sử dụng MockAIService để test.
+2026-07-25 23:44:52.346 | INFO     | module_edge_firmware.inference.multi_task_runner:load_all:187 | ==================================================
+2026-07-25 23:44:52.346 | WARNING  | module_edge_firmware.pipeline:_maybe_enable_mock_ai:248 | No trained AI model loaded from registry.
+2026-07-25 23:44:52.347 | WARNING  | module_edge_firmware.pipeline:_maybe_enable_mock_ai:250 | EDGE_USE_MOCK_AI_WHEN_NO_MODEL=false; pipeline will run without AI alerts.
+2026-07-25 23:44:52.347 | INFO     | module_edge_firmware.pipeline:start:96 | Warming up models...
+2026-07-25 23:44:52.349 | INFO     | module_edge_firmware.pipeline:start:100 | Warmup completed.
+2026-07-25 23:44:52.349 | INFO     | module_edge_firmware.mobile_gateway:start:76 | Mobile gateway listening on 0.0.0.0:8765
+2026-07-25 23:44:52.350 | INFO     | module_edge_firmware.ingestion.rtsp_capture:start:64 | RTSP capture started: rtsp://admin:password@192.168.1.100:554/stream1
+2026-07-25 23:44:52.350 | INFO     | module_edge_firmware.pipeline:start:118 | Pipeline started. Monitoring...
+2026-07-25 23:44:53.351 | INFO     | module_edge_firmware.pipeline:_health_monitor_loop:211 | HEALTH: CPU=0.0% | RAM=695.5MB | Disk=5.1GB | Camera=True | FPS=0.0
+2026-07-25 23:44:55.444 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_connect:165 | Cannot open RTSP stream: rtsp://admin:password@192.168.1.100:554/stream1
+2026-07-25 23:44:55.444 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:110 | Reconnecting in 5.0s (1/10)
+2026-07-25 23:45:03.507 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_connect:165 | Cannot open RTSP stream: rtsp://admin:password@192.168.1.100:554/stream1
+2026-07-25 23:45:03.507 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:110 | Reconnecting in 5.0s (2/10)
+2026-07-25 23:45:09.015 | INFO     | module_edge_firmware.pipeline:_signal_handler:233 | Signal 2 received. Shutting down...
+2026-07-25 23:45:09.015 | INFO     | module_edge_firmware.pipeline:stop:125 | Stopping pipeline...
+2026-07-25 23:45:09.367 | INFO     | module_edge_firmware.mobile_gateway:stop:91 | Mobile gateway stopped
+2026-07-25 23:45:11.571 | ERROR    | module_edge_firmware.ingestion.rtsp_capture:_connect:165 | Cannot open RTSP stream: rtsp://admin:password@192.168.1.100:554/stream1
+2026-07-25 23:45:11.571 | WARNING  | module_edge_firmware.ingestion.rtsp_capture:_capture_loop:110 | Reconnecting in 5.0s (3/10)
+2026-07-25 23:45:14.367 | INFO     | module_edge_firmware.ingestion.rtsp_capture:stop:74 | RTSP capture stopped
+2026-07-25 23:45:14.367 | INFO     | module_edge_firmware.inference.multi_task_runner:shutdown:277 | MultiTaskRunner shut down
+2026-07-25 23:45:14.368 | INFO     | module_edge_firmware.pipeline:stop:132 | Pipeline stopped. Stats: {'frames_processed': 0, 'alerts_sent': 0, 'avg_latency_ms': 0.0}

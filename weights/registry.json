@@ -15,8 +15,16 @@
     "note": ""
   },
   "fall_detection": {
+    "task": "fall_detection",
+    "model_name": "yolo11m-pose",
     "status": "ready",
-    "path": "weights/fall_detection/yolo-pose-best.pt",
-    "format": "pytorch"
+    "path": "weights/fall_detection/best.pt",
+    "format": "PyTorch (.pt)",
+    "metrics": {
+      "box_precision": 0.8886,
+      "box_recall": 0.9183,
+      "box_map50": 0.9085,
+    },
+    "note": "Fine-tuned yolo11m-pose (exp_pose_max) on falling-pose-estimation v4 dataset for children fall detection"
   }
 }

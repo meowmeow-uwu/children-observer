@@ -48,3 +48,14 @@ namtrung2.md
 *.jpg
 *.png
 module_ai_core/fall_detection/yolo26n.pt
+module_ai_core/datasets/test/
+module_ai_core/datasets/train/
+module_ai_core/datasets/valid/
+
+# Machine Learning Runs & Large Weights
+runs/
+*.pt
+!weights/fall_detection/best.pt
+*.mp4
+
+

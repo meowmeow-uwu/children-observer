@@ -1,0 +1,34 @@
+path: /home/nguyenhuynh/Documents/children-observer/module_ai_core/datasets
+train: /home/nguyenhuynh/Documents/children-observer/module_ai_core/datasets/train/images
+val: /home/nguyenhuynh/Documents/children-observer/module_ai_core/datasets/valid/images
+test: /home/nguyenhuynh/Documents/children-observer/module_ai_core/datasets/test/images
+kpt_shape:
+- 17
+- 3
+flip_idx:
+- 0
+- 2
+- 1
+- 4
+- 3
+- 6
+- 5
+- 8
+- 7
+- 10
+- 9
+- 12
+- 11
+- 14
+- 13
+- 16
+- 15
+nc: 1
+names:
+  0: person
+roboflow:
+  license: CC BY 4.0
+  project: falling-pose-estimation
+  url: https://universe.roboflow.com/humna-pose-data/falling-pose-estimation/dataset/4
+  version: 4
+  workspace: humna-pose-data

@@ -63,7 +63,7 @@ def get_train_transforms(img_size: int = 640) -> A.Compose:
 
             # Nhiễu (mô phỏng camera IP giá rẻ)
             A.OneOf([
-                A.GaussNoise(std_range=(10.0, 50.0), p=1.0),
+                A.GaussNoise(std_range=(0.01, 0.05), p=1.0),
                 A.ISONoise(color_shift=(0.01, 0.05), intensity=(0.1, 0.5), p=1.0),
             ], p=0.3),
 
