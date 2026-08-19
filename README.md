@@ -8,7 +8,7 @@ Hệ thống cho phép phụ huynh cấu hình các vùng nguy hiểm (ROI - Reg
 
 ## 🔄 Luồng Kiến trúc Hệ thống (Sequence Diagram)
 
-Sơ đồ dưới đây mô tả sự tương tác giữa 3 thành phần cốt lõi: **Edge Firmware (Camera/AI)**, **Backend (Máy chủ trung tâm)** và **Frontend (Giao diện phụ huynh)**.
+Sơ đồ dưới đây mô tả sự tương tác giữa 3 thành phần cốt lõi: **Edge Firmware (Camera/AI)**, **Backend (Máy chủ trung tâm)** và **Frontend (Giao diện phụ huynh)**. 
 
 ```mermaid
 sequenceDiagram

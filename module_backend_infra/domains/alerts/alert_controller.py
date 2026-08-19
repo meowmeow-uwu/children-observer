@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from core.database import get_db
 
-# Chắc chắn rằng domains/auth/dependencies.py ĐÃ ĐƯỢC TẠO thì dòng này mới không lỗi
 from domains.auth.dependencies import get_current_user
 from domains.auth.auth_models import User
 
@@ -14,7 +13,7 @@ from datetime import datetime
 
 router = APIRouter(prefix="/api/alerts", tags=["Alerts"])
 
-@router.get("/", response_model=List[alert_schemas.AlertResponse])
+@router.get("", response_model=List[alert_schemas.AlertResponse])
 def get_alerts(
     camera_id: Optional[str] = None, 
     start_date: Optional[datetime] = None,
@@ -34,11 +33,11 @@ def get_alerts(
         limit=limit
     )
 
-@router.post("/", response_model=alert_schemas.AlertResponse)
+@router.post("", response_model=alert_schemas.AlertResponse)
 async def create_alert(alert: alert_schemas.AlertCreate, db: Session = Depends(get_db)):
     return await AlertService.create_and_broadcast_alert(db, alert)
 
-@router.delete("/")
+@router.delete("")
 def delete_all_alerts(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """
     Xóa toàn bộ cảnh báo (Demo mục đích).
