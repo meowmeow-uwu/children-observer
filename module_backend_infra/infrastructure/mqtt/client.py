@@ -46,6 +46,7 @@ class MQTTManager:
                     await client.subscribe("devices/+/alerts")
                     await client.subscribe("devices/+/snapshots/#")
                     await client.subscribe("devices/+/webrtc/answer")
+                    await client.subscribe("devices/+/status")
 
                     # 2. Vòng lặp nhận tin nhắn
                     async for message in client.messages:
