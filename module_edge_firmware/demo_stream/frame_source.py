@@ -299,8 +299,14 @@ class RtspVideoSource:
         self._running = False
         self._thread: threading.Thread | None = None
         self._active = threading.Event()
+        self._connected = threading.Event()
         if initial_active:
             self._active.set()
+
+    @property
+    def connected(self) -> bool:
+        """True only after RTSP has delivered a valid frame."""
+        return self._connected.is_set()
 
     def start(self) -> None:
         if self._running:
@@ -311,6 +317,8 @@ class RtspVideoSource:
 
     def stop(self) -> None:
         self._running = False
+        self._connected.clear()
+        self._store.clear()
         self._active.set()  # unblock wait before joining
         if self._thread:
             self._thread.join(timeout=5)
@@ -346,6 +354,8 @@ class RtspVideoSource:
             cap = cv2.VideoCapture(self.rtsp_url, cv2.CAP_FFMPEG)
             cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
             if not cap.isOpened():
+                self._connected.clear()
+                self._store.clear()
                 logger.warning("Cannot open RTSP stream; retrying in {}s", self._reconnect_delay)
                 cap.release()
                 time.sleep(self._reconnect_delay)
@@ -359,11 +369,15 @@ class RtspVideoSource:
                     continue
                 ok, frame = cap.read()
                 if not ok:
+                    self._connected.clear()
+                    self._store.clear()
                     logger.warning("RTSP frame read failed; reconnecting")
                     break
+                self._connected.set()
                 source_time_ms = (time.monotonic() - self._start_time) * 1000.0
                 self._store.publish(frame, frame_index, source_time_ms)
                 frame_index += 1
             cap.release()
+            self._connected.clear()
             if self._running:
                 time.sleep(self._reconnect_delay)

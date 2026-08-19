@@ -219,6 +219,7 @@ class DemoStreamPipeline:
         self._last_loop_id_beat = 0
         self._alert_count = 0
         self._relay_ws = None
+        self._last_published_camera_online: bool | None = None
 
     def _set_camera_name(self, name: str) -> None:
         if name and name != self._camera_name:
@@ -411,6 +412,9 @@ class DemoStreamPipeline:
 
             snap = self.store.snapshot()
             if snap is None or not snap.is_valid:
+                if isinstance(self.source, RtspVideoSource) and not self.source.connected:
+                    self._heartbeat_state = "offline"
+                    self._last_track_count = 0
                 time.sleep(0.03)
                 continue
 
@@ -568,6 +572,17 @@ class DemoStreamPipeline:
     # ---- Heartbeat (không phụ thuộc viewer) ----
     async def _heartbeat_loop(self) -> None:
         while self._running:
+            camera_online = not isinstance(self.source, RtspVideoSource) or self.source.connected
+            if camera_online != self._last_published_camera_online:
+                self._last_published_camera_online = camera_online
+                if not camera_online:
+                    self._heartbeat_state = "offline"
+                    self._last_track_count = 0
+                if self.mqtt:
+                    self.mqtt.publish_camera_status(
+                        online=camera_online,
+                        reason="rtsp_connected" if camera_online else "rtsp_unavailable",
+                    )
             msg = {
                 "type": "status",
                 "state": self._heartbeat_state,

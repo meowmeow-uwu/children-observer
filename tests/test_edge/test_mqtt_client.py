@@ -64,3 +64,20 @@ def test_alert_and_snapshot_use_separate_required_topics() -> None:
     assert alert_data["event_id"]
     assert snapshot.topic == f"devices/camera_01/snapshots/{alert_data['event_id']}"
     assert snapshot.payload == b"jpeg-bytes"
+
+
+def test_camera_status_is_retained_on_device_topic() -> None:
+    client = _client()
+
+    assert client.publish_camera_status(online=False, reason="rtsp_unavailable") is True
+
+    queued = client._outbox.get_nowait()
+    assert queued.topic == "devices/camera_01/status"
+    assert queued.retain is True
+    assert json.loads(queued.payload) | {"timestamp_ms": 0} == {
+        "camera_id": "camera_01",
+        "online": False,
+        "state": "offline",
+        "reason": "rtsp_unavailable",
+        "timestamp_ms": 0,
+    }
