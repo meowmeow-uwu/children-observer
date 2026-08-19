@@ -1,6 +1,7 @@
 import React, { useRef } from "react";
 import { useCameraStream } from "../hooks/useCameraStream";
 import { useMediaContentRect, type ContentRect } from "../hooks/useMediaContentRect";
+import { useCameraStore } from "../store/cameraStore";
 
 export interface VideoStageRenderContext {
   videoRef: React.RefObject<HTMLVideoElement | null>;
@@ -42,6 +43,11 @@ export const VideoStage: React.FC<VideoStageProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const { videoRef, videoElement, attachVideoElement, streamStatus, startStream } = useCameraStream(cameraId);
   const contentRect = useMediaContentRect(containerRef, videoRef);
+  const cameraStatus = useCameraStore(
+    (state) => state.cameras.find((camera) => camera.id === cameraId)?.status
+  );
+  const sourceOffline = cameraStatus === "offline";
+  const showLiveVideo = streamStatus === "connected" && !sourceOffline;
 
   const handleAttach = React.useCallback(
     (el: HTMLVideoElement | null) => {
@@ -88,8 +94,12 @@ export const VideoStage: React.FC<VideoStageProps> = ({
         autoPlay
         playsInline
         muted
-        className={`absolute inset-0 w-full h-full object-contain pointer-events-none select-none transition-opacity duration-300 ${
-          streamStatus === "connected" ? "opacity-100" : "opacity-0"
+        className={`absolute inset-0 h-full w-full object-contain pointer-events-none select-none transition-all duration-300 ${
+          showLiveVideo
+            ? "opacity-100"
+            : sourceOffline
+              ? "scale-[1.01] opacity-40 grayscale blur-[2px]"
+              : "opacity-0"
         }`}
       />
 
@@ -101,14 +111,28 @@ export const VideoStage: React.FC<VideoStageProps> = ({
           top: contentRect.top,
           width: contentRect.width,
           height: contentRect.height,
-          opacity: streamStatus === "connected" ? 1 : 0,
+          opacity: showLiveVideo ? 1 : 0,
           transition: "opacity 300ms",
         }}
       >
         {children({ videoRef, videoElement, contentRect, streamStatus })}
       </div>
 
-      {streamStatus === "connecting" || streamStatus === "reconnecting" ? (
+      {sourceOffline ? (
+        <div
+          className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/55 p-5 text-center backdrop-blur-[1px]"
+          role="status"
+          aria-live="polite"
+        >
+          <div className="flex max-w-sm flex-col items-center rounded-2xl border border-white/15 bg-black/65 px-6 py-5 shadow-xl">
+            <span className="material-symbols-outlined mb-2 text-[48px] text-red-400">videocam_off</span>
+            <strong className="text-base text-white">Mất kết nối camera</strong>
+            <span className="mt-1 text-xs leading-5 text-white/75">
+              Không nhận được tín hiệu trực tiếp. Hãy kiểm tra nguồn điện, cáp mạng hoặc kết nối RTSP.
+            </span>
+          </div>
+        </div>
+      ) : streamStatus === "connecting" || streamStatus === "reconnecting" ? (
         <div className="absolute inset-0 w-full h-full flex items-center justify-center pointer-events-none z-10">
           <div className="bg-black/60 backdrop-blur-sm px-4 py-3 rounded-xl flex items-center gap-3">
             <div className="w-5 h-5 border-2 border-amber-400 border-t-transparent rounded-full animate-spin"></div>
@@ -117,7 +141,7 @@ export const VideoStage: React.FC<VideoStageProps> = ({
         </div>
       ) : null}
 
-      {streamStatus === "idle" && (
+      {!sourceOffline && streamStatus === "idle" && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 z-20">
           <button
             onClick={handleStart}
@@ -131,7 +155,7 @@ export const VideoStage: React.FC<VideoStageProps> = ({
         </div>
       )}
 
-      {streamStatus === "failed" && (
+      {!sourceOffline && streamStatus === "failed" && (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-error-container/15 p-4">
           <button
             onClick={handleStart}

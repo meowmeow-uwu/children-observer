@@ -19,14 +19,17 @@ export const Layout: React.FC = () => {
   // Tải camera + ROI mới nhất từ backend rồi hydrate roiStore.
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+    const refresh = async (hydrateRoi: boolean) => {
       await useCameraStore.getState().loadCameras();
-      if (!cancelled) {
+      if (!cancelled && hydrateRoi) {
         useRoiStore.getState().hydrateFromCameras();
       }
-    })();
+    };
+    void refresh(true);
+    const statusPoll = window.setInterval(() => void refresh(false), 3000);
     return () => {
       cancelled = true;
+      window.clearInterval(statusPoll);
     };
   }, []);
 
