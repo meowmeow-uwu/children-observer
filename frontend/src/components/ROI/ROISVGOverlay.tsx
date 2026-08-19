@@ -2,13 +2,14 @@ import React, { useRef, useState, useEffect, useCallback } from "react";
 import { useRoiStore } from "../../store/roiStore";
 import { createRectangleFromTwoPoints, clampPoint } from "../../utils/roiGeometry";
 import type { ROIPoint } from "../../types";
+import { VideoStage } from "../VideoStage";
 
 interface ROISVGOverlayProps {
   cameraId: string;
   cameraName: string;
 }
 
-export const ROISVGOverlay: React.FC<ROISVGOverlayProps> = ({ cameraId }) => {
+export const ROISVGOverlay: React.FC<ROISVGOverlayProps> = ({ cameraId, cameraName }) => {
   const svgRef = useRef<SVGSVGElement>(null);
 
   const {
@@ -158,24 +159,23 @@ export const ROISVGOverlay: React.FC<ROISVGOverlayProps> = ({ cameraId }) => {
 
   return (
     <div className="space-y-3">
-      {/* Canvas chỉ dùng ảnh tĩnh; tuyệt đối không mở WebRTC trên trang cấu hình. */}
-      <div className="relative aspect-video overflow-hidden rounded-2xl border border-outline-variant/30 bg-black shadow-sm">
-        <img
-          src="/test_video_thumb.jpg"
-          alt="Khung hình đầu video để thiết lập vùng nguy hiểm"
-          className="absolute inset-0 h-full w-full select-none object-contain"
-          draggable={false}
-        />
-        <div className="pointer-events-none absolute left-3 top-3 z-30 rounded-lg border border-white/15 bg-black/65 px-2.5 py-1.5 text-[10px] font-semibold text-white backdrop-blur-sm">
-          Ảnh tĩnh tham chiếu · Không kết nối camera
-        </div>
+      <VideoStage cameraId={cameraId} autoStart>
+        {({ streamStatus }) => (
+          <>
+            <div className="pointer-events-none absolute left-3 top-3 z-30 rounded-lg border border-white/15 bg-black/65 px-2.5 py-1.5 text-[10px] font-semibold text-white backdrop-blur-sm">
+              {streamStatus === "connected"
+                ? `Camera trực tiếp · ${cameraName}`
+                : "Đang kết nối camera..."}
+            </div>
 
-              {/* SVG luôn hoạt động trên toàn bộ ảnh tham chiếu. */}
+              {/* SVG maps exactly to the real video content rect supplied by VideoStage. */}
               <svg
                 ref={svgRef}
-                className={`absolute inset-0 z-20 h-full w-full touch-none ${cursorClass}`}
+                className={`pointer-events-auto absolute inset-0 z-20 h-full w-full touch-none ${cursorClass}`}
                 viewBox="0 0 1000 1000"
                 preserveAspectRatio="none"
+                role="application"
+                aria-label={`Vẽ vùng nguy hiểm trên camera ${cameraName}`}
                 onClick={handleSVGClick}
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}
@@ -321,7 +321,9 @@ export const ROISVGOverlay: React.FC<ROISVGOverlayProps> = ({ cameraId }) => {
                   </>
                 )}
               </svg>
-      </div>
+          </>
+        )}
+      </VideoStage>
 
       {/* Dynamic Canvas resolution indicator */}
       <div className="flex flex-wrap items-center gap-2 justify-between">

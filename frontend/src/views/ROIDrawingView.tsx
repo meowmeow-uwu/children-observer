@@ -156,8 +156,8 @@ export const ROIDrawingView: React.FC = () => {
           <p className="text-xs text-on-surface-variant mt-0.5">
             Camera: <strong className="text-on-surface">{cam.name}</strong>
             <span className="text-outline mx-1.5">•</span>
-            <span className="font-semibold text-amber-600">
-              Chế độ ảnh tĩnh — không phát luồng, không cảnh báo
+            <span className="font-semibold text-emerald-600">
+              Hình ảnh trực tiếp — vẽ theo đúng khung hình camera
             </span>
           </p>
         </div>
