@@ -75,6 +75,10 @@ class EdgeMqttClient:
         return f"devices/{self.device_id}/snapshots"
 
     @property
+    def status_topic(self) -> str:
+        return f"devices/{self.device_id}/status"
+
+    @property
     def connected(self) -> bool:
         return self._connected.is_set()
 
@@ -96,6 +100,20 @@ class EdgeMqttClient:
 
     def publish_bytes(self, topic: str, payload: bytes, *, retain: bool = False) -> bool:
         return self._enqueue(MqttMessage(topic, payload, retain))
+
+    def publish_camera_status(self, *, online: bool, reason: str) -> bool:
+        """Publish the current RTSP availability as retained device state."""
+        return self.publish_json(
+            self.status_topic,
+            {
+                "camera_id": self.device_id,
+                "online": online,
+                "state": "online" if online else "offline",
+                "reason": reason,
+                "timestamp_ms": int(time.time() * 1000),
+            },
+            retain=True,
+        )
 
     def _enqueue(self, message: MqttMessage) -> bool:
         try:
