@@ -3,6 +3,7 @@ import type { User, Role } from "../types";
 import { loginApi, getMeApi, updateMeApi, registerApi } from "../services/authApi";
 import type { UpdateMePayload } from "../services/authApi";
 import { cleanupAllConnections } from "../services/webrtc";
+import { useChildStore } from "../store/childStore";
 
 interface AuthContextType {
   user: User | null;
@@ -81,7 +82,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(() => {
     try {
       const savedUser = localStorage.getItem(USER_KEY);
-      return savedUser ? (JSON.parse(savedUser) as User) : null;
+      const parsed = savedUser ? (JSON.parse(savedUser) as User) : null;
+      // Hydrate childStore cho user đã lưu từ phiên trước
+      if (parsed?.id) useChildStore.getState().loadForUser(parsed.id);
+      return parsed;
     } catch {
       return null;
     }
@@ -112,6 +116,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setToken(accessToken);
         setUser(userDetails);
         persistSession(accessToken, userDetails);
+        useChildStore.getState().loadForUser(userDetails.id);
         return true;
       } catch (err: unknown) {
         const message =
@@ -146,6 +151,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setToken(accessToken);
         setUser(userDetails);
         persistSession(accessToken, userDetails);
+        useChildStore.getState().loadForUser(userDetails.id);
         return true;
       } catch (err: unknown) {
         const message =
@@ -168,6 +174,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(userDetails);
     setLoginError(null);
     persistSession(demoToken, userDetails);
+    useChildStore.getState().loadForUser(userDetails.id);
     return true;
   }, []);
 
@@ -176,6 +183,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = useCallback(() => {
     // Dọn sạch tất cả WebRTC connections
     cleanupAllConnections();
+    useChildStore.getState().reset();
     setToken(null);
     setUser(null);
     setLoginError(null);
