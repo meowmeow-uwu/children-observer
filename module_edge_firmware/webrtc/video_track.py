@@ -40,9 +40,12 @@ class AIVideoTrack(VideoStreamTrack):
             frame_source = SharedFrameSource()
         self.frame_source = frame_source
         self._start = start_time if start_time is not None else time.monotonic()
+        # PTS starts from zero for every PeerConnection. `_start` remains the
+        # shared pipeline clock used by FrameStore/source_time_ms.
+        self._media_start = time.monotonic()
         self._fps = max(1, int(fps))
         self._frame_interval = 1.0 / self._fps
-        self._next_frame_mono = self._start
+        self._next_frame_mono = self._media_start
         self.stream_id = f"stream-{uuid.uuid4().hex[:12]}"
         self._stream_origin_ms: float | None = None
 
@@ -63,8 +66,8 @@ class AIVideoTrack(VideoStreamTrack):
             await asyncio.sleep(self._next_frame_mono - now)
             now = time.monotonic()
 
-        pts = int((now - self._start) * VIDEO_CLOCK_RATE)
-        self._next_frame_mono = self._start + (pts + VIDEO_CLOCK_RATE // self._fps) / VIDEO_CLOCK_RATE
+        pts = int((now - self._media_start) * VIDEO_CLOCK_RATE)
+        self._next_frame_mono = self._media_start + (pts + VIDEO_CLOCK_RATE // self._fps) / VIDEO_CLOCK_RATE
 
         # Lấy frame mới nhất từ frame store; nếu đang giữa vòng lặp video
         # (snapshot=None) thì chờ frame thật — KHÔNG gửi placeholder làm frame

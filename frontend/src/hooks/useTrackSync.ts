@@ -14,6 +14,8 @@ const HEARTBEAT_TIMEOUT_MS = 4000; // không nhận message nào 4s → offline
 const HOLD_MAX_MS = 350;           // giữ box tối đa 350ms khi thiếu frame kế tiếp
 const STALE_MS = 750;              // stale ≥ 750ms → ẩn box
 
+const SYNC_JITTER_HOLD_MS = 500;
+
 /**
  * Đồng bộ track metadata với video đang render bằng requestVideoFrameCallback.
  *
@@ -38,29 +40,30 @@ export const useTrackSync = (
   framesRef.current = frames;
   const streamSyncRef = useRef(streamSync);
   streamSyncRef.current = streamSync;
+  const lastResolvedRef = useRef<{ tracks: TrackBox[]; atMs: number } | null>(null);
 
   const resolveTracks = useMemo(() => {
-    return (mediaTimeMs: number): TrackBox[] => {
+    return (mediaTimeMs: number): TrackBox[] | null => {
       const list = framesRef.current;
       if (list.length === 0) return [];
 
       const sync = streamSyncRef.current;
-      if (!sync) return []; // chưa có origin — không map được
+      if (!sync) return null; // no stream origin yet
 
       // Thời gian Edge tương ứng frame đang render
       const edgeTimeMs = sync.streamOriginMs + mediaTimeMs;
 
       // Frame quá cũ (stale) → ẩn toàn bộ
       const newest = list[list.length - 1];
-      if (edgeTimeMs - newest.sourceTimeMs > STALE_MS) return [];
-      if (newest.sourceTimeMs - edgeTimeMs > STALE_MS) return [];
+      if (edgeTimeMs - newest.sourceTimeMs > STALE_MS) return null;
+      if (newest.sourceTimeMs - edgeTimeMs > STALE_MS) return null;
 
       // Bỏ qua frame thuộc loop cũ (loop mới có sourcePtsMs nhỏ hơn)
       const currentLoop = newest.loopId;
       const loopFrames = list.filter(
         (f) => f.loopId === currentLoop && f.streamId === sync.streamId
       );
-      if (loopFrames.length === 0) return [];
+      if (loopFrames.length === 0) return null;
 
       // Tìm hai frame kề nhau (bracketing) quanh edgeTime
       let prev: TrackFrameMessage | null = null;
@@ -122,7 +125,19 @@ export const useTrackSync = (
     const loop = (now: number, metadata: VideoFrameCallbackMetadata) => {
       if (cancelled) return;
       const mediaTimeMs = (metadata.mediaTime ?? video.currentTime) * 1000;
-      setTracks(resolveTracks(mediaTimeMs));
+      const resolved = resolveTracks(mediaTimeMs);
+      if (resolved === null) {
+        const previous = lastResolvedRef.current;
+        if (previous && now - previous.atMs <= SYNC_JITTER_HOLD_MS) {
+          setTracks(previous.tracks);
+        } else {
+          setTracks([]);
+        }
+      } else {
+        setTracks(resolved);
+        // A fresh empty frame means no objects, so do not keep a ghost box.
+        lastResolvedRef.current = resolved.length ? { tracks: resolved, atMs: now } : null;
+      }
       // Giới hạn re-render khi không có data mới
       if (now - lastTickMs > 200) {
         lastTickMs = now;
