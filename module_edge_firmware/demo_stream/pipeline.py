@@ -33,6 +33,7 @@ from loguru import logger
 
 from module_edge_firmware.demo_stream.backend_sync import BackendSync
 from module_edge_firmware.demo_stream.detector import OnnxDetector
+from module_edge_firmware.demo_stream.fall import FallStateEngine, FallWorker
 from module_edge_firmware.demo_stream.frame_source import DemoVideoSource, FrameStore, RtspVideoSource
 from module_edge_firmware.demo_stream.roi_engine import AlertEvent, RoiStateEngine
 from module_edge_firmware.demo_stream.tracker import ByteTrackAdapter
@@ -59,6 +60,17 @@ class DemoStreamConfig:
     track_match_thresh: float = 0.8
     roi_poll_seconds: float = 5.0
     alert_cooldown_seconds: float = 5.0
+    fall_enabled: bool = False
+    fall_model_path: Path = Path("weights/fall_detection/best-416.onnx")
+    fall_fps: float = 2.0
+    fall_conf_threshold: float = 0.50
+    fall_still_seconds: float = 2.0
+    fall_cooldown_seconds: float = 30.0
+    fall_velocity_threshold: float = 0.15
+    fall_still_velocity_threshold: float = 0.04
+    fall_input_size: int = 416
+    fall_publish_alerts: bool = True
+    fall_metrics_path: Path = Path("/var/lib/children-observer/fall-metrics.jsonl")
     # Production contract in task_edge_firmware_integration.md.
     mqtt_enabled: bool = True
     mqtt_host: str = "127.0.0.1"
@@ -118,6 +130,17 @@ def build_config_from_settings() -> DemoStreamConfig:
         viewer_gated=env_bool("EDGE_VIEWER_GATED", True),
         roi_poll_seconds=env_float("EDGE_ROI_POLL_SECONDS", "5.0"),
         alert_cooldown_seconds=env_float("EDGE_ALERT_COOLDOWN_SECONDS", "5.0"),
+        fall_enabled=env_bool("EDGE_FALL_ENABLED", False),
+        fall_model_path=Path(os.getenv("EDGE_FALL_MODEL_PATH", "weights/fall_detection/best-416.onnx")),
+        fall_fps=env_float("EDGE_FALL_FPS", "2.0"),
+        fall_conf_threshold=env_float("EDGE_FALL_CONF_THRESHOLD", "0.50"),
+        fall_still_seconds=env_float("EDGE_FALL_STILL_SECONDS", "2.0"),
+        fall_cooldown_seconds=env_float("EDGE_FALL_COOLDOWN_SECONDS", "30.0"),
+        fall_velocity_threshold=env_float("EDGE_FALL_VELOCITY_THRESHOLD", "0.15"),
+        fall_still_velocity_threshold=env_float("EDGE_FALL_STILL_VELOCITY_THRESHOLD", "0.04"),
+        fall_input_size=env_int("EDGE_FALL_INPUT_SIZE", "416"),
+        fall_publish_alerts=env_bool("EDGE_FALL_PUBLISH_ALERTS", True),
+        fall_metrics_path=Path(os.getenv("EDGE_FALL_METRICS_PATH", "/var/lib/children-observer/fall-metrics.jsonl")),
         mqtt_enabled=env_bool("EDGE_MQTT_ENABLED", True),
         mqtt_host=os.getenv("MQTT_BROKER_HOST", "127.0.0.1"),
         mqtt_port=env_int("MQTT_BROKER_PORT", "1883"),
@@ -192,11 +215,29 @@ class DemoStreamPipeline:
             else None
         )
         self.mqtt: EdgeMqttClient | None = None
+        self.fall_worker = (
+            FallWorker(
+                camera_id=self.config.camera_id,
+                model_path=self.config.fall_model_path,
+                conf_threshold=self.config.fall_conf_threshold,
+                input_size=self.config.fall_input_size,
+                fps=self.config.fall_fps,
+                state_engine=FallStateEngine(
+                    still_seconds=self.config.fall_still_seconds,
+                    velocity_threshold=self.config.fall_velocity_threshold,
+                    still_velocity_threshold=self.config.fall_still_velocity_threshold,
+                    cooldown_seconds=self.config.fall_cooldown_seconds,
+                ),
+                metrics_path=self.config.fall_metrics_path,
+            )
+            if self.config.fall_enabled
+            else None
+        )
 
         # Outbox thread-safe: detection/status messages → async sender
         self.outbox: queue.Queue[dict] = queue.Queue(maxsize=64)
         # Alert queue bounded + worker (POST không block inference thread)
-        self._alert_queue: queue.Queue[tuple[AlertEvent, bytes | None] | None] = queue.Queue(maxsize=64)
+        self._alert_queue: queue.Queue[tuple[Any, bytes | None] | None] = queue.Queue(maxsize=64)
         self._alert_worker: threading.Thread | None = None
 
         # Per-PeerConnection stream identity: channel → {stream_id, origin_getter}
@@ -237,6 +278,8 @@ class DemoStreamPipeline:
         with self._session_prepare_lock:
             self._drain_queue(self.outbox)
             self._drain_queue(self._alert_queue)
+            if self.fall_worker:
+                self.fall_worker.reset()
             if not self.source.restart_and_wait():
                 raise RuntimeError("Không thể tua video về đầu đoạn demo")
             self._prepared_sessions += 1
@@ -319,6 +362,8 @@ class DemoStreamPipeline:
         self._stop.clear()
 
         self.detector.load()
+        if self.fall_worker:
+            self.fall_worker.start()
         if self.backend:
             self.backend.start()
         self.source.start()
@@ -352,6 +397,8 @@ class DemoStreamPipeline:
         except queue.Full:
             pass
         self.source.stop()
+        if self.fall_worker:
+            self.fall_worker.stop()
         if self.backend:
             self.backend.stop()
         if self._detection_thread:
@@ -376,16 +423,21 @@ class DemoStreamPipeline:
             if item is None:
                 return
             alert, snapshot_jpeg = item
+            is_fall = getattr(alert, "severity", None) is not None
             if self.mqtt:
                 self.mqtt.publish_alert_and_snapshot(
                     camera_id=alert.camera_id,
-                    title=f"{alert.title} ({alert.zone_name})",
-                    severity="danger" if alert.rule == "enterZone" else "warning",
-                    roi_name=alert.zone_name,
+                    title=alert.title if is_fall else f"{alert.title} ({alert.zone_name})",
+                    severity=alert.severity if is_fall else ("danger" if alert.rule == "enterZone" else "warning"),
+                    roi_name=getattr(alert, "roi_name", getattr(alert, "zone_name", "")),
                     snapshot_jpeg=snapshot_jpeg,
+                    notes=getattr(alert, "notes", ""),
                 )
             elif self.backend:
-                self.backend.post_alert(alert, snapshot_jpeg)
+                if is_fall:
+                    self.backend.post_fall_alert(alert, snapshot_jpeg)
+                else:
+                    self.backend.post_alert(alert, snapshot_jpeg)
             else:
                 logger.warning("Alert dropped: neither MQTT nor REST backend is configured")
 
@@ -401,6 +453,8 @@ class DemoStreamPipeline:
                 if session_active:
                     self.tracker.reset()
                     self.engine.reset_tracks()
+                    if self.fall_worker:
+                        self.fall_worker.reset()
                     session_active = False
                 self._heartbeat_state = "initializing"
                 time.sleep(0.05)
@@ -436,6 +490,9 @@ class DemoStreamPipeline:
                 detections = self.detector.detect(snap.frame)
                 tracks = self.tracker.update(detections)
                 alerts = self.engine.update(tracks, now_ms=snap.source_time_ms)
+                if self.fall_worker:
+                    self.fall_worker.offer(snap.frame, tracks, snap.source_time_ms, snap.frame_index)
+                    self.fall_worker.annotate(tracks)
             except Exception as exc:
                 logger.error(f"Detection loop error: {exc}")
                 self._heartbeat_state = "error"
@@ -453,6 +510,11 @@ class DemoStreamPipeline:
             for alert in alerts:
                 self._alert_count += 1
                 self._enqueue_alert(alert, snap.frame)
+            if self.fall_worker:
+                for alert, alert_frame in self.fall_worker.drain_alerts():
+                    if self.config.fall_publish_alerts:
+                        self._alert_count += 1
+                        self._enqueue_alert(alert, alert_frame)
 
             message = {
                 "schema_version": SCHEMA_VERSION,
@@ -480,7 +542,7 @@ class DemoStreamPipeline:
             elapsed = (time.perf_counter() - start) * 1000.0
             time.sleep(max(0.0, (interval_ms - elapsed) / 1000.0))
 
-    def _enqueue_alert(self, alert: AlertEvent, frame) -> None:
+    def _enqueue_alert(self, alert: Any, frame) -> None:
         # Chụp đúng frame phát sinh rule; queue chỉ giữ JPEG nhỏ, không giữ
         # ndarray 1080p khiến RAM tăng khi backend chậm.
         snapshot_jpeg: bytes | None = None
@@ -591,6 +653,7 @@ class DemoStreamPipeline:
                 "source_pts_ms": round(self._last_pts_ms, 1),
                 "loop_id": self._last_loop_id_beat,
                 "alerts": self._alert_count,
+                "fall_state": self.fall_worker.status if self.fall_worker else "disabled",
             }
             await self._send_message(msg)
             for _ in range(int(max(0.5, self.config.heartbeat_seconds) * 2)):
@@ -633,6 +696,7 @@ class DemoStreamPipeline:
             "loops": self.store.loop_id,
             "detection_fps": self.config.detection_fps,
             "viewer_active": self._viewer_active.is_set(),
+            "fall_state": self.fall_worker.status if self.fall_worker else "disabled",
         }
 
 

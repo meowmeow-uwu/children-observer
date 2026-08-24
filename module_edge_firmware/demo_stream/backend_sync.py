@@ -147,3 +147,39 @@ class BackendSync:
         except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, OSError) as exc:
             logger.warning(f"Alert post failed: {exc}")
             return False
+
+    def post_fall_alert(self, alert, snapshot_jpeg: bytes | None = None) -> bool:
+        """Post a fall event through REST when MQTT is unavailable.
+
+        FallAlert deliberately has no ROI rule, zone name, or bounding-box fields,
+        so it cannot use the ROI-specific ``post_alert`` serializer above.
+        """
+        payload = json.dumps(
+            {
+                "camera_id": alert.camera_id,
+                "camera_name": self.camera_name,
+                "title": alert.title,
+                "severity": alert.severity,
+                "status": "unread",
+                "snapshot_url": "",
+                "snapshot_base64": (
+                    base64.b64encode(snapshot_jpeg).decode("ascii")
+                    if snapshot_jpeg else None
+                ),
+                "roi_name": alert.roi_name,
+                "notes": alert.notes,
+            }
+        ).encode("utf-8")
+        req = urllib.request.Request(
+            f"{self.backend_url}/api/alerts",
+            data=payload,
+            headers={"Content-Type": "application/json"},
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=3) as resp:
+                ok = resp.status == 200
+                logger.info(f"Fall alert posted track={alert.track_id} -> {ok}")
+                return ok
+        except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, OSError) as exc:
+            logger.warning(f"Fall alert post failed: {exc}")
+            return False

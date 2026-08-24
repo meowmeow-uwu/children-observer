@@ -67,6 +67,11 @@ export interface TrackBox {
   zoneBreach?: boolean; // track thực sự đang vi phạm ROI (box đỏ)
   zoneId?: string | null;
   zoneName?: string | null;
+  fall?: {
+    state: "normal" | "suspected" | "confirmed" | "recovered";
+    confidence: number;
+    latencyMs: number;
+  };
 }
 
 export type AiStreamState =

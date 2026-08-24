@@ -24,6 +24,15 @@ const clamp01 = (v: number): number => Math.max(0, Math.min(1, v));
 const isFiniteNumber = (v: unknown): v is number =>
   typeof v === "number" && Number.isFinite(v);
 
+const normalizeFall = (raw: unknown): TrackBox["fall"] => {
+  if (typeof raw !== "object" || raw === null) return undefined;
+  const fall = raw as Record<string, unknown>;
+  const state = fall.state;
+  if (state !== "normal" && state !== "suspected" && state !== "confirmed" && state !== "recovered") return undefined;
+  if (!isFiniteNumber(fall.confidence) || !isFiniteNumber(fall.latency_ms)) return undefined;
+  return { state, confidence: clamp01(fall.confidence), latencyMs: Math.max(0, fall.latency_ms) };
+};
+
 const normalizeTrack = (raw: unknown): TrackBox | null => {
   if (typeof raw !== "object" || raw === null) return null;
   const t = raw as Record<string, unknown>;
@@ -55,6 +64,7 @@ const normalizeTrack = (raw: unknown): TrackBox | null => {
     zoneBreach: t.zone_breach === true,
     zoneId: typeof t.zone_id === "string" || typeof t.zone_id === "number" ? String(t.zone_id) : null,
     zoneName: typeof t.zone_name === "string" ? t.zone_name : null,
+    fall: normalizeFall(t.fall),
   };
 };
 

@@ -52,7 +52,7 @@ class AlertService:
         if not telegram_chat_id:
             telegram_chat_id = os.getenv("TEST_TELEGRAM_CHAT_ID")
             
-        if telegram_chat_id:
+        if settings.TELEGRAM_ALERTS_ENABLED and telegram_chat_id:
             telegram_msg = (
                 f"🚨 <b>BÁO ĐỘNG: {new_alert.title}</b>\n\n"
                 f"📍 <b>Khu vực:</b> {getattr(new_alert, 'roi_name', 'Không xác định')}\n"

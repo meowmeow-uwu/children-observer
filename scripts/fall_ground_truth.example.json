@@ -1,0 +1,9 @@
+{
+  "video": "replace-with-video.mp4",
+  "events": [
+    {"start_s": 12.4, "end_s": 13.2, "label": "fall"},
+    {"start_s": 30.0, "end_s": 34.0, "label": "lying_non_fall"},
+    {"start_s": 48.0, "end_s": 49.0, "label": "sit_down"},
+    {"start_s": 0.0, "end_s": 10.0, "label": "normal"}
+  ]
+}
