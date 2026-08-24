@@ -1,0 +1,127 @@
+{
+  "params": {
+    "video": "module_edge_firmware\\test_video.mp4",
+    "start_s": null,
+    "end_s": null,
+    "fps": 12.0,
+    "loops": 5,
+    "conf": 0.05,
+    "track_thresh": 0.35,
+    "high": null,
+    "low": null,
+    "new": null,
+    "buffer": 120,
+    "match": 0.8,
+    "gt_intervals": [
+      [
+        13.47,
+        16.2
+      ]
+    ]
+  },
+  "per_loop": {
+    "0": {
+      "gt_frames": 42,
+      "det_frames": 42,
+      "track_frames": 41,
+      "det_cov_pct": 100.0,
+      "track_cov_pct": 97.62,
+      "longest_run_s": 2.73,
+      "max_gap_s": 0.07,
+      "id_switches": 0,
+      "track_ids": [
+        9
+      ],
+      "track_id_count": 1
+    },
+    "1": {
+      "gt_frames": 42,
+      "det_frames": 42,
+      "track_frames": 41,
+      "det_cov_pct": 100.0,
+      "track_cov_pct": 97.62,
+      "longest_run_s": 2.73,
+      "max_gap_s": 0.07,
+      "id_switches": 0,
+      "track_ids": [
+        9
+      ],
+      "track_id_count": 1
+    },
+    "2": {
+      "gt_frames": 42,
+      "det_frames": 42,
+      "track_frames": 41,
+      "det_cov_pct": 100.0,
+      "track_cov_pct": 97.62,
+      "longest_run_s": 2.73,
+      "max_gap_s": 0.07,
+      "id_switches": 0,
+      "track_ids": [
+        9
+      ],
+      "track_id_count": 1
+    },
+    "3": {
+      "gt_frames": 42,
+      "det_frames": 42,
+      "track_frames": 41,
+      "det_cov_pct": 100.0,
+      "track_cov_pct": 97.62,
+      "longest_run_s": 2.73,
+      "max_gap_s": 0.07,
+      "id_switches": 0,
+      "track_ids": [
+        9
+      ],
+      "track_id_count": 1
+    },
+    "4": {
+      "gt_frames": 42,
+      "det_frames": 42,
+      "track_frames": 41,
+      "det_cov_pct": 100.0,
+      "track_cov_pct": 97.62,
+      "longest_run_s": 2.73,
+      "max_gap_s": 0.07,
+      "id_switches": 0,
+      "track_ids": [
+        9
+      ],
+      "track_id_count": 1
+    }
+  },
+  "summary": {
+    "gt_frames_total": 210,
+    "det_cov_pct": 100.0,
+    "track_cov_pct": 97.62,
+    "longest_run_s": 2.73,
+    "max_gap_s": 0.07,
+    "id_switches_total": 0,
+    "inference_p50_ms": 20.6,
+    "inference_p95_ms": 33.2,
+    "conf_min": 0.245,
+    "conf_max": 0.654,
+    "conf_mean": 0.431
+  },
+  "gates": {
+    "min_conf_cov_pct": 75.0,
+    "min_track_cov_pct": 70.0,
+    "max_gap_s": 0.5,
+    "min_run_s": 3.0,
+    "max_id_switches": 2,
+    "max_inference_p95_ms": 120.0
+  },
+  "run_required_s": 2.73,
+  "pass": true,
+  "results": {
+    "det_cov_pct": true,
+    "track_cov_pct": true,
+    "max_gap_s": true,
+    "min_run_s": true,
+    "max_id_switches": true,
+    "max_inference_p95_ms": true,
+    "loops_covered": true,
+    "loops_with_track": true
+  }
+}
