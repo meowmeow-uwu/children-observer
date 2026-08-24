@@ -65,7 +65,9 @@ export const DetectionOverlay = React.memo(({
         const sh = Math.max(2, (y2 - y1) * 1000);
 
         const isBreach = Boolean(track.zoneBreach);
-        const color = isBreach ? "#ef4444" : "#22c55e";
+        const isFallConfirmed = track.fall?.state === "confirmed";
+        const isFallSuspected = track.fall?.state === "suspected";
+        const color = isFallConfirmed || isBreach ? "#ef4444" : isFallSuspected ? "#f59e0b" : "#22c55e";
         const label = track.className
           ? CLASS_LABEL[track.className] || track.className
           : "Trẻ";
@@ -79,13 +81,13 @@ export const DetectionOverlay = React.memo(({
               height={sh}
               fill="none"
               stroke={color}
-              strokeWidth={isBreach ? 4 : 2.5}
+              strokeWidth={isFallConfirmed || isBreach ? 4 : 2.5}
               strokeLinejoin="round"
               opacity={0.9}
               rx={4}
               ry={4}
             />
-            {isBreach && (
+            {(isBreach || isFallConfirmed) && (
               <>
                 <rect x={sx - 4} y={sy - 4} width={sw + 8} height={sh + 8} fill="none" stroke="#ef4444" strokeWidth={1.5} strokeDasharray="6 4" opacity={0.6} />
                 <circle cx={sx + sw / 2} cy={sy + sh / 2} r={4} fill="#ef4444" />
@@ -113,6 +115,7 @@ export const DetectionOverlay = React.memo(({
                 >
                   {label} #{track.trackId} · {Math.round(track.confidence * 100)}%
                   {isBreach && track.zoneName ? ` · ${track.zoneName}` : ""}
+                  {isFallConfirmed ? " · Fall" : isFallSuspected ? " · Suspected fall" : ""}
                 </text>
               </g>
             )}

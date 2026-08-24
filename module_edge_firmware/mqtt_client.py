@@ -214,6 +214,7 @@ class EdgeMqttClient:
         severity: str,
         roi_name: str,
         snapshot_jpeg: bytes | None,
+        notes: str = "",
     ) -> None:
         """Queue the two task-mandated alert messages without blocking AI inference."""
         timestamp_ms = int(time.time() * 1000)
@@ -228,6 +229,7 @@ class EdgeMqttClient:
                 "severity": severity,
                 "snapshot_url": snapshot_name,
                 "roi_name": roi_name,
+                "notes": notes,
             },
         )
         if snapshot_jpeg:

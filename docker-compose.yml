@@ -68,6 +68,7 @@ services:
       - DATABASE_URL=postgresql://admin:secretpassword123@db:5432/child_guardian_db
       - MQTT_BROKER_HOST=mqtt
       - MQTT_BROKER_PORT=1883
+      - TELEGRAM_ALERTS_ENABLED=${TELEGRAM_ALERTS_ENABLED:-false}
     depends_on:
       mqtt:
         condition: service_started

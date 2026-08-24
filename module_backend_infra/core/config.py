@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     # Cấu hình Zalo OA Bot / Telegram
     ZALO_OA_TOKEN: Optional[str] = None
     TELEGRAM_BOT_TOKEN: Optional[str] = None
+    TELEGRAM_ALERTS_ENABLED: bool = True
 
     # ================= WEBRTC / TURN SERVER =================
     TURN_SERVER_URL: Optional[str] = None
