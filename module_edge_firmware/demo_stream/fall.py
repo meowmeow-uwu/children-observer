@@ -60,6 +60,28 @@ class FallAnnotation:
         }
 
 
+def serialise_keypoints(keypoints: np.ndarray) -> tuple[tuple[float, float, float], ...]:
+    """Return JSON-safe, normalised COCO keypoints for the matched child only."""
+    points = np.asarray(keypoints, dtype=np.float32).reshape(-1, 3)
+    return tuple(
+        (
+            round(float(np.clip(np.nan_to_num(x, nan=0.0), 0.0, 1.0)), 4),
+            round(float(np.clip(np.nan_to_num(y, nan=0.0), 0.0, 1.0)), 4),
+            round(float(np.clip(np.nan_to_num(confidence, nan=0.0), 0.0, 1.0)), 4),
+        )
+        for x, y, confidence in points
+    )
+
+
+def pose_payload(person: PosePerson) -> dict:
+    """JSON-safe pose data for UI rendering, independent from child tracking."""
+    return {
+        "box": [round(float(value), 4) for value in person.box],
+        "confidence": round(float(np.clip(person.confidence, 0.0, 1.0)), 3),
+        "keypoints": [list(point) for point in serialise_keypoints(person.keypoints)],
+    }
+
+
 class FallPoseEstimator:
     """YOLO11-Pose ONNX wrapper with deterministic CPU session options."""
 
@@ -316,6 +338,7 @@ class FallWorker:
         self.metrics = FallMetricsWriter(metrics_path, model_path)
         self._queue: queue.Queue[_WorkItem | None] = queue.Queue(maxsize=1)
         self._annotations: dict[int, FallAnnotation] = {}
+        self._poses: list[dict] = []
         self._alerts: queue.Queue[tuple[FallAlert, np.ndarray]] = queue.Queue(maxsize=8)
         self._lock = threading.Lock()
         self._thread: threading.Thread | None = None
@@ -345,6 +368,7 @@ class FallWorker:
             self._generation += 1
             self.engine.reset()
             self._annotations.clear()
+            self._poses.clear()
             self._last_offer_ms = -float("inf")
             self._drain_queue(self._queue)
             self._drain_queue(self._alerts)
@@ -391,6 +415,18 @@ class FallWorker:
             if annotation:
                 track["fall"] = annotation.as_dict()
 
+    def poses(self) -> list[dict]:
+        """Return the latest pose observations, including people without child tracks."""
+        with self._lock:
+            return [
+                {
+                    **pose,
+                    "box": list(pose["box"]),
+                    "keypoints": [list(point) for point in pose["keypoints"]],
+                }
+                for pose in self._poses
+            ]
+
     def drain_alerts(self) -> list[tuple[FallAlert, np.ndarray]]:
         alerts = []
         while True:
@@ -427,6 +463,7 @@ class FallWorker:
             if item.generation != self._generation:
                 return
             annotations: dict[int, FallAnnotation] = {}
+            self._poses = [pose_payload(person) for person in people]
             for track_id, match in associate_child_poses(item.tracks, people):
                 annotation, emitted = self.engine.update(track_id, match.keypoints, item.at_ms)
                 annotation = FallAnnotation(annotation.state, annotation.confidence, latency_ms)

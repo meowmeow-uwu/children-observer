@@ -531,6 +531,9 @@ class DemoStreamPipeline:
                 "loop_id": snap.loop_id,
                 "latency_ms": round(self._latency_ms, 1),
                 "tracks": tracks,
+                # Poses are independent from ROI child tracks so the UI can
+                # render every skeleton produced by the pose model.
+                "poses": self.fall_worker.poses() if self.fall_worker else [],
             }
             try:
                 self.outbox.put_nowait(message)

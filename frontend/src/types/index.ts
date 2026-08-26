@@ -74,6 +74,13 @@ export interface TrackBox {
   };
 }
 
+/** A raw pose from the Fall model, independent from ROI/ByteTrack identities. */
+export interface PoseSkeleton {
+  box: [number, number, number, number];
+  confidence: number;
+  keypoints: Array<[number, number, number]>; // COCO-17, coordinates normalised 0-1
+}
+
 export type AiStreamState =
   | "initializing"  // AI đang load model
   | "tracking"      // có đối tượng được track
@@ -103,6 +110,7 @@ export interface TrackFrameMessage extends AiFeedBase {
   loopId: number;         // vòng lặp video (tracker reset mỗi loop)
   latencyMs: number;
   tracks: TrackBox[];
+  poses: PoseSkeleton[];
 }
 
 export interface AiStatusMessage extends AiFeedBase {
