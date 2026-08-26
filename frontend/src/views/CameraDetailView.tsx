@@ -27,7 +27,7 @@ export const CameraDetailView: React.FC = () => {
   // Ref ổn định để useTrackSync gắn rVFC vào video element của VideoStage
   const stageVideoRef = React.useRef<HTMLVideoElement | null>(null);
   const [stageVideoElement, setStageVideoElement] = React.useState<HTMLVideoElement | null>(null);
-  const { tracks, aiState, latencyMs } = useTrackSync(stageVideoRef, id || "", stageVideoElement);
+  const { tracks, poses, aiState, latencyMs } = useTrackSync(stageVideoRef, id || "", stageVideoElement);
 
   if (!cam) {
     return (
@@ -117,6 +117,7 @@ export const CameraDetailView: React.FC = () => {
                 stageVideoRef.current = stageVideo.current;
                 const isConnected = streamStatus === "connected" && cam.status === "online";
                 const aiTracks = isConnected ? tracks : [];
+                const aiPoses = isConnected ? poses : [];
                 return (
                   <>
                     {/* ROI overlay — map lên vùng video thật (không letterbox) */}
@@ -163,6 +164,7 @@ export const CameraDetailView: React.FC = () => {
                     {/* AI Detection Bounding Boxes Overlay */}
                     <DetectionOverlay
                       tracks={aiTracks}
+                      poses={aiPoses}
                       aiState={isConnected ? aiState : "offline"}
                       latencyMs={latencyMs}
                     />

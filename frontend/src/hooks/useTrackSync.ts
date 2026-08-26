@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { RefObject } from "react";
-import type { AiStreamState, TrackBox, TrackFrameMessage } from "../types";
+import type { AiStreamState, PoseSkeleton, TrackBox, TrackFrameMessage } from "../types";
 import { useDetectionFeed } from "./useDetectionFeed";
 
 export interface TrackSyncResult {
   tracks: TrackBox[];
+  poses: PoseSkeleton[];
   aiState: AiStreamState;
   latencyMs: number;
   lastFrameAgeMs: number;
@@ -34,18 +35,19 @@ export const useTrackSync = (
 ): TrackSyncResult => {
   const { frames, status, streamSync, lastActivityAt } = useDetectionFeed(cameraId);
   const [tracks, setTracks] = useState<TrackBox[]>([]);
+  const [poses, setPoses] = useState<PoseSkeleton[]>([]);
   const [nowMs, setNowMs] = useState(() => Date.now());
 
   const framesRef = useRef(frames);
   framesRef.current = frames;
   const streamSyncRef = useRef(streamSync);
   streamSyncRef.current = streamSync;
-  const lastResolvedRef = useRef<{ tracks: TrackBox[]; atMs: number } | null>(null);
+  const lastResolvedRef = useRef<{ tracks: TrackBox[]; poses: PoseSkeleton[]; atMs: number } | null>(null);
 
   const resolveTracks = useMemo(() => {
-    return (mediaTimeMs: number): TrackBox[] | null => {
+    return (mediaTimeMs: number): { tracks: TrackBox[]; poses: PoseSkeleton[] } | null => {
       const list = framesRef.current;
-      if (list.length === 0) return [];
+      if (list.length === 0) return { tracks: [], poses: [] };
 
       const sync = streamSyncRef.current;
       if (!sync) return null; // no stream origin yet
@@ -104,7 +106,8 @@ export const useTrackSync = (
           merged.set(tr.trackId, tr);
         }
       }
-      return Array.from(merged.values());
+      const closestPoses = t < 0.5 ? prev.poses : next.poses;
+      return { tracks: Array.from(merged.values()), poses: closestPoses };
     };
   }, []);
 
@@ -117,6 +120,7 @@ export const useTrackSync = (
       // stale được xử lý bởi heartbeat timeout (HEARTBEAT_TIMEOUT_MS) bên dưới.
       const latest = framesRef.current[framesRef.current.length - 1];
       setTracks(latest ? latest.tracks : []);
+      setPoses(latest ? latest.poses : []);
       return;
     }
 
@@ -130,13 +134,18 @@ export const useTrackSync = (
         const previous = lastResolvedRef.current;
         if (previous && now - previous.atMs <= SYNC_JITTER_HOLD_MS) {
           setTracks(previous.tracks);
+          setPoses(previous.poses);
         } else {
           setTracks([]);
+          setPoses([]);
         }
       } else {
-        setTracks(resolved);
+        setTracks(resolved.tracks);
+        setPoses(resolved.poses);
         // A fresh empty frame means no objects, so do not keep a ghost box.
-        lastResolvedRef.current = resolved.length ? { tracks: resolved, atMs: now } : null;
+        lastResolvedRef.current = (resolved.tracks.length || resolved.poses.length)
+          ? { ...resolved, atMs: now }
+          : null;
       }
       // Giới hạn re-render khi không có data mới
       if (now - lastTickMs > 200) {
@@ -163,6 +172,7 @@ export const useTrackSync = (
 
   return {
     tracks,
+    poses,
     aiState,
     latencyMs: status?.latencyMs ?? 0,
     lastFrameAgeMs: statusAge,

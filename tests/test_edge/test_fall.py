@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from module_edge_firmware.demo_stream.fall import FallStateEngine, box_iou
+from module_edge_firmware.demo_stream.fall import FallStateEngine, PosePerson, box_iou, pose_payload, serialise_keypoints
 
 
 def _pose(*, lying: bool, y: float = 0.5) -> np.ndarray:
@@ -20,6 +20,16 @@ def _pose(*, lying: bool, y: float = 0.5) -> np.ndarray:
 def test_box_iou_matches_overlapping_pose_to_child_track():
     assert box_iou([0.1, 0.1, 0.5, 0.5], [0.2, 0.2, 0.6, 0.6]) > 0.3
     assert box_iou([0.1, 0.1, 0.2, 0.2], [0.8, 0.8, 0.9, 0.9]) == 0.0
+
+
+def test_pose_payload_serialises_normalised_keypoints_for_ui():
+    keypoints = _pose(lying=False)
+    keypoints[0] = [-1.0, 2.0, 1.5]
+
+    payload = pose_payload(PosePerson([0.1, 0.2, 0.4, 0.8], keypoints, 0.9))
+
+    assert len(payload["keypoints"]) == 17
+    assert payload["keypoints"][0] == [0.0, 1.0, 1.0]
 
 
 def test_fall_state_confirms_once_then_recovers():

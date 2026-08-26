@@ -3,6 +3,7 @@ import type {
   AiFeedMessage,
   AiStatusMessage,
   StreamSyncMessage,
+  PoseSkeleton,
   TrackBox,
   TrackFrameMessage,
 } from "../types";
@@ -24,13 +25,47 @@ const clamp01 = (v: number): number => Math.max(0, Math.min(1, v));
 const isFiniteNumber = (v: unknown): v is number =>
   typeof v === "number" && Number.isFinite(v);
 
+const normalizeFallKeypoints = (raw: unknown): Array<[number, number, number]> | undefined => {
+  if (!Array.isArray(raw) || raw.length !== 17) return undefined;
+  const points: Array<[number, number, number]> = [];
+  for (const point of raw) {
+    if (!Array.isArray(point) || point.length !== 3) return undefined;
+    const [x, y, confidence] = point;
+    if (!isFiniteNumber(x) || !isFiniteNumber(y) || !isFiniteNumber(confidence)) return undefined;
+    points.push([clamp01(x), clamp01(y), clamp01(confidence)]);
+  }
+  return points;
+};
+
+const normalizePose = (raw: unknown): PoseSkeleton | null => {
+  if (typeof raw !== "object" || raw === null) return null;
+  const pose = raw as Record<string, unknown>;
+  if (!isFiniteNumber(pose.confidence) || pose.confidence <= 0 || pose.confidence > 1) return null;
+  if (!Array.isArray(pose.box) || pose.box.length !== 4) return null;
+  const box = pose.box.map(Number);
+  if (box.some((value) => !Number.isFinite(value))) return null;
+  const [x1, y1, x2, y2] = box;
+  if (x2 <= x1 || y2 <= y1 || x1 < -0.01 || y1 < -0.01 || x2 > 1.01 || y2 > 1.01) return null;
+  const keypoints = normalizeFallKeypoints(pose.keypoints);
+  if (!keypoints) return null;
+  return {
+    box: [clamp01(x1), clamp01(y1), clamp01(x2), clamp01(y2)],
+    confidence: clamp01(pose.confidence),
+    keypoints,
+  };
+};
+
 const normalizeFall = (raw: unknown): TrackBox["fall"] => {
   if (typeof raw !== "object" || raw === null) return undefined;
   const fall = raw as Record<string, unknown>;
   const state = fall.state;
   if (state !== "normal" && state !== "suspected" && state !== "confirmed" && state !== "recovered") return undefined;
   if (!isFiniteNumber(fall.confidence) || !isFiniteNumber(fall.latency_ms)) return undefined;
-  return { state, confidence: clamp01(fall.confidence), latencyMs: Math.max(0, fall.latency_ms) };
+  return {
+    state,
+    confidence: clamp01(fall.confidence),
+    latencyMs: Math.max(0, fall.latency_ms),
+  };
 };
 
 const normalizeTrack = (raw: unknown): TrackBox | null => {
@@ -136,6 +171,13 @@ export const normalizeAiFeedMessage = (raw: unknown): AiFeedMessage | null => {
       if (track) tracks.push(track);
       // Track không hợp lệ bị bỏ có kiểm soát — không làm crash UI
     }
+    const poses: PoseSkeleton[] = [];
+    if (Array.isArray(m.poses)) {
+      for (const rawPose of m.poses) {
+        const pose = normalizePose(rawPose);
+        if (pose) poses.push(pose);
+      }
+    }
 
     const msg: TrackFrameMessage = {
       ...base,
@@ -147,6 +189,7 @@ export const normalizeAiFeedMessage = (raw: unknown): AiFeedMessage | null => {
       loopId: Math.round(m.loop_id),
       latencyMs: isFiniteNumber(m.latency_ms) ? m.latency_ms : 0,
       tracks,
+      poses,
     };
     return msg;
   }
