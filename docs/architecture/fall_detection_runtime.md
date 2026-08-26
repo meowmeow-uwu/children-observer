@@ -10,8 +10,10 @@ artifact vào Git. `demo_stream` chạy ROI 5 FPS; fall worker tiêu thụ lates
 worker sẽ thử nạp lại sau 30 giây.
 
 Fall chỉ đánh giá pose ghép với confirmed child track bằng IoU. State được giữ theo
-`track_id`: `normal → suspected → confirmed → recovered`; confirmed sau 2 giây
-nằm/bất động mới tạo MQTT alert. Mọi lần inference được ghi JSONL tại
+`track_id`: `normal → suspected → confirmed → recovered`; cảnh báo được phát
+ngay tại `suspected` khi có chuyển động rơi đo được. `confirmed` sau 1 giây
+chỉ là trạng thái theo dõi, không phải điều kiện gửi cảnh báo. Mọi lần
+inference được ghi JSONL tại
 `/var/lib/children-observer/fall-metrics.jsonl`.
 
 Đợt thử nghiệm phải đặt `TELEGRAM_ALERTS_ENABLED=false` trong môi trường backend:

@@ -89,8 +89,12 @@ class FallPoseEstimator:
         if self._session is None:
             raise RuntimeError("Fall pose estimator is not loaded")
         h, w = frame.shape[:2]
+        # OpenCV supplies BGR frames, while Ultralytics YOLO preprocessing feeds
+        # RGB into the model.  Keep this conversion aligned with the .pt path
+        # before resize/letterbox so exported ONNX sees the same channels.
+        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         ratio = min(self.input_size / h, self.input_size / w)
-        resized = cv2.resize(frame, (int(round(w * ratio)), int(round(h * ratio))))
+        resized = cv2.resize(rgb_frame, (int(round(w * ratio)), int(round(h * ratio))))
         pad_x = (self.input_size - resized.shape[1]) / 2.0
         pad_y = (self.input_size - resized.shape[0]) / 2.0
         image = cv2.copyMakeBorder(
@@ -110,9 +114,16 @@ class FallPoseEstimator:
             return []
         xywh = rows[:, :4]
         xyxy = np.column_stack((xywh[:, 0] - xywh[:, 2] / 2, xywh[:, 1] - xywh[:, 3] / 2, xywh[:, 0] + xywh[:, 2] / 2, xywh[:, 1] + xywh[:, 3] / 2))
-        indices = cv2.dnn.NMSBoxes(xyxy.tolist(), scores.tolist(), self.conf_threshold, 0.45)
-        if isinstance(indices, np.ndarray):
-            indices = indices.flatten()
+        # cv2.dnn.NMSBoxes expects [x, y, width, height], not [x1, y1, x2, y2].
+        nms_xywh = np.column_stack((
+            xyxy[:, 0],
+            xyxy[:, 1],
+            xyxy[:, 2] - xyxy[:, 0],
+            xyxy[:, 3] - xyxy[:, 1],
+        ))
+        indices = np.asarray(
+            cv2.dnn.NMSBoxes(nms_xywh.tolist(), scores.tolist(), self.conf_threshold, 0.45)
+        ).reshape(-1)
         people: list[PosePerson] = []
         for index in indices:
             box, score, row = xyxy[int(index)], scores[int(index)], rows[int(index)]
@@ -178,6 +189,7 @@ class FallStateEngine:
         lying_ratio_threshold: float = 0.6,
         cooldown_seconds: float = 30.0,
         track_ttl_seconds: float = 3.0,
+        alert_on_suspected: bool = True,
     ):
         self.still_ms = still_seconds * 1000.0
         self.velocity_threshold = velocity_threshold
@@ -185,8 +197,16 @@ class FallStateEngine:
         self.lying_ratio_threshold = lying_ratio_threshold
         self.cooldown_ms = cooldown_seconds * 1000.0
         self.track_ttl_ms = track_ttl_seconds * 1000.0
+        self.alert_on_suspected = alert_on_suspected
         self._states: dict[int, _TrackState] = {}
         self._last_alert_ms: dict[int, float] = {}
+
+    def _emit_allowed(self, track_id: int, at_ms: float) -> bool:
+        last = self._last_alert_ms.get(track_id)
+        if last is not None and at_ms - last < self.cooldown_ms:
+            return False
+        self._last_alert_ms[track_id] = at_ms
+        return True
 
     def update(self, track_id: int, keypoints: np.ndarray, at_ms: float) -> tuple[FallAnnotation, bool]:
         state = self._states.setdefault(track_id, _TrackState())
@@ -209,13 +229,15 @@ class FallStateEngine:
         emitted = False
 
         if state.state == "normal":
-            # A fall-specialised pose model may only start returning keypoints after
-            # the subject reaches the floor.  Preserve that case for evaluation;
-            # the stillness gate and labelled non-fall clips control false alarms.
-            if lying and (velocity >= self.velocity_threshold or not had_previous_pose):
+            # Alerting immediately requires evidence of a transition.  A first
+            # pose that is already horizontal may simply be a child lying down.
+            if lying and had_previous_pose and velocity >= self.velocity_threshold:
                 state.state = "suspected"
                 state.suspected_at_ms = at_ms
-                state.confidence = min(0.8, 0.5 + velocity) if had_previous_pose else 0.5
+                state.confidence = min(0.8, 0.5 + velocity)
+                if self.alert_on_suspected and self._emit_allowed(track_id, at_ms):
+                    state.alerted = True
+                    emitted = True
         elif state.state == "suspected":
             if not lying:
                 state.state, state.suspected_at_ms, state.confidence = "normal", None, 0.0
@@ -226,9 +248,7 @@ class FallStateEngine:
             ):
                 state.state = "confirmed"
                 state.confidence = min(0.98, 0.7 + (at_ms - state.suspected_at_ms) / 10000.0)
-                last = self._last_alert_ms.get(track_id)
-                if last is None or at_ms - last >= self.cooldown_ms:
-                    self._last_alert_ms[track_id] = at_ms
+                if not self.alert_on_suspected and self._emit_allowed(track_id, at_ms):
                     state.alerted = True
                     emitted = True
         elif state.state == "confirmed" and not lying:
