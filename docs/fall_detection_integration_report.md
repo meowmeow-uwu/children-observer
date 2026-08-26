@@ -1,146 +1,159 @@
-# Báo cáo tích hợp Fall Detection trên Raspberry Pi 4
+# Báo cáo tích hợp Fall Detection vào hệ thống hiện tại
 
-**Nhánh thực hiện:** `integration/fall-detection`  
-**Nguồn model:** `origin/feat/fall_detection`  
-**Ngày cập nhật:** 2026-08-24
+**Nhánh tích hợp:** `integration/fall-detection`
 
-## 1. Mục tiêu
+**Nguồn model:** `feat/fall_detection`
 
-Tích hợp mô hình phát hiện té ngã vào Edge runtime đang dùng cho camera RTSP,
-đồng thời giữ nguyên luồng nhận diện trẻ/ROI, MQTT, WebRTC và backend hiện có.
-Giai đoạn đầu gửi cảnh báo đến MQTT, database và giao diện web; Telegram bị tắt
-để tránh thông báo thử nghiệm đến người dùng.
+**Cập nhật:** 2026-08-26
+**Trạng thái:** Tích hợp runtime hoàn thành; chưa đạt điều kiện nghiệm thu độ chính xác/hiệu năng trên Raspberry Pi.
 
-## 2. Kiến trúc sau tích hợp
+## 1. Mục tiêu và phạm vi
+
+Tích hợp pose-based Fall Detection vào edge pipeline hiện có mà không làm gián đoạn các chức năng:
+
+- Nhận frame RTSP hoặc video demo duy nhất.
+- ROI detection, ByteTrack, MQTT, WebRTC DataChannel và backend alert.
+- Lưu alert/snapshot trên backend và hiển thị trạng thái trên frontend.
+
+Phạm vi này chỉ bao gồm Fall Detection. Violence Detection không được merge hoặc chạy cùng đợt thử nghiệm. Telegram bị tắt trong giai đoạn đánh giá nhưng alert vẫn được MQTT, backend và UI xử lý.
+
+## 2. Artifact model và provenance
+
+Model nguồn là `weights/fall_detection/best.pt` từ nhánh Fall Detection.
+
+| Artifact | Vai trò | SHA-256 |
+|---|---|---|
+| `best.pt` | Checkpoint PyTorch nguồn, YOLO11m-Pose | `6E417E27CC6B23EF1615810E870919C2B30ADEACFA01DDB5EE65382624069594` |
+| `best-640.onnx` | Bản ONNX tham chiếu chất lượng | `A0EED31FD572C522F1E3699276E5075B97828E57A794CD12756C345E234C0D85` |
+| `best-416.onnx` | Bản ONNX tối ưu để benchmark Raspberry Pi 4 | `EFD717A138A9D61E54039FC92C0E712DF95E2030ED9A231433534A531F676CEA` |
+
+Hai file ONNX được export static, batch 1, FP32, opset 17 từ `best.pt` bằng `scripts/export_fall_model.py`. Weights bị `.gitignore`; model phải được copy riêng sang Pi và kiểm SHA-256 trước khi chạy.
+
+> Lưu ý so sánh: `module_ai_core/fall_detection/predict_video.py` với tham số `--weights weights/fall_detection/best.pt` dùng đúng checkpoint nguồn. Script `test_fall_detection_video.py` cũ của nhánh Fall lại nạp `yolo-pose-best.pt`; không dùng output của hai script này để so sánh lẫn nhau nếu chưa xác minh checkpoint.
+
+## 3. Kiến trúc runtime sau tích hợp
 
 ```text
-RTSP camera
-  └─ FrameStore (latest frame)
-       ├─ ROI ONNX + ByteTrack, 5 FPS
+RTSP / Demo video
+  └─ FrameStore: chỉ giữ latest frame
+       ├─ ROI ONNX + ByteTrack (mặc định 5 FPS trên Pi)
        │    └─ confirmed child tracks
-       └─ Fall worker ONNX, 2 FPS, queue size = 1
-            ├─ YOLO11m-Pose
-            ├─ ghép pose với child track bằng IoU
-            └─ state theo track: normal → suspected → confirmed → recovered
-                 ├─ overlay WebRTC/DataChannel
-                 ├─ metrics JSONL
-                 └─ MQTT alert + snapshot khi confirmed
+       └─ FallWorker (mặc định 2 FPS, queue maxsize=1)
+            ├─ YOLO11m-Pose ONNX Runtime CPU
+            ├─ ghép pose với child track theo IoU
+            ├─ FallStateEngine theo từng track_id
+            ├─ metrics JSONL
+            └─ FallAlert → MQTT/snapshot hoặc REST fallback
 ```
 
-Fall worker chỉ xử lý frame mới nhất. Khi Raspberry Pi không xử lý kịp, frame cũ
-được bỏ thay vì tạo hàng đợi; vì vậy alert không bị trễ so với cảnh thực tế. ROI
-tiếp tục chạy ngay cả khi model fall lỗi. Worker fall chuyển trạng thái `degraded`
-và thử nạp lại sau 30 giây.
+Fall worker không mở camera/RTSP riêng. Nếu inference chậm, frame cũ bị bỏ thay vì tạo backlog; ROI và WebRTC tiếp tục chạy. Nếu load/inference Fall lỗi, worker chuyển `degraded`, retry sau 30 giây và không làm ROI dừng.
 
-## 3. Model artifact
+## 4. ONNX inference và các sửa đổi tương đương PT
 
-Chỉ lấy model `weights/fall_detection/best.pt` từ nhánh `feat/fall_detection`.
-Không merge Docker Compose, log, video annotated, training outputs hoặc code
-violence detection từ nhánh đó.
+`module_edge_firmware/demo_stream/fall.py` cung cấp `FallPoseEstimator` với ONNX Runtime CPU và 2 threads mặc định.
 
-| Artifact | Mục đích | SHA-256 |
-|---|---|---|
-| `best.pt` | Weight PyTorch nguồn, YOLO11m-Pose | `6E417E27CC6B23EF1615810E870919C2B30ADEACFA01DDB5EE65382624069594` |
-| `best-640.onnx` | Bản ONNX tham chiếu | `A0EED31FD572C522F1E3699276E5075B97828E57A794CD12756C345E234C0D85` |
-| `best-416.onnx` | Bản ONNX tối ưu để benchmark trên Pi 4 | `EFD717A138A9D61E54039FC92C0E712DF95E2030ED9A231433534A531F676CEA` |
+Các điểm đã được điều chỉnh để giảm khác biệt với đường PyTorch/Ultralytics:
 
-Weights được Git ignore và phải chuyển riêng sang Pi. Có thể tái tạo bản ONNX:
+- Frame OpenCV được đổi từ BGR sang RGB trước resize/letterbox.
+- NMS nhận bounding box dạng `xywh`, đúng hợp đồng `cv2.dnn.NMSBoxes`; kết quả cuối vẫn dùng `xyxy`.
+- Box và 17 keypoint được unletterbox, chuẩn hóa về tọa độ `0–1` theo frame gốc.
+- `EDGE_FALL_INPUT_SIZE` phải khớp artifact: `416` cho `best-416.onnx`, `640` cho `best-640.onnx`.
 
-```bash
-uv run python scripts/export_fall_model.py
+Khác biệt còn lại với video `.pt` không phải chỉ do ONNX:
+
+- `predict_video.py` chạy inference cho từng frame video, với `--conf 0.35` trong thử nghiệm đã thực hiện.
+- Runtime Pi mặc định chạy pose 2 FPS và confidence 0.50 để tránh quá tải; skeleton vì vậy cập nhật mỗi 0.5 giây, không mượt bằng video PT xử lý từng frame.
+- Preview ONNX dùng renderer Ultralytics `Annotator.kpts()` để có palette keypoint/limb giống `Results.plot()` của PT. Màu box state vẫn do integration quyết định.
+
+## 5. Ghép track và state machine
+
+Pose không tự động chọn người đầu tiên trong frame. Mỗi pose phải được ghép với `child` track confirmed bằng IoU. State được lưu riêng theo `track_id`, tự xóa khi hết TTL và reset khi video/viewer session đổi để không mang cooldown/track state cũ sang luồng mới.
+
+```text
+normal
+  └─ pose trước đó + chuyển động rơi đủ lớn + tư thế nằm
+       → suspected + gửi alert ngay
+
+suspected
+  ├─ tiếp tục nằm/bất động ≥ 1 giây → confirmed (trạng thái theo dõi)
+  └─ không còn nằm → normal
+
+confirmed
+  └─ không còn nằm → recovered → normal
 ```
 
-## 4. Thay đổi đã thực hiện
+Frame đầu tiên đã thấy người nằm không được alert. Alert `suspected` chỉ phát khi có ít nhất hai pose liên tiếp chứng minh chuyển động chuyển sang tư thế nằm. Cooldown là 30 giây theo camera/track.
 
-- Thêm `FallPoseEstimator`, `FallStateEngine`, `FallWorker` tại
-  `module_edge_firmware/demo_stream/fall.py`.
-- Cập nhật `demo_stream/pipeline.py` để chạy ROI và fall song song qua hai worker
-  bounded, publish trạng thái fall và đưa dữ liệu fall vào track message.
-- Overlay frontend đổi màu đỏ khi confirmed, cam khi suspected; client cũ vẫn tương
-  thích vì trường `fall` là tùy chọn.
-- Mở rộng MQTT alert với trường `notes`, dùng để lưu `track_id`, confidence và
-  loại sự kiện.
-- Thêm `TELEGRAM_ALERTS_ENABLED`; khi false, backend vẫn lưu/broadcast alert nhưng
-  không gọi Telegram.
-- Thêm `StateDirectory=children-observer` cho systemd để service có nơi ghi metrics
-  tại `/var/lib/children-observer/fall-metrics.jsonl`.
-- Cập nhật `weights/registry.json` thành JSON hợp lệ và tham chiếu model ONNX 416.
+`confirmed` không còn là điều kiện phát alert. Mục đích của state này là hiển thị, metrics và phân biệt tình huống kéo dài với sự kiện ngắn.
 
-## 5. Cấu hình Raspberry Pi
+## 6. Message, alert, backend và UI
 
-Thêm các biến sau vào `/etc/children-observer/edge.env`:
+Track message giữ tương thích client cũ và thêm trường tùy chọn:
+
+```json
+{
+  "fall": {
+    "state": "suspected|confirmed|recovered",
+    "confidence": 0.91,
+    "latency_ms": 380.4
+  }
+}
+```
+
+Khi Fall alert được phát, nội dung có title `Phát hiện trẻ có dấu hiệu té ngã`, severity `danger`, snapshot từ frame sinh event và notes gồm event type, track ID, confidence, source time.
+
+MQTT là đường alert chính. Nếu MQTT không có, `BackendSync.post_fall_alert()` dùng REST payload riêng, không cố dùng serializer ROI. Backend nhận `TELEGRAM_ALERTS_ENABLED`; khi `false`, alert vẫn lưu DB/broadcast UI nhưng không gọi Telegram.
+
+Frontend parse `fall` như trường optional và đổi nhãn/màu overlay ở trạng thái `suspected` hoặc `confirmed`.
+
+## 7. Cấu hình Pi đề xuất cho thử nghiệm đầu tiên
 
 ```text
 EDGE_FALL_ENABLED=true
 EDGE_FALL_MODEL_PATH=/opt/children-observer/weights/fall_detection/best-416.onnx
+EDGE_FALL_INPUT_SIZE=416
 EDGE_FALL_FPS=2
 EDGE_FALL_CONF_THRESHOLD=0.50
-EDGE_FALL_STILL_SECONDS=2.0
-EDGE_FALL_COOLDOWN_SECONDS=30
 EDGE_FALL_VELOCITY_THRESHOLD=0.15
 EDGE_FALL_STILL_VELOCITY_THRESHOLD=0.04
-EDGE_FALL_INPUT_SIZE=416
+EDGE_FALL_STILL_SECONDS=1.0
+EDGE_FALL_ALERT_ON_SUSPECTED=true
+EDGE_FALL_COOLDOWN_SECONDS=30
 EDGE_FALL_ONNX_INTRA_THREADS=2
 EDGE_FALL_PUBLISH_ALERTS=true
 EDGE_FALL_METRICS_PATH=/var/lib/children-observer/fall-metrics.jsonl
 ```
 
-Đặt `TELEGRAM_ALERTS_ENABLED=false` trong môi trường backend/Docker Compose khi
-nghiệm thu. Sau khi copy model, cần kiểm checksum ở Pi trước khi restart service.
+`best-640.onnx` chỉ dùng trên Pi khi benchmark cho thấy vẫn đạt latency p95 ≤ 450 ms, Fall ≥ 2 FPS, ROI ≥ 4 FPS, không OOM và không throttling. Không chỉ đổi đường dẫn model: phải đồng thời đặt `EDGE_FALL_INPUT_SIZE=640`.
 
-## 6. Kiểm thử đã hoàn thành
+`TELEGRAM_ALERTS_ENABLED=false` phải đặt trong môi trường backend trên laptop/server (root `.env` hoặc Docker Compose), không phải `edge.env` của Pi.
+
+## 8. Kiểm thử đã thực hiện
 
 | Hạng mục | Kết quả |
 |---|---|
-| Unit tests fall state, IoU, TTL, cooldown, recovery | Pass |
-| Tracker tests | Pass |
-| Backend alert tests | Pass |
-| Tổng kiểm thử | 13 passed |
-| TypeScript + Vite production build | Pass |
-| ONNX load CPU với 2 threads | Pass |
+| Unit: IoU, state normal/suspected/confirmed/recovered, cooldown, reset/TTL | `6 passed` |
+| ONNX smoke test sau sửa RGB/NMS | `best-416.onnx` nạp CPU thành công và trả 1 pose ở frame 6 giây |
+| ONNX 640 ở video `treemtenga.mp4`, confidence 0.35 | Có 1 pose ở 12 giây (0.423); từ 13–17 giây không đủ pose hợp lệ |
+| Frontend/backend/compose checks trước đó | Build/config đã qua; cần chạy lại trước release cuối |
+| Pi benchmark, RTSP soak test, precision/recall chính thức | Chưa thực hiện |
 
-Có cảnh báo hiện hữu từ FastAPI/Pydantic và JWT key trong test; không do thay đổi
-Fall Detection. Frontend có cảnh báo bundle lớn hơn 500 kB nhưng build thành công.
+Video `treemtenga.mp4` dài 17.97 giây. Model ONNX 640 mất person/pose score sau khoảng 13 giây; hạ confidence xuống 0.01 chỉ thấy candidate rất thấp (ví dụ 0.056 tại 13 giây và 0.037 tại 17 giây). Đây là hạn chế pose của checkpoint ở góc quay/tư thế này, không thể xử lý an toàn chỉ bằng cách giảm threshold.
 
-## 7. Đánh giá độ chính xác và hiệu năng
+## 9. Rủi ro và quyết định chưa hoàn tất
 
-Chưa có số liệu Raspberry Pi hoặc event precision/recall chính thức. Cần thực hiện
-trên video có gán nhãn thật, không dùng video ROI demo làm ground truth.
+1. **Chất lượng pose khi trẻ ngã sát sàn chưa đủ tốt.** Cần bổ sung dữ liệu có trẻ quay lưng, chuyển động nhanh, ở xa, bị che và nằm sát sàn; sau đó fine-tune lại model.
+2. **Chưa có parity report hoàn chỉnh PT–ONNX.** Cần dùng cùng `best.pt`, cùng `imgsz`, cùng confidence và cùng frame test; so sánh count, box IoU, sai số keypoint và coverage.
+3. **Pose mất thì Fall state không tiến triển.** ROI box + chuyển động có thể là fallback tương lai, nhưng chưa được tích hợp; cần test kỹ `sit_down`, `lying_non_fall` và `normal` trước khi bật alert fallback.
+4. **2 FPS là lựa chọn hiệu năng Pi, không phải setting dùng để đánh giá chất lượng pose.** Laptop debug/parity nên dùng FPS cao hơn; Pi chỉ tăng từ 2 lên 4/5 sau benchmark.
+5. **Alert ngay tại suspected tăng rủi ro false positive.** Cooldown và điều kiện velocity giảm rủi ro nhưng không thay thế bộ negative test được gán nhãn.
 
-Các script hỗ trợ:
+## 10. Checklist trước khi đưa lên Raspberry Pi
 
-```bash
-# So sánh số pose giữa PyTorch và ONNX trên cùng video.
-uv run python scripts/compare_fall_exports.py --video <fall-video.mp4>
-
-# Replay cùng đường ROI → ByteTrack → pose → fall và tạo báo cáo JSON.
-uv run python scripts/evaluate_fall.py \
-  --video <fall-video.mp4> \
-  --ground-truth scripts/fall_ground_truth.example.json
-```
-
-Kết quả cần theo dõi: event precision, recall, F1, false alerts/hour, alert latency,
-latency p50/p95, fall FPS, ROI FPS, CPU/RAM, nhiệt độ và `vcgencmd get_throttled`.
-
-Ngưỡng nghiệm thu ban đầu:
-
-- Fall recall ≥ 90%, precision ≥ 80%.
-- False alert ≤ 1 lần/giờ.
-- Fall ≥ 2 FPS, ROI ≥ 4 FPS, p95 fall inference ≤ 450 ms.
-- Nhiệt độ dưới 80°C, không throttling và không OOM trong soak test 2 giờ.
-
-## 8. Rủi ro và bước tiếp theo
-
-Khi thử trên `module_edge_firmware/test_video.mp4`, cả weight `.pt` và ONNX 416
-không trả pose ở frame trẻ đứng. Đây có thể là do model được fine-tune cho tư thế
-ngã và video hiện tại chỉ dùng kiểm ROI; chưa phải bằng chứng model hỏng. Cần chạy
-trên clip té ngã thật. Nếu model không trả pose trên clip fall đã gán nhãn, dừng
-triển khai và yêu cầu lại model/artifact từ nhóm AI.
-
-Các bước tiếp theo:
-
-1. Chuyển `best-416.onnx` sang Pi và xác minh SHA-256.
-2. Chạy foreground với RTSP + MQTT, kiểm tra overlay/snapshot/UI.
-3. Chạy replay video gán nhãn, lưu báo cáo JSON và điều chỉnh threshold nếu cần.
-4. Soak test 2 giờ trên camera thật với tình huống an toàn.
-5. Chỉ bật Telegram sau khi đạt ngưỡng nghiệm thu.
+1. Chốt checkpoint nguồn và chạy parity `best.pt` ↔ `best-416.onnx`/`best-640.onnx` với cấu hình công bằng.
+2. Chuẩn bị ground truth gồm tối thiểu `fall`, `lying_non_fall`, `sit_down`, `normal`.
+3. Chạy replay laptop, ghi precision/recall/F1, false alerts/hour, alert latency và pose coverage.
+4. Copy ONNX đã chọn sang `/opt/children-observer/weights/fall_detection/`, kiểm SHA-256.
+5. Chạy foreground Pi với RTSP, MQTT và Telegram tắt; xác minh UI, snapshot, metrics JSONL.
+6. Đo CPU, RSS, nhiệt độ, `vcgencmd get_throttled`, ROI FPS và Fall FPS.
+7. Soak test tối thiểu 2 giờ bằng các tình huống an toàn. Chỉ cập nhật systemd/reboot test sau khi đạt tiêu chí nghiệm thu.

@@ -28,6 +28,7 @@ def test_fall_state_confirms_once_then_recovers():
         velocity_threshold=0.10,
         still_velocity_threshold=0.05,
         cooldown_seconds=30.0,
+        alert_on_suspected=False,
     )
     engine.update(7, _pose(lying=False, y=0.3), 0.0)
     suspected, emitted = engine.update(7, _pose(lying=True, y=0.7), 500.0)
@@ -51,15 +52,29 @@ def test_fall_state_confirms_once_then_recovers():
     assert not emitted
 
 
-def test_first_visible_lying_pose_enters_suspected_state():
+def test_first_visible_lying_pose_does_not_alert_without_fall_motion():
     engine = FallStateEngine(
         still_seconds=2.0,
         velocity_threshold=0.1,
         still_velocity_threshold=0.05,
     )
     annotation, emitted = engine.update(9, _pose(lying=True), 0.0)
-    assert annotation.state == "suspected"
+    assert annotation.state == "normal"
     assert not emitted
+
+
+def test_measured_fall_emits_as_soon_as_it_becomes_suspected():
+    engine = FallStateEngine(
+        still_seconds=1.0,
+        velocity_threshold=0.1,
+        still_velocity_threshold=0.05,
+    )
+    engine.update(9, _pose(lying=False, y=0.3), 0.0)
+
+    annotation, emitted = engine.update(9, _pose(lying=True, y=0.7), 500.0)
+
+    assert annotation.state == "suspected"
+    assert emitted
 
 
 def test_fall_state_is_isolated_per_track_and_pruned():

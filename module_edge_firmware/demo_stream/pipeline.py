@@ -64,7 +64,8 @@ class DemoStreamConfig:
     fall_model_path: Path = Path("weights/fall_detection/best-416.onnx")
     fall_fps: float = 2.0
     fall_conf_threshold: float = 0.50
-    fall_still_seconds: float = 2.0
+    fall_still_seconds: float = 1.0
+    fall_alert_on_suspected: bool = True
     fall_cooldown_seconds: float = 30.0
     fall_velocity_threshold: float = 0.15
     fall_still_velocity_threshold: float = 0.04
@@ -134,7 +135,8 @@ def build_config_from_settings() -> DemoStreamConfig:
         fall_model_path=Path(os.getenv("EDGE_FALL_MODEL_PATH", "weights/fall_detection/best-416.onnx")),
         fall_fps=env_float("EDGE_FALL_FPS", "2.0"),
         fall_conf_threshold=env_float("EDGE_FALL_CONF_THRESHOLD", "0.50"),
-        fall_still_seconds=env_float("EDGE_FALL_STILL_SECONDS", "2.0"),
+        fall_still_seconds=env_float("EDGE_FALL_STILL_SECONDS", "1.0"),
+        fall_alert_on_suspected=env_bool("EDGE_FALL_ALERT_ON_SUSPECTED", True),
         fall_cooldown_seconds=env_float("EDGE_FALL_COOLDOWN_SECONDS", "30.0"),
         fall_velocity_threshold=env_float("EDGE_FALL_VELOCITY_THRESHOLD", "0.15"),
         fall_still_velocity_threshold=env_float("EDGE_FALL_STILL_VELOCITY_THRESHOLD", "0.04"),
@@ -224,6 +226,7 @@ class DemoStreamPipeline:
                 fps=self.config.fall_fps,
                 state_engine=FallStateEngine(
                     still_seconds=self.config.fall_still_seconds,
+                    alert_on_suspected=self.config.fall_alert_on_suspected,
                     velocity_threshold=self.config.fall_velocity_threshold,
                     still_velocity_threshold=self.config.fall_still_velocity_threshold,
                     cooldown_seconds=self.config.fall_cooldown_seconds,
