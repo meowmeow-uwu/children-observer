@@ -3,7 +3,7 @@ $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 Push-Location $Root
 try {
-    docker compose down --remove-orphans
+    docker compose -f docker-compose.yml -f docker-compose.demo.yml down --remove-orphans
     Write-Host "Đã dừng demo containers. Dữ liệu volumes vẫn được giữ lại." -ForegroundColor Green
 } finally {
     Pop-Location
