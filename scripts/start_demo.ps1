@@ -9,7 +9,7 @@ try {
         if (-not (Test-Path $asset)) { throw "Thiếu asset bắt buộc: $asset" }
     }
 
-    docker compose up --build -d
+    docker compose -f docker-compose.yml -f docker-compose.demo.yml up --build -d
 
     $deadline = (Get-Date).AddMinutes(3)
     do {
@@ -21,11 +21,11 @@ try {
     } while ((Get-Date) -lt $deadline)
 
     if (-not $health -or $health.status -ne "ok") {
-        docker compose ps
+        docker compose -f docker-compose.yml -f docker-compose.demo.yml ps
         throw "Backend chưa sẵn sàng sau 3 phút. Xem: docker compose logs backend migrate seed edge"
     }
 
-    docker compose ps
+    docker compose -f docker-compose.yml -f docker-compose.demo.yml ps
     Write-Host ""
     Write-Host "AI Child Observer demo đã sẵn sàng" -ForegroundColor Green
     Write-Host "Frontend: http://localhost:5173" -ForegroundColor Green
