@@ -12,6 +12,6 @@
     "path": "weights/fall_detection/best-416.onnx",
     "format": "onnx",
     "metrics": {},
-    "note": "YOLO11m-Pose exported for Raspberry Pi 4 evaluation; source best.pt sha256=6E417E27CC6B23EF1615810E870919C2B30ADEACFA01DDB5EE65382624069594"
+    "note": "YOLO11m-Pose exported for Raspberry Pi 4 evaluation; the model is quantized to INT8 and optimized for edge devices."
   }
 }
