@@ -38,6 +38,10 @@ class CameraBase(BaseModel):
 class CameraCreate(CameraBase):
     device_id: int
     rtsp_url: str = ""
+
+
+class CameraAlertsPausedUpdate(BaseModel):
+    paused: bool
     
 class CameraResponse(CameraBase):
     id: int

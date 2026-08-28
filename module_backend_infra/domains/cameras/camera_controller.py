@@ -2,7 +2,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from typing import List
-from pydantic import BaseModel
 
 from core.database import get_db
 from domains.auth.dependencies import get_current_user
@@ -13,9 +12,7 @@ from .camera_service import CameraService
 router = APIRouter(prefix="/api/cameras", tags=["Cameras"])
 
 
-class AlertPausePayload(BaseModel):
-    paused: bool
-@router.get("/", response_model=List[camera_schemas.CameraResponse])
+@router.get("", response_model=List[camera_schemas.CameraResponse])
 def get_cameras(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -64,7 +61,7 @@ async def save_camera_roi(
 @router.post("/{camera_id_string}/alerts-paused")
 def set_alerts_paused(
     camera_id_string: str,
-    payload: AlertPausePayload,
+    payload: camera_schemas.CameraAlertsPausedUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
