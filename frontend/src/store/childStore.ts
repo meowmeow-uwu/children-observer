@@ -33,7 +33,7 @@ const writeToStorage = (userId: string, children: ChildProfile[]) => {
 
 let currentUserId: string | null = null;
 
-export const useChildStore = create<ChildState>((set, get) => ({
+export const useChildStore = create<ChildState>((set) => ({
   children: [],
   selectedChildId: null,
 
